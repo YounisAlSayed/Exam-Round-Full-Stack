@@ -12,7 +12,26 @@ class RedirectingController
 {
     public function dashboard()
     {
-        return (new ViewModel('dashboard'));
+        $courses = [];
+        $nextExamSet = [];
+        $user = $_SESSION['user'];
+        if (!$user) {
+            http_response_code(404);
+            return new ViewModel('users/login', ['error' => 'User has to be logged in']);
+        }
+        $user_id = $user['id'];
+        if (!$user_id) {
+            http_response_code(400);
+            return new ViewModel('users/login', ['error' => 'User ID is not passed']);
+        }
+        if ($user['role'] === 'teacher') {
+            $courses = Courses::getTeacherCourses((int) $user['id']);
+            $nextExamSet = User::getTeacherNextExamSet((int) $user['id']);
+        } else if ($user['role'] === 'student') {
+            $courses = Courses::getStudentCourses((int) $user['id']);
+            $nextExamSet = User::getStudentsNextExamSet((int) $user['id']);
+        }
+        return (new ViewModel('dashboard', ['courses' => $courses, 'nextExamSet' => $nextExamSet]));
     }
 
     // -------------------------------- user --------------------------------------
@@ -39,7 +58,7 @@ class RedirectingController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: /api/users/login');
+            header('Location: ' . BASE_PATH . '/api/users/login');
             exit;
         }
 

@@ -15,6 +15,13 @@ class Exams
         return $statement->fetchAll();
     }
 
+    public static function getCourseExamCount(int $course_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = "SELECT COUNT(id) FROM exams WHERE course_id=id";
+        $statement = $pdo->prepare($sql);
+        return $statement->execute(['id' => $course_id]);
+    }
     public static function find(int $id)
     {
         $pdo = Database::getInstance();
