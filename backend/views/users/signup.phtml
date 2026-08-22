@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Signin</title>
+</head>
+
+<body>
+    <?php require_once __DIR__ . '/../layout.phtml';
+    renderHeader('Signup'); ?>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card p-4 p-lg-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <div class="logo mb-3">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h4 class="fw-bold mb-1">Create Account</h4>
+                        <p class="text-muted small">Join our quiz platform</p>
+                    </div>
+
+                    <!-- Alert Messages -->
+                    <?php if (isset($error)): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($error) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($success)): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($success) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Sign Up Form -->
+                    <form method="POST" action="<?= BASE_PATH ?>/api/users/signup">
+                        <!-- name -->
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label for="first_name" class="form-label fw-semibold small">First Name</label>
+                                <input type="text"
+                                    class="form-control <?= isset($error_first_name) ? 'is-invalid' : '' ?>"
+                                    id="first_name" name="first_name" placeholder="John"
+                                    value="<?= htmlspecialchars($first_name ?? '') ?>" required>
+                                <?php if (isset($error_first_name)): ?>
+                                <div class="invalid-feedback"><?= htmlspecialchars($error_first_name) ?></div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label for="last_name" class="form-label fw-semibold small">Last Name</label>
+                                <input type="text"
+                                    class="form-control <?= isset($error_last_name) ? 'is-invalid' : '' ?>"
+                                    id="last_name" name="last_name" placeholder="Doe"
+                                    value="<?= htmlspecialchars($last_name ?? '') ?>" required>
+                                <?php if (isset($error_last_name)): ?>
+                                <div class="invalid-feedback"><?= htmlspecialchars($error_last_name) ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold small">Email Address</label>
+                            <input type="email" class="form-control <?= isset($error_email) ? 'is-invalid' : '' ?>"
+                                id="email" name="email" placeholder="john@example.com"
+                                value="<?= htmlspecialchars($email ?? '') ?>" required>
+                            <?php if (isset($error_email)): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($error_email) ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-semibold small">Password</label>
+                            <input type="password"
+                                class="form-control <?= isset($error_password) ? 'is-invalid' : '' ?>" id="password"
+                                name="password" placeholder="Create a strong password" required>
+                            <?php if (isset($error_password)): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($error_password) ?></div>
+                            <?php endif; ?>
+                            <div class="form-text small text-muted">
+                                Must be at least 8 characters with a number and special character
+                            </div>
+                        </div>
+
+                        <!-- password confirm -->
+                        <div class="mb-4">
+                            <label for="password_conf" class="form-label fw-semibold small">Confirm Password</label>
+                            <input type="password"
+                                class="form-control <?= isset($error_password_confirm) ? 'is-invalid' : '' ?>"
+                                id="password_conf" name="password_conf" placeholder="Confirm your password" required>
+                            <?php if (isset($error_password_confirm)): ?>
+                            <div class="invalid-feedback"><?= htmlspecialchars($error_password_confirm) ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- role -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">I am a</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="role_student"
+                                        value="student" checked>
+                                    <label class="form-check-label small" for="role_student">Student</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="role_teacher"
+                                        value="teacher">
+                                    <label class="form-check-label small" for="role_teacher">Teacher</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- terms & privacy -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="terms" id="terms" required>
+                                <label class="form-check-label small" for="terms">
+                                    I agree to the <a href="#" class="fw-semibold">Terms of Service</a> and <a href="#"
+                                        class="fw-semibold">Privacy Policy</a>
+                                </label>
+                                <?php if (isset($error_terms)): ?>
+                                <div class="invalid-feedback d-block"><?= htmlspecialchars($error_terms) ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- submit -->
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+
+                    <!-- Footer -->
+                    <div class="text-center mt-4">
+                        <p class="small text-muted mb-0">
+                            Already have an account?
+                            <a href="/api/login" class="fw-semibold">Sign in</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php renderFooter(); ?>
+</body>
+
+</html>

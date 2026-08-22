@@ -1,0 +1,13 @@
+1. create an exam webpage where the teacher enters his page where he will see his all-time exams and to delete/update them or create a new project
+2. the teacher selects if he wants to write the exam's questions or to auto generate an exam from the old exams questions
+3. the teacher can select if the questions are to be randomly placed or all of them in the same numbering
+4. if the teacher creates a new exam question from scratch he has to enter the question, selections and the correct answer
+5. MC/T-F questions only
+6. the teacher has to enter the date of the exam? and the time that the student have to solve the exam
+7. the student enters his own paage where he will be met with the exam after he is done answering his mark is calculated and displayed immediately
+8. the UI/UX has to be the best that we can do using bootstrap/Sass js/Jquery html php mysql
+
+9. extras:
+10. creating a login system and a full dynamic UI
+11. search/filter/sort for the main teacher page
+12. multiple courses for the student where he has to select the course then the exam link
