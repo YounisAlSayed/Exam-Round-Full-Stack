@@ -2,7 +2,13 @@
 
 namespace App\Controllers;
 
+use App\models\Attempts;
+use App\models\Choices;
+use App\models\Exam_question;
 use App\models\Exams;
+use App\models\Marks;
+use App\models\Questions;
+use App\models\StudentAnswers;
 use App\Utils\ViewModel;
 
 class ExamsController
@@ -249,6 +255,85 @@ class ExamsController
 
         $_SESSION['flash'] = 'Exam deleted successfully';
         header('Location: /api/exams');
+        exit;
+    }
+
+    public function saveProgress($exam_id)
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . BASE_PATH . '/api/login');
+            exit;
+        }
+
+        $action = $_POST['action'] ?? 'next';
+        $currentPage = (int)($_POST['current_page'] ?? 1);
+        $totalPages = (int)($_POST['total_pages'] ?? 1);
+
+        // Save answers to session
+        $examAnswers = [];
+        foreach ($_POST as $key => $value) {
+            if (strpos($key, 'question_') === 0) {
+                $questionId = (int)str_replace('question_', '', $key);
+                $examAnswers[$questionId] = (int)$value;
+            }
+        }
+
+        if (!isset($_SESSION['exam_answers'])) {
+            $_SESSION['exam_answers'] = [];
+        }
+        $_SESSION['exam_answers'][$exam_id] = $examAnswers;
+
+        // Redirect
+        if ($action === 'previous' && $currentPage > 1) {
+            $nextPage = $currentPage - 1;
+        } elseif ($action === 'next' && $currentPage < $totalPages) {
+            $nextPage = $currentPage + 1;
+        } else {
+            $nextPage = $currentPage;
+        }
+
+        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/start/' . $nextPage);
+        exit;
+    }
+
+    public function submitExam($exam_id)
+    {
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . BASE_PATH . '/api/login');
+            exit;
+        }
+
+        // Get saved answers from session
+        $answers = $_SESSION['exam_answers'][$exam_id] ?? [];
+        $student_id = $_SESSION['user']['id'];
+
+        // Process and save answers
+        $totalMarks = 0;
+        $earnedMarks = 0;
+
+        foreach ($answers as $questionId => $choiceId) {
+            // Save student answer
+            StudentAnswers::create($student_id, $exam_id, $questionId, $choiceId);
+
+            // Check if correct
+            $choice = Choices::getById($choiceId);
+            if ($choice && $choice['is_correct']) {
+                $question = Exam_question::getQuestionMark($exam_id, $questionId);
+                $earnedMarks += $question['question_mark'];
+            }
+        }
+
+        // Get total marks
+        $totalMarks = Exams::getTotalMarks($exam_id);
+
+        // Save attempt
+        Attempts::updateSubmitted($exam_id, $student_id, $totalMarks);
+
+        // Clear session answers
+        unset($_SESSION['exam_answers'][$exam_id]);
+
+        $_SESSION['flash'] = 'Exam submitted successfully!';
+        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/result');
         exit;
     }
 }

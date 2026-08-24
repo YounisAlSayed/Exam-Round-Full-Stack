@@ -2,10 +2,12 @@
 
 namespace App\Controllers;
 
+use App\models\Attempts;
 use App\Utils\ViewModel;
 use App\models\User;
 use App\models\Questions;
 use App\models\Courses;
+use App\models\Exam_question;
 use App\models\Exams;
 
 class RedirectingController
@@ -109,5 +111,62 @@ class RedirectingController
     public function updateQuestion()
     {
         return (new ViewModel('questions/update'));
+    }
+
+    // ------------------------------ exam ----------------------------------
+
+    public function examDetails($exam_id)
+    {
+        if (!isset($_SESSION['user'])) {
+            http_response_code(400);
+            return new ViewModel('users/login', ['error' => 'User Not logged in']);
+        }
+        $user = $_SESSION['user'];
+        $examDetails = Exams::getExamFullDetails($exam_id);
+        if (!$examDetails) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Exam Not Found']);
+        }
+        $studentAttempt = '';
+        $studentSelection = '';
+        if ($user['role'] === 'student') {
+            $studentAttempt = Attempts::findByExamAndStudent($exam_id, $user['id']);
+            if (!$studentAttempt) {
+                $studentAttempt = [];
+            }
+
+            $studentSelection = Exam_question::getStudentExamSelection($exam_id, $user['id']);
+            if (!$studentSelection) {
+                $studentSelection = [];
+            }
+        }
+
+        return new ViewModel('exams/show', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection]);
+    }
+
+    public function examStart($exam_id, $page)
+    {
+        if (!$exam_id || !$page) {
+            http_response_code(400);
+            return new ViewModel('dashboard', ['error' => 'Exam is not selected']);
+        }
+        $exam = Exams::getExamFullDetails($exam_id);
+        if (!$exam) {
+            http_response_code(404);
+            header('Location: ' . BASE_PATH . '/api/dashboard');
+            exit;
+        }
+        $size = 2;
+        $offset = (int)($page - 1) * $size;
+        $questions = Questions::getExamQuestionSet($exam_id, $offset, $size);
+        if (!$questions) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'No Questions Were Found For the Specified Exam']);
+        }
+
+        $totalQuestions = Questions::getExamQuestionCount($exam_id);
+        $totalQuestions ?? 0;
+
+        return new ViewModel('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions]);
     }
 }

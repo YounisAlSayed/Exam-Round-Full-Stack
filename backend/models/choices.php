@@ -14,6 +14,14 @@ class Choices
         return $statement->execute(['question_id' => $question_id, 'choice' => $choice, 'correct' => $correct]);
     }
 
+    public static function getById($choice_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = "SELECT * FROM choices WHERE id = :id";
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id' => $choice_id]);
+        return $statement->fetch();
+    }
     public static function edit(int $choice_id, string $choice, int $correct)
     {
         $pdo = Database::getInstance();

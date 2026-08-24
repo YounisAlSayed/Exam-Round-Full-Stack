@@ -42,7 +42,6 @@
                                         </span>
                                     </div>
                                 <?php endif ?>
-
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <h3 class="h5 fw-bold mb-2"><?= htmlspecialchars($next['title'] ?? 'Exam Title') ?>
@@ -62,16 +61,20 @@
                                             </span>
                                         </div>
                                     </div>
-
-                                    <?php if ($now >= $startDate && $now < $endDate): ?>
-                                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                                            <a href="/api/exams/<?= $next['id'] ?? 0 ?>" class="btn btn-primary">
-                                                <i class="fas fa-arrow-right me-1"></i> Start Exam
-                                            </a>
-                                        </div>
-                                    <?php endif ?>
                                 </div>
                             </div>
+                            <?php //if ($now >= $startDate && $now <= $endDate): 
+                            ?>
+                            <div class="card-footer d-flex justify-content-center">
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0 container container-fluid">
+                                    <a href="<?= BASE_PATH ?>/api/exams/<?= $next['exam_id'] ?? 0 ?>/start/<?= 1 ?>"
+                                        class="btn btn-primary container container-fluid">
+                                        <i class="fas fa-arrow-right me-1"></i> Start Exam
+                                    </a>
+                                </div>
+                            </div>
+                            <?php //endif 
+                            ?>
                             <!-- Decorative gradient bar -->
                             <div class="position-absolute bottom-0 start-0 w-100"
                                 style="height: 4px; background: linear-gradient(90deg, var(--bs-primary), var(--gold));"></div>

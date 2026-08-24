@@ -59,14 +59,14 @@ class UserController
     public function signup()
     {
         $_SESSION['flash'] = null;
-        $first_name = $_POST['first_name'] ?? null;
-        $last_name = $_POST['last_name'] ?? null;
-        $email = $_POST['email'] ?? null;
-        $password = $_POST['password'] ?? null;
-        $password_conf = $_POST['password_conf'];
-        $role = $_POST['role'] ?? null;
+        $first_name = trim($_POST['first_name']) ?? null;
+        $last_name = trim($_POST['last_name']) ?? null;
+        $email = trim($_POST['email']) ?? null;
+        $password = trim($_POST['password']) ?? null;
+        $password_conf = trim($_POST['password_conf']) ?? null;
+        $role = trim($_POST['role']) ?? null;
 
-        if (!$first_name || !$last_name || !$email || !$password || !$role) {
+        if (!$first_name || !$last_name || !$email || !$password || !$password_conf || !$role) {
             http_response_code(422);
             return new ViewModel('users/signup', ['error' => 'One or more fields empty']);
         }

@@ -18,7 +18,7 @@ class Exams
     public static function getCourseExamCount(int $course_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT COUNT(id) FROM exams WHERE course_id=id";
+        $sql = "SELECT COUNT(id) FROM exams WHERE course_id=:id";
         $statement = $pdo->prepare($sql);
         return $statement->execute(['id' => $course_id]);
     }
@@ -146,5 +146,26 @@ class Exams
         $sql = "UPDATE courses SET next_exam_id = :exam_id WHERE id = :course_id";
         $statement = $pdo->prepare($sql);
         return $statement->execute(['exam_id' => $exam_id, 'course_id' => $course_id]);
+    }
+
+    public static function getExamFullDetails($exam_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = "SELECT e.id as exam_id, e.title, e.course_id, c.name as course_name, e.start_date, e.end_date, e.total_marks, e.status
+        FROM exams e
+        INNER JOIN courses c ON e.course_id = c.id
+        WHERE e.id = :id";
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id' => $exam_id]);
+        return $statement->fetch();
+    }
+
+    public static function getTotalMarks($exam_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = "SELECT total_mark FROM exams WHERE id = :id;";
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id' => $exam_id]);
+        return $statement->fetch();
     }
 }

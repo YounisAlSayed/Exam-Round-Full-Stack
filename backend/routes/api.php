@@ -34,6 +34,11 @@ Router::put('/api/exams/{id}', ['ExamsController', 'edit']);
 
 Router::delete('/api/exams/{id}', ['ExamsController', 'delete']);
 
+// when the user is taking the exam
+Router::get('/api/exams/{id}/start/{page}', ['ExamController', 'examStart']);
+Router::post('/api/exams/{id}/submit', ['ExamController', 'submitExam']);
+Router::post('/api/exams/{id}/save-answer', ['ExamController', 'saveAnswer']);
+Router::post('/api/exams/{id}/save-progress', ['ExamController', 'saveProgress']);
 //----------------- attempts routes ---------------------------
 Router::get('/api/attempts/student/{id}', ['AttemptsController', 'getStudentAttempt']);
 
@@ -93,3 +98,5 @@ Router::get('/api/profile', ['RedirectingController', 'profile']);
 Router::get('/api/users/list', ['RedirectingController', 'usersList']);
 Router::get('/api/questions/create/display', ['RedirectingController', 'createQuestion']);
 Router::get('/api/questions/update', ['RedirectingController', 'updateQuestion']);
+Router::get('/api/exams/{id}/details', ['RedirectingController', 'examDetails']);
+Router::get('/api/exams/{id}/start/{page}', ['RedirectingController', 'examStart']);

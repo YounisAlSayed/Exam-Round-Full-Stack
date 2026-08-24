@@ -65,4 +65,13 @@ class Attempts
         $statement = $pdo->prepare($sql);
         return $statement->execute(['id' => $id]);
     }
+
+    public static function updateSubmitted($exam_id, $student_id, $exam_mark = 0)
+    {
+        $pdo = Database::getInstance();
+        $sql = "UPDATE attempt SET submitted_at = NOW(), exam_mark = :exam_mark
+            WHERE exam_id = :exam_id AND student_id = :student_id";
+        $statement = $pdo->prepare($sql);
+        return $statement->execute(['exam_mark' => $exam_mark, 'exam_id' => $exam_id, 'student_id' => $student_id]);
+    }
 }

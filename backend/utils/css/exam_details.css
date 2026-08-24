@@ -1,0 +1,28 @@
+.exam-details-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.exam-details-container .card {
+    transition: box-shadow 0.2s ease;
+}
+
+.exam-details-container .card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+.exam-details-container .border-success {
+    border-color: var(--bs-success) !important;
+}
+
+.exam-details-container .border-danger {
+    border-color: var(--bs-danger) !important;
+}
+
+.bg-success.bg-opacity-10 {
+    background-color: rgba(45, 122, 79, 0.08) !important;
+}
+
+.bg-danger.bg-opacity-10 {
+    background-color: rgba(192, 57, 43, 0.08) !important;
+}

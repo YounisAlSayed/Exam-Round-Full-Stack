@@ -30,7 +30,7 @@ class Questions
         $sql = "SELECT q.id, q.course_id, q.question, eq.question_mark FROM questions q JOIN exam_questions eq ON q.id = eq.question_id WHERE eq.exam_id=:id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $exam_id]);
-        return $statement->fetch();
+        return $statement->fetchAll();
     }
 
     public static function getQuestionChoices(int $question_id)
@@ -62,5 +62,29 @@ class Questions
         $sql = 'DELETE FROM questions WHERE id=:id';
         $statement = $pdo->prepare($sql);
         return $statement->execute(['id' => $question_id]);
+    }
+
+    public static function getExamQuestionSet($exam_id, $offset, $size = 2)
+    {
+        $pdo = Database::getInstance();
+        $sql = "SELECT q.id, q.course_id, q.question, eq.question_mark 
+        FROM questions q 
+        JOIN exam_questions eq ON q.id = eq.question_id 
+        WHERE eq.exam_id=:id
+        LIMIT :size
+        OFFSET :offset";
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id' => $exam_id, 'size' => $size, 'offset' => $offset]);
+        return $statement->fetchAll();
+    }
+
+    public static function getExamQuestionCount($exam_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = "SELECT COUNT(*) as total FROM exam_questions WHERE exam_id = :exam_id";
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['exam_id' => $exam_id]);
+        $result = $statement->fetch();
+        return $result['total'] ?? 0;
     }
 }

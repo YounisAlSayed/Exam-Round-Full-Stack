@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 24, 2026 at 07:27 AM
+-- Generation Time: Aug 24, 2026 at 11:01 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -32,7 +32,8 @@ CREATE TABLE `attempts` (
   `exam_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
   `started_at` datetime NOT NULL,
-  `submitted_at` datetime DEFAULT NULL
+  `submitted_at` datetime DEFAULT NULL,
+  `exam_mark` double NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -128,15 +129,16 @@ INSERT INTO `courses` (`id`, `name`, `next_exam_id`) VALUES
 CREATE TABLE `enrolment` (
   `id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
-  `course_id` int(11) NOT NULL
+  `course_id` int(11) NOT NULL,
+  `enrolment_date` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `enrolment`
 --
 
-INSERT INTO `enrolment` (`id`, `student_id`, `course_id`) VALUES
-(1, 2, 1);
+INSERT INTO `enrolment` (`id`, `student_id`, `course_id`, `enrolment_date`) VALUES
+(1, 2, 1, '2026-08-24 10:25:03');
 
 -- --------------------------------------------------------
 
@@ -147,7 +149,7 @@ INSERT INTO `enrolment` (`id`, `student_id`, `course_id`) VALUES
 CREATE TABLE `exams` (
   `id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
-  `courses_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
   `status` enum('not_ready','ready','in_progress','completed') NOT NULL DEFAULT 'not_ready',
   `total_marks` int(11) NOT NULL CHECK (`total_marks` > 0 and `total_marks` <= 100),
   `teacher_id` int(11) NOT NULL,
@@ -160,7 +162,7 @@ CREATE TABLE `exams` (
 -- Dumping data for table `exams`
 --
 
-INSERT INTO `exams` (`id`, `title`, `courses_id`, `status`, `total_marks`, `teacher_id`, `start_date`, `end_date`, `randomize_order`) VALUES
+INSERT INTO `exams` (`id`, `title`, `course_id`, `status`, `total_marks`, `teacher_id`, `start_date`, `end_date`, `randomize_order`) VALUES
 (1, 'Midterm', 1, 'ready', 100, 1, '2026-09-01 09:00:00', '2026-09-01 10:00:00', 0);
 
 -- --------------------------------------------------------
@@ -288,18 +290,18 @@ CREATE TABLE `users` (
   `email` varchar(64) NOT NULL,
   `password` varchar(255) NOT NULL,
   `first_name` varchar(32) NOT NULL,
-  `last_name` varchar(32) NOT NULL,
-  `image` varchar(255) DEFAULT NULL
+  `last_name` varchar(32) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `role`, `email`, `password`, `first_name`, `last_name`, `image`) VALUES
-(1, 'teacher', 'teacher@test.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'Jane', 'Smith', NULL),
-(2, 'student', 'student@test.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'John', 'Doe', NULL),
-(4, 'student', 'customer1@example.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'test', 'test', NULL);
+INSERT INTO `users` (`id`, `role`, `email`, `password`, `first_name`, `last_name`) VALUES
+(1, 'teacher', 'teacher@test.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'Jane', 'Smith'),
+(2, 'student', 'student@test.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'John', 'Doe'),
+(4, 'student', 'customer1@example.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'test', 'test'),
+(5, 'student', 'signTest@test.com', '$2y$10$8qk0zH4kQwgBzfp6NiRiuu8umOo4cKOJDq.NHTSdzwCXgfFhmjtj.', 'sign test', 'test');
 
 --
 -- Indexes for dumped tables
@@ -345,7 +347,7 @@ ALTER TABLE `enrolment`
 ALTER TABLE `exams`
   ADD PRIMARY KEY (`id`),
   ADD KEY `teacher_id` (`teacher_id`),
-  ADD KEY `courses_id` (`courses_id`);
+  ADD KEY `course_id` (`course_id`);
 
 --
 -- Indexes for table `exam_questions`
@@ -463,7 +465,7 @@ ALTER TABLE `teacher_courses`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
@@ -501,7 +503,8 @@ ALTER TABLE `enrolment`
 --
 ALTER TABLE `exams`
   ADD CONSTRAINT `exams_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `exams_ibfk_2` FOREIGN KEY (`courses_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `exams_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `exams_ibfk_3` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`);
 
 --
 -- Constraints for table `exam_questions`
