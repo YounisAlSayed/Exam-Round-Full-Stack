@@ -1,0 +1,127 @@
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.next-exam-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(247, 248, 252, 0.95) 100%);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.next-exam-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.course-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.course-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.course-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
+}
+
+.course-card:hover .card-arrow i {
+    transform: translateX(4px);
+    color: var(--bs-primary) !important;
+}
+
+.course-card:hover .course-icon i {
+    transform: scale(1.1);
+    color: var(--bs-primary) !important;
+}
+
+.course-icon i {
+    font-size: 28px;
+    transition: all 0.3s ease;
+    color: var(--bs-primary);
+}
+
+.card-arrow i {
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.course-card:active {
+    transform: scale(0.98);
+}
+
+@media (min-width: 1200px) {
+    .courses-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 24px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .courses-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .courses-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .course-card .card-body {
+        padding: 16px !important;
+    }
+
+    .course-icon i {
+        font-size: 22px;
+    }
+
+    .next-exam-card .card-body {
+        padding: 20px !important;
+    }
+}
+@media (max-width: 480px) {
+    .courses-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+.next-exam-card .btn-primary {
+    position: relative;
+    overflow: hidden;
+}
+
+.next-exam-card .btn-primary::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.5s ease;
+    transform: translate(-50%, -50%);
+}
+
+.next-exam-card .btn-primary:active::after {
+    width: 300px;
+    height: 300px;
+}

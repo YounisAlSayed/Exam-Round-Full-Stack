@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <title>Profile</title>
 </head>
@@ -29,16 +30,10 @@
                     <div class="card-body text-center p-4">
                         <!-- Profile Image -->
                         <div class="profile-avatar mb-3">
-                            <?php if (isset($user['image']) && $user['image']): ?>
-                            <img src="<?= htmlspecialchars($user['image']) ?>"
-                                alt="<?= htmlspecialchars($user['first_name'] ?? 'User') ?>" class="rounded-circle"
-                                style="width: 120px; height: 120px; object-fit: cover; border: 4px solid var(--bs-primary);">
-                            <?php else: ?>
                             <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center mx-auto"
                                 style="width: 120px; height: 120px; background: lightgrey; color: white; font-size: 48px;">
                                 <?= strtoupper(substr($user['first_name'] ?? 'U', 0, 1) . substr($user['last_name'] ?? 'r', 0, 1)) ?>
                             </div>
-                            <?php endif; ?>
                         </div>
 
                         <!-- User Name -->
@@ -147,127 +142,127 @@
 
                         <!-- Recent Activity -->
                         <?php if (isset($recent_exams) && !empty($recent_exams)): ?>
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-transparent border-0">
-                                <h5 class="fw-bold mb-0">Recent Exam Activity</h5>
-                            </div>
-                            <div class="card-body pt-0">
-                                <?php foreach ($recent_exams as $exam): ?>
-                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                                    <div>
-                                        <h6 class="fw-bold mb-0"><?= htmlspecialchars($exam['title'] ?? 'Exam') ?></h6>
-                                        <span class="text-muted small">
-                                            <i class="fas fa-calendar-alt me-1"></i>
-                                            <?= isset($exam['completed_at']) ? date('M d, Y', strtotime($exam['completed_at'])) : 'Pending' ?>
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span
-                                            class="badge <?= ($exam['student_mark'] ?? 0) >= 50 ? 'bg-success' : 'bg-danger' ?> rounded-pill">
-                                            <?= $exam['student_mark'] ?? 0 ?>%
-                                        </span>
-                                    </div>
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-transparent border-0">
+                                    <h5 class="fw-bold mb-0">Recent Exam Activity</h5>
                                 </div>
-                                <?php endforeach; ?>
+                                <div class="card-body pt-0">
+                                    <?php foreach ($recent_exams as $exam): ?>
+                                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <div>
+                                                <h6 class="fw-bold mb-0"><?= htmlspecialchars($exam['title'] ?? 'Exam') ?></h6>
+                                                <span class="text-muted small">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    <?= isset($exam['completed_at']) ? date('M d, Y', strtotime($exam['completed_at'])) : 'Pending' ?>
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span
+                                                    class="badge <?= ($exam['student_mark'] ?? 0) >= 50 ? 'bg-success' : 'bg-danger' ?> rounded-pill">
+                                                    <?= $exam['student_mark'] ?? 0 ?>%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
-                        </div>
                         <?php else: ?>
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center py-4">
-                                <i class="fas fa-inbox text-muted" style="font-size: 36px;"></i>
-                                <p class="text-muted mt-2">No recent exam activity</p>
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center py-4">
+                                    <i class="fas fa-inbox text-muted" style="font-size: 36px;"></i>
+                                    <p class="text-muted mt-2">No recent exam activity</p>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                     </div>
 
                     <!-- Exam History Tab -->
                     <div class="tab-pane fade" id="exams" role="tabpanel">
                         <?php if (isset($exam_history) && !empty($exam_history)): ?>
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Exam</th>
-                                                <th>Course</th>
-                                                <th>Date</th>
-                                                <th>Score</th>
-                                                <th>Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($exam_history as $exam): ?>
-                                            <tr>
-                                                <td class="fw-bold"><?= htmlspecialchars($exam['title'] ?? 'Exam') ?>
-                                                </td>
-                                                <td><?= htmlspecialchars($exam['course_name'] ?? 'N/A') ?></td>
-                                                <td><?= isset($exam['completed_at']) ? date('M d, Y', strtotime($exam['completed_at'])) : 'N/A' ?>
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="badge <?= ($exam['student_mark'] ?? 0) >= 50 ? 'bg-success' : 'bg-danger' ?> rounded-pill">
-                                                        <?= $exam['student_mark'] ?? 0 ?>%
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="badge <?= ($exam['student_mark'] ?? 0) >= 50 ? 'bg-success' : 'bg-warning' ?>">
-                                                        <?= ($exam['student_mark'] ?? 0) >= 50 ? 'Passed' : 'Failed' ?>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Exam</th>
+                                                    <th>Course</th>
+                                                    <th>Date</th>
+                                                    <th>Score</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($exam_history as $exam): ?>
+                                                    <tr>
+                                                        <td class="fw-bold"><?= htmlspecialchars($exam['title'] ?? 'Exam') ?>
+                                                        </td>
+                                                        <td><?= htmlspecialchars($exam['course_name'] ?? 'N/A') ?></td>
+                                                        <td><?= isset($exam['completed_at']) ? date('M d, Y', strtotime($exam['completed_at'])) : 'N/A' ?>
+                                                        </td>
+                                                        <td>
+                                                            <span
+                                                                class="badge <?= ($exam['student_mark'] ?? 0) >= 50 ? 'bg-success' : 'bg-danger' ?> rounded-pill">
+                                                                <?= $exam['student_mark'] ?? 0 ?>%
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span
+                                                                class="badge <?= ($exam['student_mark'] ?? 0) >= 50 ? 'bg-success' : 'bg-warning' ?>">
+                                                                <?= ($exam['student_mark'] ?? 0) >= 50 ? 'Passed' : 'Failed' ?>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         <?php else: ?>
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center py-5">
-                                <i class="fas fa-file-alt text-muted" style="font-size: 48px;"></i>
-                                <h5 class="fw-bold mt-3">No Exam History</h5>
-                                <p class="text-muted small">You haven't taken any exams yet.</p>
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center py-5">
+                                    <i class="fas fa-file-alt text-muted" style="font-size: 48px;"></i>
+                                    <h5 class="fw-bold mt-3">No Exam History</h5>
+                                    <p class="text-muted small">You haven't taken any exams yet.</p>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                     </div>
 
                     <!-- Enrolled Courses Tab -->
                     <div class="tab-pane fade" id="courses" role="tabpanel">
                         <?php if (isset($enrolled_courses) && !empty($enrolled_courses)): ?>
-                        <div class="row g-3">
-                            <?php foreach ($enrolled_courses as $course): ?>
-                            <div class="col-md-6">
-                                <a href="/api/courses/<?= $course['id'] ?? 0 ?>" class="text-decoration-none">
-                                    <div class="card border-0 shadow-sm h-100">
-                                        <div class="card-body">
-                                            <h6 class="fw-bold mb-2">
-                                                <?= htmlspecialchars($course['name'] ?? 'Course') ?></h6>
-                                            <span class="badge bg-primary rounded-pill">
-                                                <?= $course['exam_count'] ?? 0 ?> Exams
-                                            </span>
-                                            <span class="badge bg-light text-dark rounded-pill ms-1">
-                                                <i class="fas fa-clock me-1"></i>
-                                                <?= $course['progress'] ?? 0 ?>% Complete
-                                            </span>
-                                        </div>
+                            <div class="row g-3">
+                                <?php foreach ($enrolled_courses as $course): ?>
+                                    <div class="col-md-6">
+                                        <a href="/api/courses/<?= $course['id'] ?? 0 ?>" class="text-decoration-none">
+                                            <div class="card border-0 shadow-sm h-100">
+                                                <div class="card-body">
+                                                    <h6 class="fw-bold mb-2">
+                                                        <?= htmlspecialchars($course['name'] ?? 'Course') ?></h6>
+                                                    <span class="badge bg-primary rounded-pill">
+                                                        <?= $course['exam_count'] ?? 0 ?> Exams
+                                                    </span>
+                                                    <span class="badge bg-light text-dark rounded-pill ms-1">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        <?= $course['progress'] ?? 0 ?>% Complete
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </a>
                                     </div>
-                                </a>
+                                <?php endforeach; ?>
                             </div>
-                            <?php endforeach; ?>
-                        </div>
                         <?php else: ?>
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body text-center py-5">
-                                <i class="fas fa-book-open text-muted" style="font-size: 48px;"></i>
-                                <h5 class="fw-bold mt-3">No Courses Enrolled</h5>
-                                <p class="text-muted small">You haven't enrolled in any courses yet.</p>
-                                <a href="/api/courses" class="btn btn-primary mt-2">Browse Courses</a>
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center py-5">
+                                    <i class="fas fa-book-open text-muted" style="font-size: 48px;"></i>
+                                    <h5 class="fw-bold mt-3">No Courses Enrolled</h5>
+                                    <p class="text-muted small">You haven't enrolled in any courses yet.</p>
+                                    <a href="/api/courses" class="btn btn-primary mt-2">Browse Courses</a>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -289,15 +284,15 @@
                         <div class="text-center mb-3">
                             <div class="profile-avatar-upload position-relative d-inline-block">
                                 <?php if (isset($user['image']) && $user['image']): ?>
-                                <img src="<?= htmlspecialchars($user['image']) ?>" alt="Profile" id="profilePreview"
-                                    class="rounded-circle"
-                                    style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--bs-primary);">
+                                    <img src="<?= htmlspecialchars($user['image']) ?>" alt="Profile" id="profilePreview"
+                                        class="rounded-circle"
+                                        style="width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--bs-primary);">
                                 <?php else: ?>
-                                <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center mx-auto"
-                                    id="profilePreview"
-                                    style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--bs-primary), var(--gold)); color: white; font-size: 36px;">
-                                    <?= strtoupper(substr($user['first_name'] ?? 'U', 0, 1)) ?>
-                                </div>
+                                    <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center mx-auto"
+                                        id="profilePreview"
+                                        style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--bs-primary), var(--gold)); color: white; font-size: 36px;">
+                                        <?= strtoupper(substr($user['first_name'] ?? 'U', 0, 1)) ?>
+                                    </div>
                                 <?php endif; ?>
                                 <label for="imageUpload"
                                     class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2"
@@ -329,16 +324,16 @@
                         </div>
 
                         <?php if (($user['role'] ?? '') === 'teacher'): ?>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small">Teacher Courses</label>
-                            <?php if (isset($teacher_courses) && !empty($teacher_courses)): ?>
-                            <?php foreach ($teacher_courses as $course): ?>
-                            <span class="badge bg-secondary me-1"><?= htmlspecialchars($course['name'] ?? '') ?></span>
-                            <?php endforeach; ?>
-                            <?php else: ?>
-                            <p class="text-muted small">No courses assigned</p>
-                            <?php endif; ?>
-                        </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Teacher Courses</label>
+                                <?php if (isset($teacher_courses) && !empty($teacher_courses)): ?>
+                                    <?php foreach ($teacher_courses as $course): ?>
+                                        <span class="badge bg-secondary me-1"><?= htmlspecialchars($course['name'] ?? '') ?></span>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <p class="text-muted small">No courses assigned</p>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                     <div class="modal-footer">
@@ -351,100 +346,100 @@
     </div>
 
     <style>
-    /* Profile Container */
-    .profile-container {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
+        /* Profile Container */
+        .profile-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    /* Profile Avatar */
-    .profile-avatar {
-        position: relative;
-    }
+        /* Profile Avatar */
+        .profile-avatar {
+            position: relative;
+        }
 
-    .avatar-placeholder {
-        font-weight: 700;
-    }
+        .avatar-placeholder {
+            font-weight: 700;
+        }
 
-    /* Stats */
-    .stat-item {
-        padding: 8px;
-    }
+        /* Stats */
+        .stat-item {
+            padding: 8px;
+        }
 
-    .stat-item h5 {
-        color: var(--bs-primary);
-    }
+        .stat-item h5 {
+            color: var(--bs-primary);
+        }
 
-    /* Card hover effects */
-    .profile-container .card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
+        /* Card hover effects */
+        .profile-container .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-    .profile-container .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
-    }
+        .profile-container .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+        }
 
-    /* Tab styling */
-    .nav-tabs .nav-link {
-        color: var(--ink);
-        font-weight: 500;
-    }
+        /* Tab styling */
+        .nav-tabs .nav-link {
+            color: var(--ink);
+            font-weight: 500;
+        }
 
-    .nav-tabs .nav-link.active {
-        color: var(--bs-primary);
-        border-bottom: 3px solid var(--bs-primary);
-    }
+        .nav-tabs .nav-link.active {
+            color: var(--bs-primary);
+            border-bottom: 3px solid var(--bs-primary);
+        }
 
-    /* Table styling */
-    .table thead th {
-        background: var(--parchment);
-        color: var(--ink);
-        font-weight: 600;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        border-bottom: 2px solid var(--line);
-    }
+        /* Table styling */
+        .table thead th {
+            background: var(--parchment);
+            color: var(--ink);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 2px solid var(--line);
+        }
 
-    /* Modal styling */
-    .modal-content {
-        border: none;
-        border-radius: 12px;
-    }
+        /* Modal styling */
+        .modal-content {
+            border: none;
+            border-radius: 12px;
+        }
 
-    .modal-header {
-        border-bottom: 1px solid var(--line);
-    }
+        .modal-header {
+            border-bottom: 1px solid var(--line);
+        }
 
-    .modal-footer {
-        border-top: 1px solid var(--line);
-    }
+        .modal-footer {
+            border-top: 1px solid var(--line);
+        }
     </style>
 
     <script>
-    // Preview image before upload
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('profilePreview');
-                if (preview.tagName === 'IMG') {
-                    preview.src = e.target.result;
-                } else {
-                    // If it's the placeholder div, replace with img
-                    const img = document.createElement('img');
-                    img.id = 'profilePreview';
-                    img.src = e.target.result;
-                    img.className = 'rounded-circle';
-                    img.style.cssText =
-                        'width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--bs-primary);';
-                    preview.parentNode.replaceChild(img, preview);
-                }
-            };
-            reader.readAsDataURL(input.files[0]);
+        // Preview image before upload
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profilePreview');
+                    if (preview.tagName === 'IMG') {
+                        preview.src = e.target.result;
+                    } else {
+                        // If it's the placeholder div, replace with img
+                        const img = document.createElement('img');
+                        img.id = 'profilePreview';
+                        img.src = e.target.result;
+                        img.className = 'rounded-circle';
+                        img.style.cssText =
+                            'width: 100px; height: 100px; object-fit: cover; border: 3px solid var(--bs-primary);';
+                        preview.parentNode.replaceChild(img, preview);
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
         }
-    }
     </script>
     <?php renderFooter(); ?>
 </body>

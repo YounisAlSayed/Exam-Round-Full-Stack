@@ -14,7 +14,7 @@ class RedirectingController
     {
         $courses = [];
         $nextExamSet = [];
-        $user = $_SESSION['user'];
+        $user = $_SESSION['user'] ?? null;
         if (!$user) {
             http_response_code(404);
             return new ViewModel('users/login', ['error' => 'User has to be logged in']);

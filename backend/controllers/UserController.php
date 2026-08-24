@@ -117,7 +117,8 @@ class UserController
         }
 
         $user_id = (int) $currentUser['id'];
-        $name = $_POST['name'] ?? null;
+        $first_name = $_POST['first_name'] ?? null;
+        $last_name = $_POST['last_name'] ?? null;
         $email = $_POST['email'] ?? null;
         $password = $_POST['password'] ?? null;
         $password_conf = $_POST['password_conf'] ?? null;
@@ -128,7 +129,7 @@ class UserController
             exit;
         }
 
-        if (!$name || !$email || !$password) {
+        if (!$first_name || !$last_name || !$email || !$password) {
             http_response_code(422);
             return new ViewModel('users/profile', ['error' => 'One or more fields empty']);
         }
@@ -138,7 +139,7 @@ class UserController
             return new ViewModel('users/profile', ['error' => 'Passwords DO Not Match']);
         }
 
-        if (strlen($name) < 1 || strlen($name) > 32) {
+        if (strlen($first_name) < 1 || strlen($first_name) > 32 || strlen($last_name) < 1 || strlen($last_name) > 32) {
             http_response_code(422);
             return new ViewModel('users/profile', ['error' => 'Name has to be between 1 and 32 characters']);
         }
@@ -154,7 +155,7 @@ class UserController
             return new ViewModel('users/profile', ['error' => 'Email Already exists']);
         }
 
-        if (!User::edit($user_id, $name, $email, password_hash($password, PASSWORD_DEFAULT))) {
+        if (!User::edit($user_id, $first_name, $last_name, $email, password_hash($password, PASSWORD_DEFAULT))) {
             http_response_code(500);
             return new ViewModel('users/profile', ['error' => 'Internal Server Error']);
         }

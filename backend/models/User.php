@@ -18,11 +18,12 @@ class User
     public static function getStudentsNextExamSet($student_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT ex.title, ex.total_marks, ex.start_date, ex.end_date, c.name
+        $sql = "SELECT ex.id as exam_id, ex.title, ex.total_marks, ex.start_date, ex.end_date, c.name as course_name
                 FROM enrolment en
                 INNER JOIN courses c ON c.id = en.course_id
                 INNER JOIN exams ex ON ex.course_id = c.id
                 WHERE en.student_id = :id
+                AND ex.start_date > NOW()
                 ORDER BY ex.start_date ASC
                 LIMIT 5";
         $statement = $pdo->prepare($sql);
@@ -38,6 +39,7 @@ class User
                 INNER JOIN courses c ON c.id = tc.course_id
                 INNER JOIN exams ex ON ex.course_id = c.id
                 WHERE tc.teacher_id = :id
+                AND ex.end_date > NOW()
                 ORDER BY ex.start_date ASC
                 LIMIT 5";
         $statement = $pdo->prepare($sql);
@@ -71,12 +73,12 @@ class User
         return $statement->execute(['first_name' => $first_name, 'last_name' => $last_name, 'email' => $email, 'password' => $password, 'role' => $role]);
     }
 
-    public static function edit(int $id, string $name, string  $email, string $password)
+    public static function edit(int $id, string $first_name, string $last_name, string  $email, string $password)
     {
         $pdo = Database::getInstance();
-        $sql = 'UPDATE users SET name=:name, email=:email, password=:password WHERE id=:id';
+        $sql = 'UPDATE users SET first_name=:first_name, last_name, email=:email, password=:password WHERE id=:id';
         $statement = $pdo->prepare($sql);
-        return $statement->execute(['name' => $name, 'email' => $email, 'password' => $password, 'id' => $id]);
+        return $statement->execute(['first_name' => $first_name, 'last_name' => $last_name, 'email' => $email, 'password' => $password, 'id' => $id]);
     }
 
     public static function delete(int $id)

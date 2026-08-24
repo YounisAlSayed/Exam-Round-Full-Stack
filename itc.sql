@@ -297,8 +297,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `role`, `email`, `password`, `first_name`, `last_name`, `image`) VALUES
-(1, 'teacher', 'teacher@test.com', 'PASTE_HASH_HERE', 'Jane', 'Smith', NULL),
-(2, 'student', 'student@test.com', 'PASTE_HASH_HERE', 'John', 'Doe', NULL),
+(1, 'teacher', 'teacher@test.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'Jane', 'Smith', NULL),
+(2, 'student', 'student@test.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'John', 'Doe', NULL),
 (4, 'student', 'customer1@example.com', '$2y$10$bE/3F8lfDu0kzdvfnNt7F.QRg3KBxarK2.E1Jn6h9PJKSQaQ/uL8m', 'test', 'test', NULL);
 
 --

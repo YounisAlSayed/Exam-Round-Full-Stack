@@ -60,7 +60,7 @@ class Courses
     public static function getStudentCourses(int $student_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT c.name FROM enrolment e 
+        $sql = "SELECT c.id, c.name FROM enrolment e 
             INNER JOIN courses c ON e.course_id=c.id 
             WHERE e.student_id=:id";
         $statement = $pdo->prepare($sql);
@@ -71,7 +71,7 @@ class Courses
     public static function getTeacherCourses(int $teacher_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT c.name FROM teacher_courses tc
+        $sql = "SELECT c.id, c.name FROM teacher_courses tc
             INNER JOIN courses c ON tc.course_id=c.id
             WHERE tc.teacher_id=:id;";
 
