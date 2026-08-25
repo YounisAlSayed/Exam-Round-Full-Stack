@@ -4,17 +4,20 @@ require_once __DIR__ . "/../layout.phtml";
 $exam = $examDetails ?? null;
 $attempt = $studentAttempt ?? null;
 $selections = $studentSelection ?? [];
+$questionsChoices = $questionsChoices ?? [];
 
 // Calculate totals if attempt exists
 $totalQuestions = count($selections);
 $answeredQuestions = 0;
 $correctAnswers = 0;
 $totalEarnedMarks = 0;
+$questionsTotalMarks = 0;
 
 if (!empty($selections)) {
     // Group selections by question
     $questionsMap = [];
     foreach ($selections as $selection) {
+        $questionsTotalMarks += $selection['question_mark'];
         $qId = $selection['question_id'];
         if (!isset($questionsMap[$qId])) {
             $questionsMap[$qId] = [
@@ -30,11 +33,6 @@ if (!empty($selections)) {
             $questionsMap[$qId]['selected_choice_id'] = $selection['choice_id'];
         }
     }
-
-    $totalQuestions = count($selections);
-    $answeredQuestions = 0;
-    $correctAnswers = 0;
-    $totalEarnedMarks = 0;
 
     foreach ($questionsMap as $q) {
         if ($q['selected_choice_id'] !== null) {
@@ -69,10 +67,11 @@ if ($exam) {
         $canShowQuestions = true;
     }
 }
-
+$scaledScore = 0;
 $percentage = 0;
 if ($exam && $exam['total_marks'] > 0) {
-    $percentage = round(($totalEarnedMarks / $exam['total_marks']) * 100);
+    $scaledScore = round(($totalEarnedMarks / $questionsTotalMarks) * $exam['total_marks'], 2);
+    $percentage = round(($scaledScore / $exam['total_marks']) * 100, 2);
 }
 ?>
 <!DOCTYPE html>
@@ -92,118 +91,118 @@ if ($exam && $exam['total_marks'] > 0) {
     <?php renderHeader('Exam Details'); ?>
     <div class="exam-details-container pt-5">
         <?php if ($exam): ?>
-        <!-- Exam Header -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                    <div>
-                        <h2 class="fw-bold mb-1"><?= htmlspecialchars($exam['title'] ?? 'Exam') ?></h2>
-                        <p class="text-muted small mb-0">
-                            <i class="fas fa-book me-1"></i>
-                            <?= htmlspecialchars($exam['course_name'] ?? 'Course') ?>
-                        </p>
+            <!-- Exam Header -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <h2 class="fw-bold mb-1"><?= htmlspecialchars($exam['title'] ?? 'Exam') ?></h2>
+                            <p class="text-muted small mb-0">
+                                <i class="fas fa-book me-1"></i>
+                                <?= htmlspecialchars($exam['course_name'] ?? 'Course') ?>
+                            </p>
+                        </div>
+
+                        <?php if ($now >= $startDate && $now < $endDate && $_SESSION['user']['role'] === 'student'): ?>
+                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                <a href="<?= BASE_PATH ?>/api/exams/<?= $next['id'] ?? 0 ?>/start" class="btn btn-primary">
+                                    <i class="fas fa-arrow-right me-1"></i> Start Exam
+                                </a>
+                            </div>
+                        <?php endif ?>
+
+                        <?php if ($isSubmitted): ?>
+                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                <i class="fas fa-check-circle me-1"></i> Submitted
+                            </span>
+                        <?php elseif ($isActive): ?>
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                                <i class="fas fa-clock me-1"></i> In Progress
+                            </span>
+                        <?php else: ?>
+                            <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                <i class="fas fa-hourglass-start me-1"></i>
+                                <?= ucfirst(str_replace('_', ' ', $exam['status'] ?? 'pending')) ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
 
-                    <?php if ($now >= $startDate && $now < $endDate && $_SESSION['user']['role'] === 'student'): ?>
-                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                        <a href="<?= BASE_PATH ?>/api/exams/<?= $next['id'] ?? 0 ?>/start" class="btn btn-primary">
-                            <i class="fas fa-arrow-right me-1"></i> Start Exam
-                        </a>
-                    </div>
-                    <?php endif ?>
+                    <hr>
 
-                    <?php if ($isSubmitted): ?>
-                    <span class="badge bg-success rounded-pill px-3 py-2">
-                        <i class="fas fa-check-circle me-1"></i> Submitted
-                    </span>
-                    <?php elseif ($isActive): ?>
-                    <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
-                        <i class="fas fa-clock me-1"></i> In Progress
-                    </span>
-                    <?php else: ?>
-                    <span class="badge bg-secondary rounded-pill px-3 py-2">
-                        <i class="fas fa-hourglass-start me-1"></i>
-                        <?= ucfirst(str_replace('_', ' ', $exam['status'] ?? 'pending')) ?>
-                    </span>
-                    <?php endif; ?>
-                </div>
-
-                <hr>
-
-                <div class="row g-3">
-                    <div class="col-md-3 col-6">
-                        <small class="text-muted d-block">Start Date</small>
-                        <strong><?= date('M d, Y g:i A', strtotime($exam['start_date'])) ?></strong>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <small class="text-muted d-block">End Date</small>
-                        <strong><?= date('M d, Y g:i A', strtotime($exam['end_date'])) ?></strong>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <small class="text-muted d-block">Total Answered Questions</small>
-                        <strong><?= $totalQuestions ?></strong>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <small class="text-muted d-block">Total Marks</small>
-                        <strong><?= htmlspecialchars($exam['total_marks'] ?? 0) ?></strong>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">Start Date</small>
+                            <strong><?= date('M d, Y g:i A', strtotime($exam['start_date'])) ?></strong>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">End Date</small>
+                            <strong><?= date('M d, Y g:i A', strtotime($exam['end_date'])) ?></strong>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">Total Answered Questions</small>
+                            <strong><?= $totalQuestions ?></strong>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">Total Marks</small>
+                            <strong><?= htmlspecialchars($exam['total_marks'] ?? 0) ?></strong>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <?php if ($isSubmitted): ?>
-        <!-- Results Summary -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <h5 class="fw-bold mb-3"><i class="fas fa-chart-simple me-2"></i>Your Results</h5>
+            <?php if ($isSubmitted): ?>
+                <!-- Results Summary -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-chart-simple me-2"></i>Your Results</h5>
 
-                <div class="row g-3 text-center">
-                    <div class="col-md-3 col-6">
-                        <div class="border rounded p-3">
-                            <small class="text-muted d-block">Score</small>
-                            <h3 class="fw-bold mb-0"><?= $totalEarnedMarks ?> / <?= $exam['total_marks'] ?></h3>
+                        <div class="row g-3 text-center">
+                            <div class="col-md-3 col-6">
+                                <div class="border rounded p-3">
+                                    <small class="text-muted d-block">Score</small>
+                                    <h3 class="fw-bold mb-0"><?= $totalEarnedMarks ?> / <?= $questionsTotalMarks ?></h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="border rounded p-3">
+                                    <small class="text-muted d-block">Percentage</small>
+                                    <h3 class="fw-bold mb-0 <?= $percentage >= 50 ? 'text-success' : 'text-danger' ?>">
+                                        <?= $percentage ?>%
+                                    </h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="border rounded p-3">
+                                    <small class="text-muted d-block">Correct</small>
+                                    <h3 class="fw-bold mb-0 text-success"><?= $correctAnswers ?></h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="border rounded p-3">
+                                    <small class="text-muted d-block">Answered</small>
+                                    <h3 class="fw-bold mb-0"><?= $answeredQuestions ?> / <?= $totalQuestions ?></h3>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <div class="border rounded p-3">
-                            <small class="text-muted d-block">Percentage</small>
-                            <h3 class="fw-bold mb-0 <?= $percentage >= 50 ? 'text-success' : 'text-danger' ?>">
-                                <?= $percentage ?>%
-                            </h3>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <div class="border rounded p-3">
-                            <small class="text-muted d-block">Correct</small>
-                            <h3 class="fw-bold mb-0 text-success"><?= $correctAnswers ?></h3>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <div class="border rounded p-3">
-                            <small class="text-muted d-block">Answered</small>
-                            <h3 class="fw-bold mb-0"><?= $answeredQuestions ?> / <?= $totalQuestions ?></h3>
-                        </div>
+
+                        <?php if ($attempt && $attempt['submitted_at']): ?>
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    Submitted on <?= date('M d, Y g:i A', strtotime($attempt['submitted_at'])) ?>
+                                </small>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
+            <?php endif; ?>
 
-                <?php if ($attempt && $attempt['submitted_at']): ?>
-                <div class="text-center mt-3">
-                    <small class="text-muted">
-                        Submitted on <?= date('M d, Y g:i A', strtotime($attempt['submitted_at'])) ?>
-                    </small>
-                </div>
-                <?php endif; ?>
-            </div>
-        </div>
-        <?php endif; ?>
+            <!-- Questions Section -->
+            <?php if ($canShowQuestions && !empty($questionsMap)): ?>
+                <div class="mt-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Questions</h5>
 
-        <!-- Questions Section -->
-        <?php if ($canShowQuestions && !empty($questionsMap)): ?>
-        <div class="mt-4">
-            <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Questions</h5>
-
-            <?php foreach ($questionsMap as $index => $question): ?>
-            <?php
+                    <?php foreach ($questionsMap as $index => $question): ?>
+                        <?php
                         $selectedChoiceId = $question['selected_choice_id'];
                         $isAnswered = $selectedChoiceId !== null;
                         $isCorrect = false;
@@ -220,108 +219,108 @@ if ($exam && $exam['total_marks'] > 0) {
                         }
                         ?>
 
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h6 class="fw-bold mb-0">Question <?= $index + 1 ?></h6>
-                        <span class="badge bg-secondary rounded-pill">
-                            <?= $question['question_mark'] ?> marks
-                        </span>
-                    </div>
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h6 class="fw-bold mb-0">Question <?= $index + 1 ?></h6>
+                                    <span class="badge bg-secondary rounded-pill">
+                                        <?= $question['question_mark'] ?> marks
+                                    </span>
+                                </div>
 
-                    <p class="mb-3"><?= htmlspecialchars($question['question_text']) ?></p>
+                                <p class="mb-3"><?= htmlspecialchars($question['question_text']) ?></p>
 
-                    <!-- Choices -->
-                    <div class="mb-3">
-                        <small class="text-muted d-block mb-2">Your Answer</small>
-                        <?php if ($isAnswered): ?>
-                        <div
-                            class="border rounded p-3 <?= $isCorrect ? 'border-success bg-success bg-opacity-10' : 'border-danger bg-danger bg-opacity-10' ?>">
-                            <?= htmlspecialchars($selectedText) ?>
-                            <span class="badge <?= $isCorrect ? 'bg-success' : 'bg-danger' ?> ms-2">
-                                <?= $isCorrect ? 'Correct' : 'Incorrect' ?>
-                            </span>
-                        </div>
-                        <?php else: ?>
-                        <div class="border rounded p-3 text-muted">
-                            <i class="fas fa-minus-circle me-1"></i> Not answered
-                        </div>
-                        <?php endif; ?>
-                    </div>
+                                <!-- Choices -->
+                                <div class="mb-3">
+                                    <small class="text-muted d-block mb-2">Your Answer</small>
+                                    <?php if ($isAnswered): ?>
+                                        <div
+                                            class="border rounded p-3 <?= $isCorrect ? 'border-success bg-success bg-opacity-10' : 'border-danger bg-danger bg-opacity-10' ?>">
+                                            <?= htmlspecialchars($selectedText) ?>
+                                            <span class="badge <?= $isCorrect ? 'bg-success' : 'bg-danger' ?> ms-2">
+                                                <?= $isCorrect ? 'Correct' : 'Incorrect' ?>
+                                            </span>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="border rounded p-3 text-muted">
+                                            <i class="fas fa-minus-circle me-1"></i> Not answered
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
 
-                    <!-- Show correct answer if wrong or unanswered -->
-                    <?php if (!$isCorrect || !$isAnswered): ?>
-                    <div>
-                        <small class="text-muted d-block mb-1">Correct Answer</small>
-                        <?php foreach ($question['choices'] as $choice): ?>
-                        <?php if ($choice['is_correct']): ?>
-                        <div class="border rounded p-3 border-success bg-success bg-opacity-10">
-                            <?= htmlspecialchars($choice['choice_text']) ?>
-                            <span class="badge bg-success ms-2">Correct</span>
+                                <!-- Show correct answer if wrong or unanswered -->
+                                <?php if (!$isCorrect || !$isAnswered): ?>
+                                    <div>
+                                        <small class="text-muted d-block mb-1">Correct Answer</small>
+                                        <?php foreach ($questionsChoices[$question['question_id']] as $choice): ?>
+                                            <?php if ($choice['is_correct']): ?>
+                                                <div class="border rounded p-3 border-success bg-success bg-opacity-10">
+                                                    <?= htmlspecialchars($choice['choice_text']) ?>
+                                                    <span class="badge bg-success ms-2">Correct</span>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <?php elseif ($isActive && !$isSubmitted): ?>
-        <!-- Exam in progress - show timer -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-hourglass-half text-primary mb-3" style="font-size: 48px;"></i>
-                <h5 class="fw-bold">Exam In Progress</h5>
-                <p class="text-muted mb-3">You are currently taking this exam. Answer all questions and submit when
-                    done.
-                </p>
-                <a href="/api/exams/<?= $exam['exam_id'] ?>/take" class="btn btn-primary">
-                    <i class="fas fa-arrow-right me-2"></i>Continue Exam
-                </a>
-            </div>
-        </div>
-        <?php elseif (!$canShowQuestions && !$isActive): ?>
-        <!-- Exam did not start -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-clock text-muted mb-3" style="font-size: 48px;"></i>
-                <h5 class="fw-bold">Exam Did Not Start Yet</h5>
-                <p class="text-muted mb-0">This exam will be available on
-                    <?= date('M d, Y g:i A', strtotime($exam['start_date'])) ?></p>
-            </div>
-        </div>
-        <?php elseif ($isActive && !$isSubmitted): ?>
-        <!-- Exam active but not submitted - show continue button -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-play-circle text-primary mb-3" style="font-size: 48px;"></i>
-                <h5 class="fw-bold">Ready to Continue?</h5>
-                <p class="text-muted mb-3">You have started this exam but haven't submitted yet.</p>
-                <a href="/api/exams/<?= $exam['exam_id'] ?>/take" class="btn btn-primary">
-                    <i class="fas fa-arrow-right me-2"></i>Continue Exam
-                </a>
-            </div>
-        </div>
-        <?php endif; ?>
+            <?php elseif ($isActive && !$isSubmitted): ?>
+                <!-- Exam in progress - show timer -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-hourglass-half text-primary mb-3" style="font-size: 48px;"></i>
+                        <h5 class="fw-bold">Exam In Progress</h5>
+                        <p class="text-muted mb-3">You are currently taking this exam. Answer all questions and submit when
+                            done.
+                        </p>
+                        <a href="/api/exams/<?= $exam['exam_id'] ?>/take" class="btn btn-primary">
+                            <i class="fas fa-arrow-right me-2"></i>Continue Exam
+                        </a>
+                    </div>
+                </div>
+            <?php elseif (!$canShowQuestions && !$isActive): ?>
+                <!-- Exam did not start -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-clock text-muted mb-3" style="font-size: 48px;"></i>
+                        <h5 class="fw-bold">Exam Did Not Start Yet</h5>
+                        <p class="text-muted mb-0">This exam will be available on
+                            <?= date('M d, Y g:i A', strtotime($exam['start_date'])) ?></p>
+                    </div>
+                </div>
+            <?php elseif ($isActive && !$isSubmitted): ?>
+                <!-- Exam active but not submitted - show continue button -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-play-circle text-primary mb-3" style="font-size: 48px;"></i>
+                        <h5 class="fw-bold">Ready to Continue?</h5>
+                        <p class="text-muted mb-3">You have started this exam but haven't submitted yet.</p>
+                        <a href="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?>/start/1" class="btn btn-primary">
+                            <i class="fas fa-arrow-right me-2"></i>Continue Exam
+                        </a>
+                    </div>
+                </div>
+            <?php endif; ?>
 
-        <!-- Back to Dashboard -->
-        <div class="mt-4">
-            <a href="<?= BASE_PATH ?>/api/dashboard" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-            </a>
-        </div>
+            <!-- Back to Dashboard -->
+            <div class="mt-4">
+                <a href="<?= BASE_PATH ?>/api/dashboard" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
 
         <?php else: ?>
-        <!-- Exam not found -->
-        <div ss="card border-0 shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 48px;"></i>
-                <h5 class="fw-bold">Exam Not Found</h5>
-                <p class="text-muted">The exam you're looking for doesn't exist or has been removed.</p>
-                <a href="<?= BASE_PATH ?>/api/dashboard" class="btn btn-primary mt-3">Go to Dashboard</a>
+            <!-- Exam not found -->
+            <div ss="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 48px;"></i>
+                    <h5 class="fw-bold">Exam Not Found</h5>
+                    <p class="text-muted">The exam you're looking for doesn't exist or has been removed.</p>
+                    <a href="<?= BASE_PATH ?>/api/dashboard" class="btn btn-primary mt-3">Go to Dashboard</a>
+                </div>
             </div>
-        </div>
         <?php endif; ?>
     </div>
     <?php renderFooter(); ?>

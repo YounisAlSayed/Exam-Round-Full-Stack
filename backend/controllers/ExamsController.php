@@ -8,7 +8,7 @@ use App\models\Exam_question;
 use App\models\Exams;
 use App\models\Marks;
 use App\models\Questions;
-use App\models\StudentAnswers;
+use App\models\StudentsAnswers;
 use App\Utils\ViewModel;
 
 class ExamsController
@@ -270,18 +270,16 @@ class ExamsController
         $totalPages = (int)($_POST['total_pages'] ?? 1);
 
         // Save answers to session
-        $examAnswers = [];
-        foreach ($_POST as $key => $value) {
-            if (strpos($key, 'question_') === 0) {
-                $questionId = (int)str_replace('question_', '', $key);
-                $examAnswers[$questionId] = (int)$value;
-            }
-        }
-
         if (!isset($_SESSION['exam_answers'])) {
             $_SESSION['exam_answers'] = [];
         }
-        $_SESSION['exam_answers'][$exam_id] = $examAnswers;
+        $examAnswers = [];
+        foreach ($_POST as $key => $value) {
+            if (strpos($key, 'question_') === 0) {
+                $question_id = (int)str_replace('question_', '', $key);
+                $_SESSION['exam_answers'][$exam_id][$question_id] = (int) $value;
+            }
+        }
 
         // Redirect
         if ($action === 'previous' && $currentPage > 1) {
@@ -313,7 +311,7 @@ class ExamsController
 
         foreach ($answers as $questionId => $choiceId) {
             // Save student answer
-            StudentAnswers::create($student_id, $exam_id, $questionId, $choiceId);
+            StudentsAnswers::create($student_id, $exam_id, $questionId, $choiceId);
 
             // Check if correct
             $choice = Choices::getById($choiceId);
@@ -324,16 +322,16 @@ class ExamsController
         }
 
         // Get total marks
-        $totalMarks = Exams::getTotalMarks($exam_id);
+        $totalMarks = (Exams::getTotalMarks($exam_id))['total_marks'];
 
         // Save attempt
-        Attempts::updateSubmitted($exam_id, $student_id, $totalMarks);
+        Attempts::updateSubmitted($exam_id, $student_id, $earnedMarks);
 
         // Clear session answers
         unset($_SESSION['exam_answers'][$exam_id]);
 
         $_SESSION['flash'] = 'Exam submitted successfully!';
-        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/result');
+        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/details');
         exit;
     }
 }

@@ -31,8 +31,9 @@ class Exam_question
             q.question as question_text,
             eq.question_mark,
             sa.selected_choice_id,
+            eq.question_mark,
             c.id as choice_id,
-            c.choice_text as choice_text,
+            c.choice_text,
             c.is_correct,
                 CASE 
                     WHEN sa.selected_choice_id = c.id THEN 1 

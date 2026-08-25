@@ -24,6 +24,7 @@ require_once __DIR__ . '/../layout.phtml';
     // Get data from ViewModel
     $exam = $exam ?? null;
     $questions = $questions ?? [];
+    $choices = $choices ?? [];
     $currentPage = (int)($page ?? 1);
     $totalQuestions = isset($totalQuestions) ? $totalQuestions : 0;
     $totalPages = ceil($totalQuestions / 2); // 2 questions per page
@@ -45,21 +46,16 @@ require_once __DIR__ . '/../layout.phtml';
         }
     }
 
-    // Generate CSRF token
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    $csrfToken = $_SESSION['csrf_token'];
-
     // Get saved answers from session for this exam
     $savedAnswers = $_SESSION['exam_answers'][$exam['exam_id'] ?? 0] ?? [];
     ?>
-
     <div class="exam-container">
         <!-- Fixed Header -->
         <header class="exam-header">
             <div class="container">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
-                        <h5 class="fw-bold mb-0">
+                        <h5 class="fw-bold mb-0 jus">
                             <i class="fas fa-file-alt text-primary me-2"></i>
                             <?= htmlspecialchars($exam['title'] ?? 'Exam') ?>
                         </h5>
@@ -89,8 +85,7 @@ require_once __DIR__ . '/../layout.phtml';
         </header>
 
         <div class="container mt-5 pt-4">
-            <form method="POST" action="/api/exams/<?= $exam['exam_id'] ?? 0 ?>/submit" id="examForm">
-                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+            <form method="POST" action="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?? 0 ?>/submit" id="examForm">
                 <input type="hidden" name="exam_id" value="<?= $exam['exam_id'] ?? 0 ?>">
                 <input type="hidden" name="current_page" value="<?= $currentPage ?>">
                 <input type="hidden" name="total_pages" value="<?= $totalPages ?>">
@@ -98,7 +93,7 @@ require_once __DIR__ . '/../layout.phtml';
                 <?php if (!empty($questions)): ?>
                     <?php foreach ($questions as $index => $question): ?>
                         <?php
-                        $choices = Questions::getQuestionChoices($question['id']);
+                        $question_choices = $choices[$question['id']] ?? [];
                         $savedChoice = $savedAnswers[$question['id']] ?? null;
                         ?>
 
@@ -126,8 +121,8 @@ require_once __DIR__ . '/../layout.phtml';
 
                                 <!-- Choices -->
                                 <div class="choices-container">
-                                    <?php if (!empty($choices)): ?>
-                                        <?php foreach ($choices as $choiceIndex => $choice): ?>
+                                    <?php if (!empty($question_choices)): ?>
+                                        <?php foreach ($question_choices as $choiceIndex => $choice): ?>
                                             <div class="choice-item mb-2 <?= ($savedChoice == $choice['id']) ? 'selected' : '' ?>">
                                                 <label class="d-flex align-items-center" style="cursor: pointer;">
                                                     <input type="radio" name="question_<?= $question['id'] ?>"
@@ -161,8 +156,9 @@ require_once __DIR__ . '/../layout.phtml';
                 <!-- Navigation -->
                 <div class="d-flex justify-content-between align-items-center mt-4">
                     <?php if ($currentPage > 1): ?>
-                        <button type="submit" formaction="/api/exams/<?= $exam['exam_id'] ?? 0 ?>/save-progress"
-                            name="action" value="previous" class="btn btn-outline-primary pagination-btn">
+                        <button type="submit"
+                            formaction="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?? 0 ?>/save/progress" name="action"
+                            value="previous" class="btn btn-outline-primary pagination-btn">
                             <i class="fas fa-arrow-left me-2"></i>Previous
                         </button>
                     <?php else: ?>
@@ -174,8 +170,9 @@ require_once __DIR__ . '/../layout.phtml';
                     </span>
 
                     <?php if ($currentPage < $totalPages): ?>
-                        <button type="submit" formaction="/api/exams/<?= $exam['exam_id'] ?? 0 ?>/save-progress"
-                            name="action" value="next" class="btn btn-primary pagination-btn">
+                        <button type="submit"
+                            formaction="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?? 0 ?>/save/progress" name="action"
+                            value="next" class="btn btn-primary pagination-btn">
                             <i class="fas fa-save me-2"></i>Save & Next
                         </button>
                     <?php else: ?>

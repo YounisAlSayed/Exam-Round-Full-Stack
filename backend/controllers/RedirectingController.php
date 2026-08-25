@@ -140,22 +140,48 @@ class RedirectingController
                 $studentSelection = [];
             }
         }
+        $examQuestions = Questions::getExamQuestions($exam_id);
+        $questionsChoices = [];
+        foreach ($examQuestions as $question) {
+            $questionsChoices[$question['id']] = Questions::getQuestionChoices($question['id']);
+        }
 
-        return new ViewModel('exams/show', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection]);
+        return new ViewModel('exams/show', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection, 'questionsChoices' => $questionsChoices]);
     }
 
     public function examStart($exam_id, $page)
     {
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . BASE_PATH . '/api/users/login');
+            exit;
+        }
+
         if (!$exam_id || !$page) {
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Exam is not selected']);
         }
+
         $exam = Exams::getExamFullDetails($exam_id);
         if (!$exam) {
             http_response_code(404);
             header('Location: ' . BASE_PATH . '/api/dashboard');
             exit;
         }
+
+        $student_id = (int) $_SESSION['user']['id'];
+        $exam_id = (int) $exam_id;
+
+        // Create the attempt row the FIRST time the student reaches this exam —
+        // find-or-create, so navigating between pages never creates duplicates.
+        $attempt = Attempts::findByExamAndStudent($exam_id, $student_id);
+        if (!$attempt) {
+            Attempts::start($exam_id, $student_id);
+        } elseif ($attempt['submitted_at'] !== null) {
+            // Already submitted — don't let them re-enter and re-answer
+            http_response_code(403);
+            return new ViewModel('dashboard', ['error' => 'You have already submitted this exam']);
+        }
+
         $size = 2;
         $offset = (int)($page - 1) * $size;
         $questions = Questions::getExamQuestionSet($exam_id, $offset, $size);
@@ -163,10 +189,13 @@ class RedirectingController
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'No Questions Were Found For the Specified Exam']);
         }
-
+        $choices = [];
+        foreach ($questions as $question) {
+            $choices[$question['id']] = Questions::getQuestionChoices($question['id']);
+        }
         $totalQuestions = Questions::getExamQuestionCount($exam_id);
         $totalQuestions ?? 0;
 
-        return new ViewModel('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions]);
+        return new ViewModel('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions, 'choices' => $choices]);
     }
 }

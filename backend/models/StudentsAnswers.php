@@ -4,7 +4,7 @@ namespace App\models;
 
 use App\Utils\Database;
 
-class StudentAnswers
+class StudentsAnswers
 {
     public static function find(int $student_id, int $exam_id, int $question_id)
     {

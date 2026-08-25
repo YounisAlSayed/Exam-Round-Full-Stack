@@ -163,7 +163,7 @@ class Exams
     public static function getTotalMarks($exam_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT total_mark FROM exams WHERE id = :id;";
+        $sql = "SELECT total_marks FROM exams WHERE id = :id;";
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $exam_id]);
         return $statement->fetch();
