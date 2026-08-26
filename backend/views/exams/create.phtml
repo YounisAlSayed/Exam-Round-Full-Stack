@@ -1,0 +1,372 @@
+<?php
+require_once __DIR__ . '/../layout.phtml';
+$course = $course ?? [];
+$courseQuestions = $courseQuestions ?? [];
+$totalAvailableQuestions = count($courseQuestions);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="<?= BASE_PATH ?>/utils/css/createExam.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Create New Exam</title>
+</head>
+
+<body>
+    <?php renderHeader("Create New Exam") ?>
+
+    <div class="container w-75 py-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="fas fa-plus-circle text-primary me-2"></i>Create New Exam
+                </h2>
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-book me-1"></i>
+                    <?= htmlspecialchars($course['name'] ?? 'Course') ?>
+                </p>
+            </div>
+            <a href="<?= BASE_PATH ?>/api/courses/<?= $course['id'] ?>/teacher"
+                class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Course
+            </a>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step-wrapper">
+                <div class="step-dot active" id="step1Dot">1</div>
+                <div class="step-label active" id="step1Label">Exam Details</div>
+            </div>
+            <div class="step-line" id="stepLine1"></div>
+            <div class="step-wrapper">
+                <div class="step-dot inactive" id="step2Dot">2</div>
+                <div class="step-label" id="step2Label">Questions</div>
+            </div>
+            <div class="step-line" id="stepLine2"></div>
+            <div class="step-wrapper">
+                <div class="step-dot inactive" id="step3Dot">3</div>
+                <div class="step-label" id="step3Label">Confirm</div>
+            </div>
+        </div>
+
+        <form id="examForm" method="POST" action="<?= BASE_PATH ?>/api/courses/<?= $course['id'] ?>/exams/store">
+
+            <!-- ========== STEP 1: EXAM DETAILS ========== -->
+            <div id="step1" class="step-content">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-info-circle me-2 text-primary"></i>Exam Details
+                        </h5>
+
+                        <div class="row g-3">
+                            <!-- Exam Title -->
+                            <div class="col-12">
+                                <label for="examTitle" class="form-label fw-semibold">Exam Title <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="examTitle" name="title"
+                                    placeholder="e.g., Midterm Exam - Web Development" required>
+                            </div>
+
+                            <!-- Course & Description -->
+                            <div class="col-12">
+                                <label for="examDescription" class="form-label fw-semibold">Description</label>
+                                <textarea class="form-control" id="examDescription" name="description" rows="2"
+                                    placeholder="Optional description for the exam"></textarea>
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="col-md-6">
+                                <label for="startDate" class="form-label fw-semibold">Start Date & Time <span
+                                        class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="startDate" name="start_date"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="endDate" class="form-label fw-semibold">End Date & Time <span
+                                        class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="endDate" name="end_date" required>
+                            </div>
+
+                            <!-- Total Marks & Duration -->
+                            <div class="col-md-6">
+                                <label for="totalMarks" class="form-label fw-semibold">Total Marks <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="totalMarks" name="total_marks"
+                                    placeholder="e.g., 100" min="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="duration" class="form-label fw-semibold">Duration (minutes) <span
+                                        class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="duration" name="duration"
+                                    placeholder="e.g., 60" min="1" required>
+                            </div>
+
+                            <hr class="section-divider">
+
+                            <!-- Auto-Generate Toggle -->
+                            <div class="col-12">
+                                <div class="border rounded-3 p-3 bg-light">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="autoGenerate"
+                                                name="auto_generate" value="1" style="width: 3rem; height: 1.5rem;">
+                                            <label class="form-check-label fw-semibold" for="autoGenerate">
+                                                Auto-Generate Questions
+                                            </label>
+                                        </div>
+                                        <span class="badge bg-info text-white rounded-pill">
+                                            <i class="fas fa-magic me-1"></i> Available: <?= $totalAvailableQuestions ?>
+                                            questions
+                                        </span>
+                                        <small class="text-muted ms-auto">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            System will randomly select questions from the course
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Auto-Generate Settings (hidden by default) -->
+                            <div id="autoGenerateSettings" class="col-12 d-none">
+                                <div class="border rounded-3 p-3 bg-white">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="numQuestions" class="form-label fw-semibold">Number of
+                                                Questions</label>
+                                            <input type="number" class="form-control" id="numQuestions"
+                                                name="num_questions" value="5" min="1"
+                                                max="<?= $totalAvailableQuestions ?>">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="shuffleQuestions" class="form-label fw-semibold">Options</label>
+                                            <div class="d-flex gap-3 pt-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="shuffleQuestions" name="shuffle_questions" checked>
+                                                    <label class="form-check-label" for="shuffleQuestions">Shuffle
+                                                        Questions</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="shuffleChoices"
+                                                        name="shuffle_choices" checked>
+                                                    <label class="form-check-label" for="shuffleChoices">Shuffle
+                                                        Choices</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-primary" onclick="goToStep2()">
+                                Next: Questions <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== STEP 2: QUESTIONS ========== -->
+            <div id="step2" class="step-content d-none">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">
+                                <i class="fas fa-list me-2 text-primary"></i>Exam Questions
+                            </h5>
+                            <div>
+                                <span class="badge bg-primary rounded-pill me-2" id="questionCounter">0 questions</span>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuestion()">
+                                    <i class="fas fa-plus me-1"></i> Add Question
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Questions Container -->
+                        <div id="questionsContainer">
+                            <!-- Questions will be dynamically added here -->
+                            <div class="text-center text-muted py-5 empty-state" id="emptyQuestions">
+                                <i class="fas fa-question-circle" style="font-size: 3rem;"></i>
+                                <p class="mt-3 mb-0">No questions added yet.</p>
+                                <p class="small">Click "Add Question" to get started.</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-secondary" onclick="goToStep1()">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="goToStep3()">
+                                Next: Confirm <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========== STEP 3: CONFIRM ========== -->
+            <div id="step3" class="step-content d-none">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-check-circle me-2 text-success"></i>Confirm Exam
+                        </h5>
+
+                        <!-- Exam Summary -->
+                        <div class="border rounded-3 p-3 bg-light mb-4">
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">Title</small>
+                                    <strong id="confirmTitle">-</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">Start Date</small>
+                                    <strong id="confirmStart">-</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">End Date</small>
+                                    <strong id="confirmEnd">-</strong>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted d-block">Duration</small>
+                                    <strong id="confirmDuration">-</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Questions Preview -->
+                        <h6 class="fw-bold mb-2"><i class="fas fa-list me-2"></i>Questions Preview</h6>
+                        <div id="confirmQuestionsContainer" class="mb-4">
+                            <!-- Questions will be populated here -->
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Please review all questions before confirming. Once created, you can still edit the exam
+                            later.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" onclick="goToStep2()">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i> Create Exam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- ========== MODAL: ADD/EDIT QUESTION ========== -->
+    <div class="modal fade" id="questionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="questionModalLabel">
+                        <i class="fas fa-pen me-2 text-primary"></i><span id="modalQuestionTitle">Add Question</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="questionForm">
+                        <input type="hidden" id="editQuestionIndex" value="-1">
+
+                        <!-- Question Type -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Question Type <span
+                                    class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="question_type" id="typeMC"
+                                        value="mc" checked>
+                                    <label class="form-check-label" for="typeMC">Multiple Choice</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="question_type" id="typeTF"
+                                        value="tf">
+                                    <label class="form-check-label" for="typeTF">True / False</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question Text -->
+                        <div class="mb-3">
+                            <label for="questionText" class="form-label fw-semibold">Question Text <span
+                                    class="text-danger">*</span></label>
+                            <textarea class="form-control" id="questionText" name="question_text" rows="2"
+                                placeholder="Enter your question here..." required></textarea>
+                        </div>
+
+                        <!-- Question Mark -->
+                        <div class="mb-3">
+                            <label for="questionMark" class="form-label fw-semibold">Marks <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="questionMark" name="question_mark" value="10"
+                                min="1" required>
+                        </div>
+
+                        <!-- Choices Container (for MC) -->
+                        <div id="choicesContainer">
+                            <label class="form-label fw-semibold">Choices <span class="text-danger">*</span></label>
+                            <div id="choicesList">
+                                <!-- Choice inputs will be added here -->
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
+                                onclick="addChoiceField()">
+                                <i class="fas fa-plus me-1"></i> Add Choice
+                            </button>
+                        </div>
+
+                        <!-- True/False Options (hidden by default) -->
+                        <div id="tfContainer" class="d-none">
+                            <label class="form-label fw-semibold">Correct Answer <span
+                                    class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="tf_correct" id="tfTrue"
+                                        value="true">
+                                    <label class="form-check-label" for="tfTrue">True</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="tf_correct" id="tfFalse"
+                                        value="false" checked>
+                                    <label class="form-check-label" for="tfFalse">False</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveQuestion()">
+                        <i class="fas fa-save me-1"></i> Save Question
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php renderFooter() ?>
+    <script>
+        const courseQuestions = <?= json_encode($courseQuestions) ?>
+    </script>
+    <script src="<?= BASE_PATH ?>/utils/js/createExam.js"></script>
+
+</body>
+
+</html>

@@ -177,4 +177,13 @@ class Exams
         $statement->execute(['id' => $exam_id]);
         return $statement->fetch();
     }
+
+    public static function getCourseExams($course_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = 'SELECT * FROM exams WHERE course_id = :id';
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id' => $course_id]);
+        return $statement->fetchAll();
+    }
 }

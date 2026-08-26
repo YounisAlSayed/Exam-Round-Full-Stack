@@ -36,10 +36,10 @@ class Courses
     public static function getCourseStudents(int $course_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT u.id, u.first_name, u.last_name, u.email
+        $sql = "SELECT u.id AS student_id, u.first_name, u.last_name, u.email, en.enrolment_date
                 FROM enrolment en
                 INNER JOIN users u ON u.id = en.student_id
-                WHERE en.courses_id = :course_id";
+                WHERE en.course_id = :course_id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['course_id' => $course_id]);
         return $statement->fetchAll();

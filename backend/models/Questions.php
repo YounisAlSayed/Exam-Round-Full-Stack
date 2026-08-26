@@ -87,4 +87,13 @@ class Questions
         $result = $statement->fetch();
         return $result['total'] ?? 0;
     }
+
+    public static function getCourseQuestions($course_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = 'SELECT * FROM questions WHERE course_id = :id';
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id' => $course_id]);
+        return $statement->fetchAll();
+    }
 }

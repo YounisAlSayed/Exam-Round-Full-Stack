@@ -243,4 +243,54 @@ class RedirectingController
 
         return new ViewModel('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions, 'choices' => $choices]);
     }
+
+    public function teacherCourse($course_id)
+    {
+        if (!$course_id) {
+            http_response_code(400);
+            return new ViewModel('dashboard', ['error' => 'Course Not Passed']);
+        }
+        if (!isset($_SESSION['user'])) {
+            http_response_code(400);
+            return new ViewModel('users/login', ['error' => 'user Not Logged in']);
+        }
+        $user = $_SESSION['user'];
+        if ($user['role'] !== 'teacher') {
+            http_response_code(403);
+            return new ViewModel('dashboard', ['error' => 'Forbidden For None Teachers']);
+        }
+        $course = Courses::find($course_id);
+        if (!$course) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Course Not Found']);
+        }
+        $courseStudents = Courses::getCourseStudents($course_id) ?? [];
+        $courseExams = Exams::getCourseExams($course_id) ?? [];
+        $courseQuestions = Questions::getCourseQuestions($course_id) ?? [];
+
+        return new ViewModel('courses/teacherCourse', ['course' => $course, 'courseStudents' => $courseStudents, 'courseExams' => $courseExams, 'courseQuestions' => $courseQuestions]);
+    }
+
+    public function examCreate($course_id)
+    {
+        if (!$course_id) {
+            http_response_code(400);
+            return new ViewModel('dashboard', ['error' => 'Course ID was not passed']);
+        }
+        if (!$_SESSION['user']) {
+            http_response_code(400);
+            return new ViewModel('users/login', ['error' => 'User is Not logged in']);
+        }
+        $auth = Check_user::checkTeacherCredentials();
+        if ($auth !== null) {
+            return $auth;
+        }
+        $course = Courses::find($course_id);
+        if (!$course) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Course not Found']);
+        }
+
+        return new ViewModel('exams/create', ['course_id' => $course_id, 'course' => $course]);
+    }
 }

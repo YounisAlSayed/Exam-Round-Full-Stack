@@ -27,7 +27,7 @@ Router::get('/api/exams/random', ['ExamsController', 'generateRandom']);
 Router::get('/api/exams/course/{id}', ['ExamsController', 'getNextCourseExam']);
 Router::get('/api/exams/{id}/questions', ['ExamsController', 'getExamQuestions']);
 
-Router::post('/api/exams', ['ExamsController', 'add']);
+Router::post('/api/exams/create/courses/{course_id}', ['ExamsController', 'create']);
 Router::post('/api/exams/course/{id}', ['ExamsController', 'setNextCourseExam']);
 
 Router::put('/api/exams/{id}', ['ExamsController', 'edit']);
@@ -100,3 +100,5 @@ Router::get('/api/questions/update', ['RedirectingController', 'updateQuestion']
 Router::get('/api/exams/{id}/details/student', ['RedirectingController', 'studentExamDetails']);
 Router::get('/api/exams/{id}/details/teacher', ['RedirectingController', 'teacherExamDetails']);
 Router::get('/api/exams/{id}/start/{page}', ['RedirectingController', 'examStart']);
+Router::get('/api/courses/{course_id}/teacher', ['RedirectingController', 'teacherCourse']);
+Router::get('/api/exams/create/courses/{course_id}', ['RedirectingController', 'examCreate']);

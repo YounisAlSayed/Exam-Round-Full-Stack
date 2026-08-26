@@ -115,7 +115,7 @@
             <?php if (isset($courses) && !empty($courses)): ?>
                 <div class="courses-grid">
                     <?php foreach ($courses as $course): ?>
-                        <a href="<?= BASE_PATH ?>/api/courses/<?= $course['id'] ?? 0 ?>"
+                        <a href="<?= BASE_PATH ?>/api/courses/<?= $course['id'] ?? 0 ?>/teacher"
                             class="course-card-link text-decoration-none">
                             <div class="card h-100 border-0 shadow-sm course-card">
                                 <div class="card-body p-4">

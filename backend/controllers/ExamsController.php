@@ -6,8 +6,6 @@ use App\models\Attempts;
 use App\models\Choices;
 use App\models\Exam_question;
 use App\models\Exams;
-use App\models\Marks;
-use App\models\Questions;
 use App\models\StudentsAnswers;
 use App\Utils\ViewModel;
 
@@ -88,8 +86,12 @@ class ExamsController
     }
 
     // Router::post('/api/exams', ['ExamsController', 'add']);
-    public function add()
+    public function create($course_id)
     {
+        if (!$course_id) {
+            http_response_code(400);
+            return new ViewModel('dashboard', ['error' => 'course ID was not Passed']);
+        }
         $authError = Check_user::checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
@@ -98,14 +100,13 @@ class ExamsController
         $currentUser = $_SESSION['user'];
 
         $title = $_POST['title'] ?? null;
-        $courses_id = (int) ($_POST['courses_id'] ?? 0);
         $status = $_POST['status'] ?? 'not_ready';
         $total_marks = (int) ($_POST['total_marks'] ?? 0);
         $start_date = $_POST['start_date'] ?? null;
         $end_date = $_POST['end_date'] ?? null;
         $randomize_order = isset($_POST['randomize_order']) ? 1 : 0;
 
-        if (!$title || !$courses_id || !$total_marks || !$start_date || !$end_date) {
+        if (!$title || !$course_id || !$total_marks || !$start_date || !$end_date) {
             http_response_code(400);
             return new ViewModel('exams/create', ['error' => 'Missing required fields']);
         }
@@ -127,7 +128,7 @@ class ExamsController
 
         $examId = Exams::create(
             $title,
-            $courses_id,
+            $course_id,
             $status,
             $total_marks,
             (int) $currentUser['id'],
@@ -142,7 +143,7 @@ class ExamsController
         }
 
         $_SESSION['flash'] = 'Exam created successfully';
-        header('Location: /api/exams/' . $examId);
+        header('Location: /api/exams/' . $examId . '/details/teacher');
         exit;
     }
 
