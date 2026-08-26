@@ -15,6 +15,7 @@
     <?php require_once 'layout.phtml' ?>
     <?php renderHeader("Dashboard") ?>
     <?php $_SESSION['flash'] = null ?>
+    <?php $user = $_SESSION['user'] ?>
 
     <div class="dashboard-container">
         <!-- Next Exam Section -->
@@ -30,7 +31,8 @@
                     $startDate = new DateTime($next['start_date']);
                     $endDate = new DateTime($next['end_date']);
                     ?>
-                    <a href="<?= BASE_PATH ?>/api/exams/<?= $next['exam_id'] ?>/details" class="text-decoration-none">
+                    <a href="<?= BASE_PATH ?>/api/exams/<?= $next['exam_id'] ?>/details/<?= $user['role'] ?>"
+                        class="text-decoration-none">
                         <div class="card border-0 shadow-sm next-exam-card position-relative overflow-hidden">
                             <div class="card-body p-4">
                                 <!-- Countdown Badge -->

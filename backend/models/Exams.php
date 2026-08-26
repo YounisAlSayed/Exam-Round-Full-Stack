@@ -168,4 +168,13 @@ class Exams
         $statement->execute(['id' => $exam_id]);
         return $statement->fetch();
     }
+
+    public static function getById($exam_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = 'SELECT * FROM exams WHERE id = :id';
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id' => $exam_id]);
+        return $statement->fetch();
+    }
 }

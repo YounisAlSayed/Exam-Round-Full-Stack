@@ -1,0 +1,187 @@
+<?php
+require_once __DIR__ . '/../layout.phtml';
+
+$exam = $exam ?? [];
+$questions = $questions ?? [];
+
+$now = new DateTime();
+$startDate = new DateTime($exam['start_date']);
+$endDate = new DateTime($exam['end_date']);
+
+$studentsPerformance = $studentPerformance ?? null;
+
+$questionsChoices = $questionsChoices ?? [];
+
+$totalQuestions = count($questions);
+
+$examAttemptStatus = $examAttemptStatus ?? [];
+
+$questionsTotalMarks = 0;
+foreach ($questions as $question) {
+    $questionsTotalMarks += $question['question_mark'];
+}
+$percentage = 0;
+$scaledScore = 0;
+if ($exam && $exam['total_marks'] > 0) {
+    $scaledScore = round(($examAttemptStatus['average_mark'] / $questionsTotalMarks) * $exam['total_marks'], 2);
+    $percentage = round(($scaledScore / $exam['total_marks']) * 100, 2);
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="<?= BASE_PATH ?>/utils/css/exam_details.css">
+    <title>Teacher Exam Overview</title>
+</head>
+
+<body>
+    <?php renderHeader('Teacher Exam Overview') ?>
+
+    <div class="exam-details-container py-5">
+        <?php if ($exam): ?>
+            <!-- Exam Header -->
+            <div class="card border-0 shadow-sm mb-4 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                        <div>
+                            <h2 class="fw-bold mb-1"><?= $exam['title'] ?></h2>
+                            <p class="text-muted small mb-0">
+                                <i class="fas fa-book me-1"></i>
+                                <?= htmlspecialchars($exam['course_name'] ?? 'Course') ?>
+                            </p>
+                        </div>
+
+                        <?php if ($now > $endDate): ?>
+                            <span class="badge bg-success rounded-pill px-4 py-2 fs-6">
+                                <i class="fas fa-check-circle me-1"></i> Done
+                            </span>
+                        <?php elseif ($now >= $startDate && $now < $endDate): ?>
+                            <span class="badge bg-warning text-dark rounded-pill px-4 py-2 fs-6">
+                                <i class="fas fa-clock me-1"></i> In Progress
+                            </span>
+                        <?php elseif ($now < $startDate): ?>
+                            <span class="badge bg-secondary rounded-pill px-4 py-2 fs-6">
+                                <i class="fas fa-hourglass-start me-1"></i>
+                                <?= ucfirst(str_replace('_', ' ', $exam['status'] ?? 'pending')) ?>
+                            </span>
+                        <?php endif ?>
+                    </div>
+
+                    <hr>
+
+                    <div class="row g-3 text-center text-md-start">
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">Start Date</small>
+                            <strong><?= date('M d, Y g:i A', strtotime($exam['start_date'])) ?></strong>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">End Date</small>
+                            <strong><?= date('M d, Y g:i A', strtotime($exam['end_date'])) ?></strong>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">Total Questions</small>
+                            <strong><?= $totalQuestions ?></strong>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <small class="text-muted d-block">Total Marks</small>
+                            <strong><?= htmlspecialchars($exam['total_marks'] ?? 0) ?></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exam Attempts Status -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-chart-simple me-2"></i>Exam Attempts Status
+                    </h5>
+
+                    <div class="row g-3 text-center">
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <small class="text-muted d-block">Average Score</small>
+                                <h3 class="fw-bold mb-0"><?= $examAttemptStatus['average_mark'] ?> /
+                                    <?= $questionsTotalMarks ?></h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <small class="text-muted d-block">Average Percentage</small>
+                                <h3
+                                    class="fw-bold mb-0 <?= $percentage >= 50 ? ($percentage >= 70 ? 'text-success' : 'text-warning') : 'text-danger' ?>">
+                                    <?= $percentage ?>%
+                                </h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <small class="text-muted d-block">Submissions</small>
+                                <h3 class="fw-bold mb-0 text-success"><?= $examAttemptStatus['total_attempts'] ?> /
+                                    <?= $examAttemptStatus['total_enrolled_students'] ?></h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <small class="text-muted d-block">Submission Percentage</small>
+                                <h3 class="fw-bold mb-0">
+                                    <?= round(($examAttemptStatus['total_attempts'] / max($examAttemptStatus['total_enrolled_students'], 1)) * 100) ?>%
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions List -->
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-list me-2"></i> Questions</h5>
+                    <a href="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?>/add/question"
+                        class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i> New Question
+                    </a>
+                </div>
+
+                <?php foreach ($questions as $index => $question): ?>
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start mb-3">
+                                <h6 class="fw-bold mb-0">Question <?= $index + 1 ?></h6>
+                                <span class="badge bg-secondary rounded-pill"><?= $question['question_mark'] ?> marks</span>
+                            </div>
+
+                            <p class="mb-3"><?= htmlspecialchars($question['question_text']) ?></p>
+
+                            <!-- Choices -->
+                            <div class="border rounded-3 p-3 bg-light">
+                                <?php $choicePlaceholder = ['A. ', "B. ", "C. ", "D. "]; ?>
+                                <?php foreach ($questionsChoices[$question['question_id']] as $choice_index => $choice): ?>
+                                    <div
+                                        class="btn btn-outline-secondary d-flex justify-content-between align-items-center py-1 px-2 border-1">
+                                        <span><?= $choicePlaceholder[$choice_index] . htmlspecialchars($choice['choice_text']) ?></span>
+                                        <?php if ($choice['is_correct']): ?>
+                                            <span class="badge bg-success rounded-pill">
+                                                <i class="fas fa-check me-1"></i>Correct
+                                            </span>
+                                        <?php endif ?>
+                                    </div>
+                                <?php endforeach ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach ?>
+            </div>
+        <?php endif ?>
+    </div>
+
+    <?php renderFooter() ?>
+</body>
+
+</html>

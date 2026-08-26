@@ -74,4 +74,19 @@ class Attempts
         $statement = $pdo->prepare($sql);
         return $statement->execute(['exam_mark' => $exam_mark, 'exam_id' => $exam_id, 'student_id' => $student_id]);
     }
+
+    public static function getExamAttemptStats(int $exam_id)
+    {
+        $pdo = Database::getInstance();
+        $sql = "SELECT
+                (SELECT COUNT(*) FROM attempts WHERE exam_id = :id1) AS total_attempts,
+                (SELECT COUNT(*) FROM enrolment en
+                    INNER JOIN exams ex ON ex.course_id = en.course_id
+                    WHERE ex.id = :id2) AS total_enrolled_students,
+                (SELECT AVG(exam_mark) FROM attempts
+                    WHERE exam_id = :id3 AND submitted_at IS NOT NULL) AS average_mark";
+        $statement = $pdo->prepare($sql);
+        $statement->execute(['id1' => $exam_id, 'id2' => $exam_id, 'id3' => $exam_id]);
+        return $statement->fetch();
+    }
 }

@@ -115,11 +115,15 @@ class RedirectingController
 
     // ------------------------------ exam ----------------------------------
 
-    public function examDetails($exam_id)
+    public function studentExamDetails($exam_id)
     {
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return new ViewModel('users/login', ['error' => 'User Not logged in']);
+        }
+        if (!$exam_id) {
+            http_response_code(400);
+            return new ViewModel('dashboard', ['error' => 'Exam ID Not Passed']);
         }
         $user = $_SESSION['user'];
         $examDetails = Exams::getExamFullDetails($exam_id);
@@ -146,7 +150,48 @@ class RedirectingController
             $questionsChoices[$question['id']] = Questions::getQuestionChoices($question['id']);
         }
 
-        return new ViewModel('exams/show', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection, 'questionsChoices' => $questionsChoices]);
+        return new ViewModel('exams/studentExamDetails', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection, 'questionsChoices' => $questionsChoices]);
+    }
+
+    public function teacherExamDetails($exam_id)
+    {
+        if (!isset($_SESSION['user'])) {
+            http_response_code(400);
+            return new ViewModel('users/login', ['error' => 'User Not Logged in']);
+        }
+        if (!$exam_id) {
+            http_response_code(400);
+            return new ViewModel('dashboard', ['error' => 'Exam ID Not Passed']);
+        }
+        if (!Exams::getById($exam_id)) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Exam Not Found']);
+        }
+        $user = $_SESSION['user'];
+        if ($user['role'] !== 'teacher') {
+            http_response_code(403);
+            return new ViewModel('dashboard', ['error' => 'User Does not have access to this page']);
+        }
+
+        $exam = Exams::getExamFullDetails($exam_id);
+        if (!$exam) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Exam Not found']);
+        }
+
+        $examQuestions = Questions::getExamQuestions($exam_id);
+        if (!$examQuestions) {
+            $examQuestions = [];
+        }
+        $questionsChoices = [];
+        foreach ($examQuestions as $question) {
+            $questionsChoices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
+        }
+
+        $examAttemptStatus = Attempts::getExamAttemptStats($exam_id);
+        if (!$examAttemptStatus)
+            $examAttemptStatus = [];
+        return new ViewModel('exams/teacherExamDetails', ['exam' => $exam, 'questions' => $examQuestions, 'questionsChoices' => $questionsChoices, 'examAttemptStatus' => $examAttemptStatus]);
     }
 
     public function examStart($exam_id, $page)

@@ -34,7 +34,7 @@ class User
     public static function getTeacherNextExamSet($teacher_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT ex.title, ex.total_marks, ex.start_date, ex.start_date, ex.end_date, c.name
+        $sql = "SELECT ex.id as exam_id, ex.title, ex.total_marks, ex.start_date, ex.start_date, ex.end_date, c.name
                 FROM teacher_courses tc
                 INNER JOIN courses c ON c.id = tc.course_id
                 INNER JOIN exams ex ON ex.course_id = c.id

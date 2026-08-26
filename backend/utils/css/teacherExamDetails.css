@@ -1,0 +1,29 @@
+.clickable-question {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.clickable-question:hover {
+    background-color: #f8f9fa;
+}
+
+.clickable-choice {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.clickable-choice:hover {
+    background-color: #e9ecef;
+}
+
+.choice-text-display {
+    word-break: break-word;
+}
+
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+.modal {
+    z-index: 1050 !important;
+}
