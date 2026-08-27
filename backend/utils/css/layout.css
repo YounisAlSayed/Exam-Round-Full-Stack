@@ -82,9 +82,7 @@ h4,
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(40,46,62,0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* ============================================
-   BUTTONS
-   ============================================ */
+/* BUTTONS */
 .btn-primary {
     --bs-btn-bg: var(--accent);
     --bs-btn-border-color: var(--accent);
@@ -127,9 +125,7 @@ h4,
     border-radius: 8px;
 }
 
-/* ============================================
-   CARDS
-   ============================================ */
+/* CARDS */
 .card {
     border: 1px solid rgba(0, 99, 170, 0.08);
     border-radius: 12px;
@@ -147,9 +143,7 @@ h4,
     border-top: 1px solid var(--line);
 }
 
-/* ============================================
-   FORMS
-   ============================================ */
+/* FORMS */
 .form-control,
 .form-select {
     border: 1px solid var(--line);
@@ -194,9 +188,7 @@ h4,
     border-radius: 0 8px 8px 0;
 }
 
-/* ============================================
-   BADGE SEAL
-   ============================================ */
+/* BADGE SEAL */
 .badge-seal {
     font-family: "Fraunces", serif;
     font-weight: 600;
@@ -209,9 +201,7 @@ h4,
     font-size: 0.75rem;
 }
 
-/* ============================================
-   TABLES
-   ============================================ */
+/* TABLES */
 .table {
     border-radius: 12px;
     overflow: hidden;
@@ -236,9 +226,7 @@ h4,
     background: rgba(0, 99, 170, 0.04);
 }
 
-/* ============================================
-   ALERTS
-   ============================================ */
+/* ALERTS */
 .alert {
     border: none;
     border-radius: 8px;
@@ -270,9 +258,7 @@ h4,
     border-left: 4px solid var(--bs-info);
 }
 
-/* ============================================
-   LINKS
-   ============================================ */
+/* LINKS */
 a {
     color: var(--accent);
     text-decoration: none;
@@ -284,9 +270,7 @@ a:hover {
     text-decoration: underline;
 }
 
-/* ============================================
-   MODALS
-   ============================================ */
+/* MODALS */
 .modal-content {
     border: none;
     border-radius: 12px;
@@ -301,9 +285,7 @@ a:hover {
     border-top: 1px solid var(--line);
 }
 
-/* ============================================
-   DROPDOWNS
-   ============================================ */
+/* DROPDOWNS */
 .dropdown-menu {
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -327,9 +309,7 @@ a:hover {
     color: white;
 }
 
-/* ============================================
-   PAGINATION
-   ============================================ */
+/* PAGINATION */
 .pagination .page-link {
     border: 1px solid var(--line);
     border-radius: 6px;
@@ -349,9 +329,7 @@ a:hover {
     color: white;
 }
 
-/* ============================================
-   PROGRESS BAR
-   ============================================ */
+/* PROGRESS BAR */
 .progress {
     border-radius: 4px;
     background: var(--line);
@@ -363,9 +341,7 @@ a:hover {
     border-radius: 4px;
 }
 
-/* ============================================
-   TABS
-   ============================================ */
+/* TABS */
 .nav-tabs {
     border-bottom: 2px solid var(--line);
 }
@@ -387,9 +363,7 @@ a:hover {
     border-bottom: 2px solid var(--accent);
 }
 
-/* ============================================
-   UTILITIES
-   ============================================ */
+/* UTILITIES */
 main {
     min-height: calc(100vh - 160px);
 }

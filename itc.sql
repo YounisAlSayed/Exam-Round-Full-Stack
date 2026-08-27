@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 24, 2026 at 11:01 AM
+-- Generation Time: Aug 27, 2026 at 09:02 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -35,6 +35,13 @@ CREATE TABLE `attempts` (
   `submitted_at` datetime DEFAULT NULL,
   `exam_mark` double NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `attempts`
+--
+
+INSERT INTO `attempts` (`id`, `exam_id`, `student_id`, `started_at`, `submitted_at`, `exam_mark`) VALUES
+(1, 1, 2, '2026-08-25 15:00:02', '2026-08-25 15:02:19', 0);
 
 -- --------------------------------------------------------
 
@@ -221,29 +228,30 @@ CREATE TABLE `marks` (
 CREATE TABLE `questions` (
   `id` int(11) NOT NULL,
   `course_id` int(11) NOT NULL,
-  `question` text NOT NULL
+  `question` text NOT NULL,
+  `type` enum('mc','t/f') NOT NULL DEFAULT 'mc'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `questions`
 --
 
-INSERT INTO `questions` (`id`, `course_id`, `question`) VALUES
-(1, 1, 'What does SQL stand for?'),
-(2, 1, 'testing'),
-(3, 1, 'testing'),
-(4, 1, 'testing'),
-(5, 1, 'testing'),
-(6, 1, 'testing'),
-(7, 1, 'testing'),
-(8, 1, 'testing'),
-(9, 1, 'testing'),
-(10, 1, 'testing'),
-(11, 1, 'testing'),
-(12, 1, 'testing'),
-(13, 1, 'testing'),
-(14, 1, 'testing'),
-(15, 1, 'testing');
+INSERT INTO `questions` (`id`, `course_id`, `question`, `type`) VALUES
+(1, 1, 'What does SQL stand for?', 'mc'),
+(2, 1, 'testing', 'mc'),
+(3, 1, 'testing', 'mc'),
+(4, 1, 'testing', 'mc'),
+(5, 1, 'testing', 'mc'),
+(6, 1, 'testing', 'mc'),
+(7, 1, 'testing', 'mc'),
+(8, 1, 'testing', 'mc'),
+(9, 1, 'testing', 'mc'),
+(10, 1, 'testing', 'mc'),
+(11, 1, 'testing', 'mc'),
+(12, 1, 'testing', 'mc'),
+(13, 1, 'testing', 'mc'),
+(14, 1, 'testing', 'mc'),
+(15, 1, 'testing', 'mc');
 
 -- --------------------------------------------------------
 
@@ -258,6 +266,27 @@ CREATE TABLE `student_answers` (
   `question_id` int(11) NOT NULL,
   `selected_choice_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_answers`
+--
+
+INSERT INTO `student_answers` (`id`, `student_id`, `exam_id`, `question_id`, `selected_choice_id`) VALUES
+(3, 2, 1, 15, 43),
+(4, 2, 1, 13, 38),
+(5, 2, 1, 14, 41),
+(6, 2, 1, 11, 31),
+(7, 2, 1, 12, 35),
+(8, 2, 1, 9, 25),
+(9, 2, 1, 10, 28),
+(10, 2, 1, 7, 21),
+(11, 2, 1, 8, 23),
+(12, 2, 1, 5, 14),
+(13, 2, 1, 6, 18),
+(14, 2, 1, 3, 9),
+(15, 2, 1, 4, 11),
+(16, 2, 1, 1, 1),
+(17, 2, 1, 2, 6);
 
 -- --------------------------------------------------------
 
@@ -405,7 +434,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `attempts`
 --
 ALTER TABLE `attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `choices`
@@ -453,7 +482,7 @@ ALTER TABLE `questions`
 -- AUTO_INCREMENT for table `student_answers`
 --
 ALTER TABLE `student_answers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `teacher_courses`

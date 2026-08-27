@@ -147,7 +147,7 @@ class RedirectingController
         $examQuestions = Questions::getExamQuestions($exam_id);
         $questionsChoices = [];
         foreach ($examQuestions as $question) {
-            $questionsChoices[$question['id']] = Questions::getQuestionChoices($question['id']);
+            $questionsChoices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
         }
 
         return new ViewModel('exams/studentExamDetails', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection, 'questionsChoices' => $questionsChoices]);
@@ -277,7 +277,7 @@ class RedirectingController
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Course ID was not passed']);
         }
-        if (!$_SESSION['user']) {
+        if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return new ViewModel('users/login', ['error' => 'User is Not logged in']);
         }
@@ -291,6 +291,18 @@ class RedirectingController
             return new ViewModel('dashboard', ['error' => 'Course not Found']);
         }
 
-        return new ViewModel('exams/create', ['course_id' => $course_id, 'course' => $course]);
+        $courseQuestions = Questions::getCourseQuestions($course_id);
+        if (!$courseQuestions) {
+            $courseQuestions = [];
+        }
+
+        $questionsChoices = [];
+        foreach ($courseQuestions as $question) {
+            $questionsChoices[$question['id']] = Questions::getQuestionChoices($question['id']);
+        }
+        if (!$questionsChoices)
+            $questionsChoices = [];
+
+        return new ViewModel('exams/create', ['course_id' => $course_id, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices]);
     }
 }
