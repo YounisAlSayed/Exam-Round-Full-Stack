@@ -1,7 +1,8 @@
+console.log(basePath);
 document.getElementById("createExamBtn").addEventListener("click", function () {
     let modal = createModal({ id: "questionPreviewModal", title: "Create Exam", size: "lg" });
     modal.setBody(`
-        <form id="createExamForm" method="POST" action="${BASE_PATH}/api/exams/create">
+        <form id="createExamForm" method="POST" action="${basePath}/api/exams/create/courses/${courseID}">
             <div class="modal-body p-4">
                             <h5 class="fw-bold mb-3">
                                 <i class="fas fa-info-circle me-2 text-primary"></i>Exam Details
@@ -40,7 +41,7 @@ document.getElementById("createExamBtn").addEventListener("click", function () {
 
                                 <div class="col-md-12">
                                     <label for="randomizeOrder" class="form-label fw-semibold">Randomize Question Order</label>
-                                    <input type="radio" class="form-check-input" id="randomizeOrder" name="randomize">
+                                    <input type="checkbox" class="form-check-input" id="randomizeOrder" name="randomize">
                                 </div>
                             </div>
                         </div>

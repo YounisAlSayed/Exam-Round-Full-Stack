@@ -56,20 +56,20 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
             <!-- Tabs -->
             <ul class="nav exam-tabs mb-0" id="examTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#detailsPane"
-                        type="button" role="tab">
+                    <button class="nav-link active" disabled id="details-tab" data-bs-toggle="tab"
+                        data-bs-target="#detailsPane" type="button" role="tab">
                         <span class="tab-num">1</span> Exam Details
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questionsPane"
-                        type="button" role="tab">
+                    <button class="nav-link" id="questions-tab" disabled data-bs-toggle="tab"
+                        data-bs-target="#questionsPane" type="button" role="tab">
                         <span class="tab-num">2</span> Questions
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="confirm-tab" data-bs-toggle="tab" data-bs-target="#confirmPane"
-                        type="button" role="tab">
+                    <button class="nav-link" id="confirm-tab" disabled data-bs-toggle="tab"
+                        data-bs-target="#confirmPane" type="button" role="tab">
                         <span class="tab-num">3</span> Confirm
                     </button>
                 </li>
@@ -283,14 +283,14 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
     <?php renderFooter() ?>
 
     <script>
-    // Server data — each course question already carries its own real
-    // choices, keyed by question id, exactly as the controller built it.
-    const courseQuestions = <?= json_encode($courseQuestions, JSON_HEX_TAG) ?>;
-    const questionsChoices = <?= json_encode($questionsChoices, JSON_HEX_TAG) ?>;
-    const courseID = <?= json_encode($course['id'], JSON_HEX_TAG) ?>;
-    const basePath = "<?= BASE_PATH ?>";
-    const draftQuestions = <?= json_encode($draftQuestions ?? [], JSON_HEX_TAG); ?>
-    const draftQuestionsChoices = <?= json_encode($draftQuestionsChoices ?? [], JSON_HEX_TAG) ?>
+        // Server data — each course question already carries its own real
+        // choices, keyed by question id, exactly as the controller built it.
+        const courseQuestions = <?= json_encode($courseQuestions, JSON_HEX_TAG) ?>;
+        const questionsChoices = <?= json_encode($questionsChoices, JSON_HEX_TAG) ?>;
+        const courseID = <?= json_encode($course['id'], JSON_HEX_TAG) ?>;
+        const basePath = "<?= BASE_PATH ?>";
+        const draftQuestions = <?= json_encode($draftQuestions ?? [], JSON_HEX_TAG); ?>;
+        const draftQuestionsChoices = <?= json_encode($draftQuestionsChoices ?? [], JSON_HEX_TAG); ?>;
     </script>
     <script src="<?= BASE_PATH ?>/utils/js/modal.js"></script>
     <script src="<?= BASE_PATH ?>/utils/js/editExam.js"></script>

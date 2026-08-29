@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\models\Attempts;
 use App\models\Choices;
+use App\models\Courses;
 use App\models\Exam_question;
 use App\models\Exams;
 use App\models\StudentsAnswers;
@@ -92,19 +93,23 @@ class ExamsController
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'course ID was not Passed']);
         }
+        $course_id = (int) $course_id;
         $authError = Check_user::checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
+        }
+        if (!Courses::find($course_id)) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Course Not Found']);
         }
 
         $currentUser = $_SESSION['user'];
 
         $title = $_POST['title'] ?? null;
-        $status = $_POST['status'] ?? 'not_ready';
         $total_marks = (int) ($_POST['total_marks'] ?? 0);
         $start_date = $_POST['start_date'] ?? null;
         $end_date = $_POST['end_date'] ?? null;
-        $randomize_order = isset($_POST['randomize_order']) ? 1 : 0;
+        $randomize_order = isset($_POST['randomize']) ? 1 : 0;
 
         if (!$title || !$course_id || !$total_marks || !$start_date || !$end_date) {
             http_response_code(400);
@@ -116,11 +121,6 @@ class ExamsController
             return new ViewModel('exams/create', ['error' => 'Total marks must be between 1 and 100']);
         }
 
-        if (!in_array($status, ['not_ready', 'ready', 'in_progress', 'completed'])) {
-            http_response_code(422);
-            return new ViewModel('exams/create', ['error' => 'Invalid status']);
-        }
-
         if (strtotime($end_date) <= strtotime($start_date)) {
             http_response_code(422);
             return new ViewModel('exams/create', ['error' => 'End date must be after start date']);
@@ -129,7 +129,6 @@ class ExamsController
         $examId = Exams::create(
             $title,
             $course_id,
-            $status,
             $total_marks,
             (int) $currentUser['id'],
             $start_date,
@@ -143,7 +142,7 @@ class ExamsController
         }
 
         $_SESSION['flash'] = 'Exam created successfully';
-        header('Location: /api/exams/' . $examId . '/details/teacher');
+        header('Location: ' . BASE_PATH . '/api/exams/' . $examId . '/create/courses/' . $course_id);
         exit;
     }
 

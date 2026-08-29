@@ -18,7 +18,6 @@ function activateTab(id) {
     document.getElementById("confirmTitle").innerHTML = document.getElementById("examTitle").value ?? "-";
     document.getElementById("confirmStart").innerHTML = document.getElementById("startDate").value ?? "-";
     document.getElementById("confirmEnd").innerHTML = document.getElementById("endDate").value ?? "-";
-    document.getElementById("confirmDuration").innerHTML = document.getElementById("duration").value ?? "-";
 
     bootstrap.Tab.getOrCreateInstance(trigger).show();
 }
@@ -28,9 +27,8 @@ document.getElementById("toQuestionsBtn").addEventListener("click", function () 
     const start = document.getElementById("startDate").value;
     const end = document.getElementById("endDate").value;
     const marks = document.getElementById("totalMarks").value;
-    const duration = document.getElementById("duration").value;
 
-    if (!title || !start || !end || !marks || parseInt(marks) <= 0 || !duration || parseInt(duration) <= 0) {
+    if (!title || !start || !end || !marks || parseInt(marks) <= 0) {
         alert("Please fill in all required exam details first.");
         return;
     }
@@ -43,19 +41,8 @@ document.getElementById("finalSubmitBtn").addEventListener("click", function (ev
     const start = document.getElementById("startDate").value;
     const end = document.getElementById("endDate").value;
     const marks = document.getElementById("totalMarks").value;
-    const duration = document.getElementById("duration").value;
 
-    if (
-        !title ||
-        !start ||
-        !end ||
-        !marks ||
-        parseInt(marks) <= 0 ||
-        parseInt(marks) > 100 ||
-        !duration ||
-        parseInt(duration) <= 0 ||
-        questions.length <= 0
-    ) {
+    if (!title || !start || !end || !marks || parseInt(marks) <= 0 || parseInt(marks) > 100 || questions.length <= 0) {
         event.preventDefault();
         alert("Please fill in all required exam details first.");
         return;
@@ -207,9 +194,9 @@ function updateConfirmSummary() {
     document.getElementById("confirmEnd").textContent = document.getElementById("endDate").value
         ? new Date(document.getElementById("endDate").value).toLocaleString()
         : "-";
-    document.getElementById("confirmDuration").textContent = document.getElementById("duration").value
-        ? document.getElementById("duration").value + " min"
-        : "-";
+    document.getElementById("confirmDuration").textContent = new Date(
+        new Date(document.getElementById("endDate")).getTime() - new Date(document.getElementById("startDate")).getTime(),
+    );
 }
 
 function renderConfirmQuestions() {

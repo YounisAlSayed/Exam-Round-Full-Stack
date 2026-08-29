@@ -76,7 +76,7 @@ class Exams
 
     public static function create(
         string $title,
-        int $courses_id,
+        int $course_id,
         int $total_marks,
         int $teacher_id,
         string $start_date,
@@ -84,12 +84,12 @@ class Exams
         int $randomize_order
     ) {
         $pdo = Database::getInstance();
-        $sql = "INSERT INTO exams (title, courses_id, status, total_marks, teacher_id, start_date, end_date, randomize_order)
-                VALUES (:title, :courses_id, :status, :total_marks, :teacher_id, :start_date, :end_date, :randomize_order)";
+        $sql = "INSERT INTO exams (title, course_id, total_marks, teacher_id, start_date, end_date, randomize_order)
+                VALUES (:title, :course_id, :total_marks, :teacher_id, :start_date, :end_date, :randomize_order)";
         $statement = $pdo->prepare($sql);
         $success = $statement->execute([
             'title' => $title,
-            'courses_id' => $courses_id,
+            'course_id' => $course_id,
             'total_marks' => $total_marks,
             'teacher_id' => $teacher_id,
             'start_date' => $start_date,
