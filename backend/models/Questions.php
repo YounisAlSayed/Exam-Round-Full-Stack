@@ -96,4 +96,13 @@ class Questions
         $statement->execute(['id' => $course_id]);
         return $statement->fetchAll();
     }
+
+    public static function getQuestionsDraft($question_ids)
+    {
+        $pdo = Database::getInstance();
+        $sql = 'SELECT * FROM questions WHERE id IN (?)';
+        $statement = $pdo->prepare($sql);
+        $statement->execute([$question_ids]);
+        return $statement->fetchAll();
+    }
 }

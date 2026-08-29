@@ -77,7 +77,6 @@ class Exams
     public static function create(
         string $title,
         int $courses_id,
-        string $status,
         int $total_marks,
         int $teacher_id,
         string $start_date,
@@ -91,7 +90,6 @@ class Exams
         $success = $statement->execute([
             'title' => $title,
             'courses_id' => $courses_id,
-            'status' => $status,
             'total_marks' => $total_marks,
             'teacher_id' => $teacher_id,
             'start_date' => $start_date,

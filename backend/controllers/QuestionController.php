@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\Check_user;
 use App\models\Choices;
+use App\models\Courses;
 use App\models\Exam_question;
 use App\models\Questions;
 use App\Utils\ViewModel;
@@ -11,42 +12,47 @@ use App\Utils\ViewModel;
 class QuestionController
 {
     // Router::post('/api/questions', ['QuestionController', 'addQuestion']);
-    public function addQuestion()
+    public function addQuestion($course_id)
     {
-        $course_id = (int) $_POST['course_id'];
         $question = $_POST['question'];
+
+        $question_type = $_POST['question_type'];
 
         $choices = $_POST['choices'] ?? [];
         $correct = (int) $_POST['correct'];
 
-        $exam_id = (int) $_POST['exam_id'];
         $question_mark = (float) $_POST['question_mark'];
 
         $authError = Check_user::checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
-        if (!$course_id || !$question || !$choices || $correct < 0 || !$exam_id || !$question_mark) {
+        if (!$course_id || !$question || !$question_type || !$choices || $correct < 0 || !$question_mark) {
             http_response_code(400);
-            return new ViewModel('questions/create/display', ['error' => 'Incomplete input']);
+            return new ViewModel('dashboard?error="MISSING INPUT"', ['error' => 'Incomplete input']);
+        }
+        $course = Courses::find($course_id);
+        if (!$course) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Course not Found']);
         }
         $question_id = Questions::create($course_id, $question);
         if (!$question_id) {
             http_response_code(500);
-            return new ViewModel('questions/create/display', ['error' => 'Internal Server Error']);
+            return new ViewModel('dashboard?error="QUESTION CREATE"', ['error' => 'Internal Server Error']);
         }
-        if (!Exam_question::create($exam_id, $question_id, $question_mark)) {
-            http_response_code(500);
-            return new ViewModel('questions/create/display', ['error' => 'Internal Server Error']);
-        }
+        if (!isset($_SESSION['questions_draft_ids']))
+            $_SESSION['questions_draft_ids'] = [];
+        $_SESSION['questions_draft_ids'] = $question_id;
+
         foreach ($choices as $index => $choice) {
             if (!Choices::create($question_id, $choice, $index === $correct ? 1 : 0)) {
                 http_response_code(500);
-                return (new ViewModel('questions/create/display', ['error' => 'Internal Server Error']));
+                return (new ViewModel('dashboard?error="CHOICE CREATE"', ['error' => 'Internal Server Error']));
             }
         }
         $_SESSION['flash'] = "Created the question Successfully";
-        header("Location: /api/questions/create/display");
+        header("Location: " . BASE_PATH . "/api/exams/create/courses/" . "$course_id");
         exit;
     }
 

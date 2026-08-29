@@ -271,9 +271,11 @@ class RedirectingController
         return new ViewModel('courses/teacherCourse', ['course' => $course, 'courseStudents' => $courseStudents, 'courseExams' => $courseExams, 'courseQuestions' => $courseQuestions]);
     }
 
-    public function examCreate($course_id)
+    public function examCreate($exam_id, $course_id)
     {
-        if (!$course_id) {
+        $course_id = (int) $course_id;
+        $exam_id = (int) $exam_id;
+        if (!$course_id || !$exam_id) {
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Course ID was not passed']);
         }
@@ -291,6 +293,12 @@ class RedirectingController
             return new ViewModel('dashboard', ['error' => 'Course not Found']);
         }
 
+        $exam = Exams::getById($exam_id);
+        if (!$exam) {
+            http_response_code(404);
+            return new ViewModel('dashboard', ['error' => 'Exam Not Found']);
+        }
+
         $courseQuestions = Questions::getCourseQuestions($course_id);
         if (!$courseQuestions) {
             $courseQuestions = [];
@@ -303,6 +311,15 @@ class RedirectingController
         if (!$questionsChoices)
             $questionsChoices = [];
 
-        return new ViewModel('exams/create', ['course_id' => $course_id, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices]);
+        $draft_questions = Questions::getQuestionsDraft($_SESSION['questions_draft_ids'] ?? null) ?? [];
+        if (!$draft_questions)
+            $draft_questions = [];
+        $draft_questions_choices = [];
+        foreach ($draft_questions as $question) {
+            $draft_questions_choices[$question['id']] = Questions::getQuestionChoices($question['id']);
+        }
+        if (!$draft_questions_choices)
+            $draft_questions_choices = [];
+        return new ViewModel('exams/create', ['course_id' => $course_id, 'exam' => $exam, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices, 'draftQuestions' => $draft_questions, 'draftQuestionsChoices' => $draft_questions_choices]);
     }
 }

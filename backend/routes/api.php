@@ -3,7 +3,7 @@
 use App\Routes\Router;
 
 //------------------------------ questions routers -----------------------------------
-Router::post('/api/questions/create', ['QuestionController', 'addQuestion']);
+Router::post('/api/questions/create/courses/{course_id}', ['QuestionController', 'addQuestion']);
 Router::post('/api/questions/{id}/choices', ['QuestionController', 'addQuestionChoices']);
 
 Router::put('/api/questions/{id}', ['QuestionController', 'editQuestion']);
@@ -101,4 +101,4 @@ Router::get('/api/exams/{id}/details/student', ['RedirectingController', 'studen
 Router::get('/api/exams/{id}/details/teacher', ['RedirectingController', 'teacherExamDetails']);
 Router::get('/api/exams/{id}/start/{page}', ['RedirectingController', 'examStart']);
 Router::get('/api/courses/{course_id}/teacher', ['RedirectingController', 'teacherCourse']);
-Router::get('/api/exams/create/courses/{course_id}', ['RedirectingController', 'examCreate']);
+Router::get('/api/exams/{exam_id}/create/courses/{course_id}', ['RedirectingController', 'examCreate']);

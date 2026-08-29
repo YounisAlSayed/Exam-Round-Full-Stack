@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="<?= BASE_PATH ?>/utils/css/dashboard.css">
     <title>Dashboard</title>
 </head>
+<?php if (isset($_GET['error'])) { ?>
+<h1><?= $_GET['error'] ?></h1>
+<?php } ?>
 
 <body>
     <?php require_once 'layout.phtml' ?>
@@ -20,84 +23,84 @@
     <div class="dashboard-container">
         <!-- Next Exam Section -->
         <?php if (isset($nextExamSet) && $nextExamSet): ?>
-            <?php $now = new DateTime(); ?>
-            <div class="mb-5">
-                <h2 class="h4 fw-bold mb-3">
-                    <i class="fas fa-clock text-primary me-2"></i>
-                    Your Next Exams
-                </h2>
-                <?php foreach ($nextExamSet as $next): ?>
-                    <?php
+        <?php $now = new DateTime(); ?>
+        <div class="mb-5">
+            <h2 class="h4 fw-bold mb-3">
+                <i class="fas fa-clock text-primary me-2"></i>
+                Your Next Exams
+            </h2>
+            <?php foreach ($nextExamSet as $next): ?>
+            <?php
                     $startDate = new DateTime($next['start_date']);
                     $endDate = new DateTime($next['end_date']);
                     ?>
-                    <a href="<?= BASE_PATH ?>/api/exams/<?= $next['exam_id'] ?>/details/<?= $user['role'] ?>"
-                        class="text-decoration-none">
-                        <div class="card border-0 shadow-sm next-exam-card position-relative overflow-hidden">
-                            <div class="card-body p-4">
-                                <!-- Countdown Badge -->
-                                <?php if ($now < $startDate): ?>
-                                    <div class="position-absolute top-0 end-0 m-3">
-                                        <span class="badge bg-danger rounded-pill px-3 py-2">
-                                            <i class="fas fa-hourglass-half me-1"></i>
-                                            <?= isset($startDate, $endDate) ? ($startDate->diff(new DateTime()))->d . ' days' : 'Coming Soon' ?>
-                                        </span>
-                                    </div>
-                                <?php endif ?>
-                                <div class="row align-items-center">
-                                    <div class="col-md-8">
-                                        <h3 class="h5 fw-bold mb-2"><?= htmlspecialchars($next['title'] ?? 'Exam Title') ?>
-                                        </h3>
-                                        <div class="d-flex flex-wrap gap-3 text-muted small">
-                                            <span>
-                                                <i class="fas fa-book me-1"></i>
-                                                <?= htmlspecialchars($next['course_name'] ?? 'Course') ?>
-                                            </span>
-                                            <span>
-                                                <i class="fas fa-calendar-alt me-1"></i>
-                                                <?= isset($next['start_date']) ? date('M d, Y', strtotime($next['start_date'])) : 'Date TBD' ?>
-                                            </span>
-                                            <span>
-                                                <i class="fas fa-stopwatch me-1"></i>
-                                                <?= isset($startDate, $endDate) ? ($endDate->diff($startDate))->h . ' H' : 'Duration TBD' ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <?php //if ($now >= $startDate && $now <= $endDate): 
-                            ?>
-                            <div class="card-footer d-flex justify-content-center">
-                                <div class="col-md-4 text-md-end mt-3 mt-md-0 container container-fluid">
-                                    <a href="<?= BASE_PATH ?>/api/exams/<?= $next['exam_id'] ?? 0 ?>/start/<?= 1 ?>"
-                                        class="btn btn-primary container container-fluid">
-                                        <i class="fas fa-arrow-right me-1"></i> Start Exam
-                                    </a>
-                                </div>
-                            </div>
-                            <?php //endif 
-                            ?>
-                            <!-- Decorative gradient bar -->
-                            <div class="position-absolute bottom-0 start-0 w-100"
-                                style="height: 4px; background: linear-gradient(90deg, var(--bs-primary), var(--gold));"></div>
+            <a href="<?= BASE_PATH ?>/api/exams/<?= $next['exam_id'] ?>/details/<?= $user['role'] ?>"
+                class="text-decoration-none">
+                <div class="card border-0 shadow-sm next-exam-card position-relative overflow-hidden">
+                    <div class="card-body p-4">
+                        <!-- Countdown Badge -->
+                        <?php if ($now < $startDate): ?>
+                        <div class="position-absolute top-0 end-0 m-3">
+                            <span class="badge bg-danger rounded-pill px-3 py-2">
+                                <i class="fas fa-hourglass-half me-1"></i>
+                                <?= isset($startDate, $endDate) ? ($startDate->diff(new DateTime()))->d . ' days' : 'Coming Soon' ?>
+                            </span>
                         </div>
-                    </a>
-                <?php endforeach ?>
-            </div>
-        <?php else: ?>
-            <div class="mb-5">
-                <h2 class="h4 fw-bold mb-3">
-                    <i class="fas fa-clock text-primary me-2"></i>
-                    Your Next Exam
-                </h2>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-check-circle text-success mb-3" style="font-size: 48px;"></i>
-                        <h5 class="fw-bold">No Upcoming Exams</h5>
-                        <p class="text-muted small">You're all caught up! Check back later for new exams.</p>
+                        <?php endif ?>
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h3 class="h5 fw-bold mb-2"><?= htmlspecialchars($next['title'] ?? 'Exam Title') ?>
+                                </h3>
+                                <div class="d-flex flex-wrap gap-3 text-muted small">
+                                    <span>
+                                        <i class="fas fa-book me-1"></i>
+                                        <?= htmlspecialchars($next['course_name'] ?? 'Course') ?>
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        <?= isset($next['start_date']) ? date('M d, Y', strtotime($next['start_date'])) : 'Date TBD' ?>
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-stopwatch me-1"></i>
+                                        <?= isset($startDate, $endDate) ? ($endDate->diff($startDate))->h . ' H' : 'Duration TBD' ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    <?php //if ($now >= $startDate && $now <= $endDate): 
+                            ?>
+                    <div class="card-footer d-flex justify-content-center">
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0 container container-fluid">
+                            <a href="<?= BASE_PATH ?>/api/exams/<?= $next['exam_id'] ?? 0 ?>/start/<?= 1 ?>"
+                                class="btn btn-primary container container-fluid">
+                                <i class="fas fa-arrow-right me-1"></i> Start Exam
+                            </a>
+                        </div>
+                    </div>
+                    <?php //endif 
+                            ?>
+                    <!-- Decorative gradient bar -->
+                    <div class="position-absolute bottom-0 start-0 w-100"
+                        style="height: 4px; background: linear-gradient(90deg, var(--bs-primary), var(--gold));"></div>
+                </div>
+            </a>
+            <?php endforeach ?>
+        </div>
+        <?php else: ?>
+        <div class="mb-5">
+            <h2 class="h4 fw-bold mb-3">
+                <i class="fas fa-clock text-primary me-2"></i>
+                Your Next Exam
+            </h2>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-check-circle text-success mb-3" style="font-size: 48px;"></i>
+                    <h5 class="fw-bold">No Upcoming Exams</h5>
+                    <p class="text-muted small">You're all caught up! Check back later for new exams.</p>
                 </div>
             </div>
+        </div>
         <?php endif; ?>
 
         <!-- Courses Section -->
@@ -113,68 +116,63 @@
             </div>
 
             <?php if (isset($courses) && !empty($courses)): ?>
-                <div class="courses-grid">
-                    <?php foreach ($courses as $course): ?>
-                        <a href="<?= BASE_PATH ?>/api/courses/<?= $course['id'] ?? 0 ?>/teacher"
-                            class="course-card-link text-decoration-none">
-                            <div class="card h-100 border-0 shadow-sm course-card">
-                                <div class="card-body p-4">
-                                    <!-- Course Title -->
-                                    <h5 class="card-title fw-bold mb-2">
-                                        <?= htmlspecialchars($course['name'] ?? 'Course Name') ?></h5>
+            <div class="courses-grid">
+                <?php foreach ($courses as $course): ?>
+                <a href="<?= BASE_PATH ?>/api/courses/<?= $course['id'] ?? 0 ?>/teacher"
+                    class="course-card-link text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm course-card">
+                        <div class="card-body p-4">
+                            <!-- Course Title -->
+                            <h5 class="card-title fw-bold mb-2">
+                                <?= htmlspecialchars($course['name'] ?? 'Course Name') ?></h5>
 
-                                    <!-- Course Stats -->
-                                    <div class="d-flex flex-wrap gap-2 mb-3">
-                                        <?php if (isset($course['exam_count'])): ?>
-                                            <span class="badge bg-light text-dark">
-                                                <i class="fas fa-file-alt me-1"></i>
-                                                <?= $course['exam_count'] ?> Exams
-                                            </span>
-                                        <?php endif; ?>
-                                        <?php if (isset($course['progress'])): ?>
-                                            <span class="badge bg-light text-dark">
-                                                <i class="fas fa-chart-line me-1"></i>
-                                                <?= $course['progress'] ?? 0 ?>% Complete
-                                            </span>
-                                        <?php endif; ?>
-                                    </div>
+                            <!-- Course Stats -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <?php if (isset($course['exam_count'])): ?>
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-file-alt me-1"></i>
+                                    <?= $course['exam_count'] ?> Exams
+                                </span>
+                                <?php endif; ?>
+                                <?php if (isset($course['progress'])): ?>
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    <?= $course['progress'] ?? 0 ?>% Complete
+                                </span>
+                                <?php endif; ?>
+                            </div>
 
-                                    <!-- Progress Bar -->
-                                    <?php if (isset($course['progress'])): ?>
-                                        <div class="progress" style="height: 6px;">
-                                            <div class="progress-bar" role="progressbar"
-                                                style="width: <?= $course['progress'] ?>%; background: linear-gradient(90deg, var(--bs-primary), var(--gold));">
-                                            </div>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <!-- Arrow indicator -->
-                                    <div class="card-arrow mt-3">
-                                        <i class="fas fa-chevron-right text-muted"></i>
-                                    </div>
+                            <!-- Progress Bar -->
+                            <?php if (isset($course['progress'])): ?>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" role="progressbar"
+                                    style="width: <?= $course['progress'] ?>%; background: linear-gradient(90deg, var(--bs-primary), var(--gold));">
                                 </div>
                             </div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-book-open text-muted mb-3" style="font-size: 48px;"></i>
-                        <h5 class="fw-bold">No Courses Enrolled</h5>
-                        <p class="text-muted small">You haven't enrolled in any courses yet.</p>
-                        <a href="/api/courses" class="btn btn-primary mt-2">Browse Courses</a>
+                            <?php endif; ?>
+
+                            <!-- Arrow indicator -->
+                            <div class="card-arrow mt-3">
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </div>
                     </div>
+                </a>
+                <?php endforeach; ?>
+            </div>
+            <?php else: ?>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-book-open text-muted mb-3" style="font-size: 48px;"></i>
+                    <h5 class="fw-bold">No Courses Enrolled</h5>
+                    <p class="text-muted small">You haven't enrolled in any courses yet.</p>
+                    <a href="/api/courses" class="btn btn-primary mt-2">Browse Courses</a>
                 </div>
+            </div>
             <?php endif; ?>
         </div>
     </div>
     <?php renderFooter(); ?>
-    <script>
-        setInterval(function() {
-            document.getElementById()
-        })
-    </script>
 </body>
 
 </html>

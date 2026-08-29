@@ -140,10 +140,9 @@ foreach ($courseExams as $exam) {
                     <div class="tab-pane fade show active" id="exams" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="fw-bold mb-0"><i class="fas fa-file-alt me-2"></i>Course Exams</h6>
-                            <a href="<?= BASE_PATH ?>/api/exams/create/courses/<?= $course['id'] ?>"
-                                class="btn btn-primary btn-sm">
+                            <button id="createExamBtn" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus me-1"></i> Add Exam
-                            </a>
+                            </button>
                         </div>
 
                         <?php if (!empty($courseExams)): ?>
@@ -152,11 +151,12 @@ foreach ($courseExams as $exam) {
                                         $examEnd = new DateTime($exam['end_date']);
                                         $isCompleted = $now > $examEnd;
                                     ?>
-                            <a href="<?= BASE_PATH ?>/api/exams/<?= $exam['id'] ?>/edit"
-                                class="list-group-item list-group-item-action clickable-item d-flex justify-content-between align-items-center">
+                            <a href="<?= BASE_PATH ?>/api/exams/<?= $exam['id'] ?>/create/courses/<?= $course['id']; ?>
+                                            class=" list-group-item list-group-item-action clickable-item d-flex
+                                justify-content-between align-items-center text-decoration-none">
                                 <div>
                                     <h6 class="mb-1 fw-semibold"><?= htmlspecialchars($exam['title']) ?></h6>
-                                    <small class="text-muted">
+                                    <small class=" text-muted">
                                         <i class="fas fa-calendar me-1"></i>
                                         <?= date('M d, Y', strtotime($exam['start_date'])) ?> -
                                         <?= date('M d, Y', strtotime($exam['end_date'])) ?>
@@ -302,6 +302,11 @@ foreach ($courseExams as $exam) {
     </div>
 
     <?php renderFooter() ?>
+    <script>
+    const BASE_PATH = <?= json_encode(BASE_PATH, JSON_HEX_TAG) ?>
+    </script>
+    <script src="<?= BASE_PATH ?>/utils/js/modal.js"></script>
+    <script src="<?= BASE_PATH ?>/utils/js/createExam.js"></script>
 </body>
 
 </html>

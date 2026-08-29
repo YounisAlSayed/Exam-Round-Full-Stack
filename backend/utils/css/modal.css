@@ -1,0 +1,15 @@
+.dynamic-modal .modal-title[data-role="title"]:empty {
+    display: none;
+}
+
+.dynamic-modal .modal-footer:empty {
+    display: none;
+    border-top: none;
+}
+
+.dynamic-modal .modal-body[data-role="body"]:empty::before {
+    content: "Nothing to show.";
+    color: var(--bs-body-color);
+    opacity: 0.5;
+    font-style: italic;
+}

@@ -5,6 +5,15 @@ $course_id = $course_id ?? ($course['id'] ?? 0);
 $courseQuestions = $courseQuestions ?? [];
 $questionsChoices = $questionsChoices ?? [];
 $totalAvailableQuestions = count($courseQuestions);
+
+$examStartPlaceHolder = new DateTime();
+$examStartPlaceHolder->modify('+7 days');
+
+$examEndPlaceHolder = clone $examStartPlaceHolder;
+$examEndPlaceHolder->modify('+2 hours');
+
+$startValue = $examStartPlaceHolder->format('Y-m-d\TH:i');
+$endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
 ?>
 
 <!DOCTYPE html>
@@ -16,6 +25,7 @@ $totalAvailableQuestions = count($courseQuestions);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="<?= BASE_PATH ?>/utils/css/createExam.css">
+    <link rel="stylesheet" href="<?= BASE_PATH ?>/utils/css/modal.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <title>Create New Exam</title>
 </head>
@@ -80,39 +90,30 @@ $totalAvailableQuestions = count($courseQuestions);
                                     <label for="examTitle" class="form-label fw-semibold">Exam Title <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="examTitle" name="title"
-                                        placeholder="e.g., Midterm Exam - Web Development" required>
-                                </div>
-
-                                <div class="col-12">
-                                    <label for="examDescription" class="form-label fw-semibold">Description</label>
-                                    <textarea class="form-control" id="examDescription" name="description" rows="2"
-                                        placeholder="Optional description for the exam"></textarea>
+                                        placeholder="e.g., Midterm Exam - Web Development"
+                                        value="<?= $exam['title'] ?? '' ?>" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="startDate" class="form-label fw-semibold">Start Date & Time <span
                                             class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="startDate" name="start_date"
-                                        required>
+                                    <input type="datetime-local"
+                                        value="<?= $exam['start_date'] ?? $examStartPlaceHolder ?>" class="form-control"
+                                        id="startDate" name="start_date" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="endDate" class="form-label fw-semibold">End Date & Time <span
                                             class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="endDate" name="end_date"
-                                        required>
+                                    <input type="datetime-local" class="form-control"
+                                        value="<?= $exam['end_date'] ?? $examEndPlaceHolder ?>" id="endDate"
+                                        name="end_date" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="totalMarks" class="form-label fw-semibold">Total Marks <span
                                             class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="totalMarks" name="total_marks"
-                                        placeholder="e.g., 100" min="1" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="duration" class="form-label fw-semibold">Duration (minutes) <span
-                                            class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" id="duration" name="duration"
-                                        placeholder="e.g., 60" min="1" required>
+                                    <input type="number" class="form-control" value="<?= $exam['total_marks'] ?? '' ?>"
+                                        id="totalMarks" name="total_marks" placeholder="e.g., 100" min="1" required>
                                 </div>
                             </div>
 
@@ -196,7 +197,7 @@ $totalAvailableQuestions = count($courseQuestions);
                             <div>
                                 <h3>Create Exam</h3>
                                 <div class="d-flex">
-
+                                    <div></div>
                                 </div>
                             </div>
                             <div class="border rounded-3 p-3 bg-light mb-4">
@@ -286,9 +287,13 @@ $totalAvailableQuestions = count($courseQuestions);
     // choices, keyed by question id, exactly as the controller built it.
     const courseQuestions = <?= json_encode($courseQuestions, JSON_HEX_TAG) ?>;
     const questionsChoices = <?= json_encode($questionsChoices, JSON_HEX_TAG) ?>;
-    const courseID = <?= json_encode($course['id'], JSON_HEX_TAG) ?>
+    const courseID = <?= json_encode($course['id'], JSON_HEX_TAG) ?>;
+    const basePath = "<?= BASE_PATH ?>";
+    const draftQuestions = <?= json_encode($draftQuestions ?? [], JSON_HEX_TAG); ?>
+    const draftQuestionsChoices = <?= json_encode($draftQuestionsChoices ?? [], JSON_HEX_TAG) ?>
     </script>
-    <script src="<?= BASE_PATH ?>/utils/js/createExam.js"></script>
+    <script src="<?= BASE_PATH ?>/utils/js/modal.js"></script>
+    <script src="<?= BASE_PATH ?>/utils/js/editExam.js"></script>
 </body>
 
 </html>
