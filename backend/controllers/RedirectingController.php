@@ -320,6 +320,18 @@ class RedirectingController
         }
         if (!$draft_questions_choices)
             $draft_questions_choices = [];
-        return new ViewModel('exams/create', ['course_id' => $course_id, 'exam' => $exam, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices, 'draftQuestions' => $draft_questions, 'draftQuestionsChoices' => $draft_questions_choices]);
+
+        $examQuestions = Questions::getExamQuestions($exam_id);
+        $examQuestionsChices = [];
+        if (!$examQuestions) {
+            $examQuestions = [];
+        } else {
+            foreach ($examQuestions as $question) {
+                $examQuestionsChices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
+            }
+        }
+        if (!$examQuestionsChices)
+            $examQuestionsChices = [];
+        return new ViewModel('exams/create', ['course_id' => $course_id, 'exam' => $exam, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices, 'draftQuestions' => $draft_questions, 'draftQuestionsChoices' => $draft_questions_choices, 'examQuestions' => $examQuestions, 'examQuestionsChoices' => $examQuestionsChices]);
     }
 }

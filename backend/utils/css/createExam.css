@@ -110,3 +110,23 @@
     opacity: 0.5;
     font-style: italic;
 }
+.choice-row {
+    background: #f8f9fa;
+    border: 1px solid var(--line, #e9ecef);
+    border-radius: 8px;
+    padding: 8px 14px;
+}
+
+.choice-row.is-correct {
+    background: #d1e7dd;
+    border-color: #a3cfbb;
+}
+
+.choice-row-text {
+    font-size: 0.9rem;
+    color: var(--ink, #282e3e);
+}
+
+.choice-row.is-correct .choice-row-text {
+    font-weight: 600;
+}

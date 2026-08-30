@@ -27,7 +27,7 @@ class Questions
     public static function getExamQuestions(int $exam_id)
     {
         $pdo = Database::getInstance();
-        $sql = "SELECT q.id AS question_id, q.course_id, q.question AS question_text, eq.question_mark FROM questions q JOIN exam_questions eq ON q.id = eq.question_id WHERE eq.exam_id=:id";
+        $sql = "SELECT q.id AS question_id, q.course_id, q.question AS question_text, q.type as question_type, eq.question_mark FROM questions q JOIN exam_questions eq ON q.id = eq.question_id WHERE eq.exam_id=:id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $exam_id]);
         return $statement->fetchAll();

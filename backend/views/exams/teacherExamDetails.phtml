@@ -22,8 +22,8 @@ foreach ($questions as $question) {
 }
 $percentage = 0;
 $scaledScore = 0;
-if ($exam && $exam['total_marks'] > 0) {
-    $scaledScore = round(($examAttemptStatus['average_mark'] / $questionsTotalMarks) * $exam['total_marks'], 2);
+if ($exam && $exam['total_marks'] > 0 && $questionsTotalMarks > 0) {
+    $scaledScore = round(($examAttemptStatus['average_mark'] / ($questionsTotalMarks)) * $exam['total_marks'], 2);
     $percentage = round(($scaledScore / $exam['total_marks']) * 100, 2);
 }
 ?>
