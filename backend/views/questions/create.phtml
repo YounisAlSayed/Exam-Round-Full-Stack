@@ -1,15 +1,139 @@
+<?php
+require_once __DIR__ . "/../layout.phtml";
+$course_id = $course_id ?? 0;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="<?= BASE_PATH ?>/utils/css/createExam.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <title>Create A Question</title>
 </head>
 
 <body>
-    <h1>Create a Question</h1>
-    <a href="<?= BASE_PATH ?>/api/questions/update">Update</a>
+    <?php renderHeader("Create A Question"); ?>
+
+    <div class="container py-4 w-75">
+        <h1 class="mb-4">Create a Question</h1>
+        <form id="addQuestionForm" method="POST"
+            action="<?= BASE_PATH ?>/api/questions/create/<?= $course_id ?>?exam_id=<?= $_GET['exam_id'] ?? null ?>">
+            <div class="row g-3">
+                <!-- Question -->
+                <div class="col-12">
+                    <label for="qp_questionText" class="form-label fw-semibold">
+                        Question
+                    </label>
+
+                    <input type="text" id="qp_questionText" name="question" class="form-control"
+                        placeholder="e.g., What does CRUD stand for?" required>
+                </div>
+
+                <!-- Marks -->
+                <div class="col-md-4">
+                    <label for="qp_questionMark" class="form-label fw-semibold">
+                        Marks
+                    </label>
+
+                    <input type="number" id="qp_questionMark" name="question_mark" class="form-control" min="1"
+                        max="100" required>
+                </div>
+
+                <!-- Question Type -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold d-block">
+                        Question Type
+                    </label>
+
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="question_type" id="qp_typeMC" value="mc"
+                                checked required>
+
+                            <label class="form-check-label" for="qp_typeMC">
+                                Multiple Choice
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="question_type" id="qp_typeTF"
+                                value="t/f">
+
+                            <label class="form-check-label" for="qp_typeTF">
+                                True / False
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice -->
+                <div class="col-12" id="qp_mcContainer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <label class="form-label fw-semibold mb-0">
+                            Choices
+                        </label>
+
+                        <small class="text-muted" id="qp_choiceHint">
+                            2–4 choices
+                        </small>
+
+                    </div>
+
+                    <div id="qp_choicesList" class="mt-2"></div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="qp_addChoiceBtn">
+                        <i class="fas fa-plus me-1"></i>
+                        Add Choice
+                    </button>
+
+                </div>
+
+                <!-- True / False -->
+                <div class="col-12 d-none" id="qp_tfContainer">
+
+                    <label class="form-label fw-semibold d-block">
+                        Correct Answer
+                    </label>
+
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfTrue" value="true">
+
+                            <label class="form-check-label" for="qp_tfTrue">
+                                True
+                            </label>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfFalse"
+                                value="false">
+
+                            <label class="form-check-label" for="qp_tfFalse">
+                                False
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex gap-2 mt-4">
+                <button type="button" class="btn btn-outline-danger" onclick="history.back()">
+                    Cancel
+                </button>
+
+                <button type="submit" class="btn btn-outline-primary" id="qp_confirmBtn">
+                    Create
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="<?= BASE_PATH ?>/utils/js/createQuestion.js"></script>
 </body>
 
 </html>

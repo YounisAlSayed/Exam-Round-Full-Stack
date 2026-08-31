@@ -3,11 +3,10 @@
 use App\Routes\Router;
 
 //------------------------------ questions routers -----------------------------------
-Router::post('/api/questions/create/courses/{course_id}', ['QuestionController', 'addQuestion']);
-Router::post('/api/questions/{id}/choices', ['QuestionController', 'addQuestionChoices']);
+Router::post('/api/questions/create/{course_id}', ['QuestionController', 'addQuestion']);
+Router::post('/api/questions/generate/courses/{course_id}/exams/{exam_id}', ['QuestionController', 'autoGenerate']);
 
 Router::put('/api/questions/{id}', ['QuestionController', 'editQuestion']);
-Router::put('/api/questions/{id}/choices', ['QuestionController', 'editQuestionChoices']);
 
 Router::delete('/api/questions/{id}/courses/{course_id}', ['QuestionController', 'delete']);
 
@@ -95,7 +94,8 @@ Router::get('/api/signup', ['RedirectingController', 'signup']);
 Router::get('/api/logout', ['RedirectingController', 'logout']);
 Router::get('/api/profile', ['RedirectingController', 'profile']);
 Router::get('/api/users/list', ['RedirectingController', 'usersList']);
-Router::get('/api/questions/create/display', ['RedirectingController', 'createQuestion']);
+Router::get('/api/questions/create/courses/{course_id}/view', ['RedirectingController', 'createQuestion']);
+Router::post('/api/questions/create/courses/{course_id}/view', ['RedirectingController', 'createQuestion']);
 Router::get('/api/questions/update', ['RedirectingController', 'updateQuestion']);
 Router::get('/api/exams/{id}/details/student', ['RedirectingController', 'studentExamDetails']);
 Router::get('/api/exams/{id}/details/teacher', ['RedirectingController', 'teacherExamDetails']);

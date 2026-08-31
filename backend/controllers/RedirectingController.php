@@ -12,11 +12,20 @@ use App\models\Exams;
 
 class RedirectingController
 {
+    private Attempts $attempts;
+    private Courses $courses;
+    public function __construct()
+    {
+        $this->attempts = new Attempts();
+        $this->courses = new Courses();
+        throw new \Exception('Not implemented');
+    }
     public function dashboard()
     {
         $courses = [];
         $nextExamSet = [];
         $user = $_SESSION['user'] ?? null;
+        $_SESSION['error'] = null;
         if (!$user) {
             http_response_code(404);
             return new ViewModel('users/login', ['error' => 'User has to be logged in']);
@@ -27,10 +36,10 @@ class RedirectingController
             return new ViewModel('users/login', ['error' => 'User ID is not passed']);
         }
         if ($user['role'] === 'teacher') {
-            $courses = Courses::getTeacherCourses((int) $user['id']);
+            $courses = $this->courses->getTeacherCourses((int) $user['id']);
             $nextExamSet = User::getTeacherNextExamSet((int) $user['id']);
         } else if ($user['role'] === 'student') {
-            $courses = Courses::getStudentCourses((int) $user['id']);
+            $courses = $this->courses->getStudentCourses((int) $user['id']);
             $nextExamSet = User::getStudentsNextExamSet((int) $user['id']);
         }
         return (new ViewModel('dashboard', ['courses' => $courses, 'nextExamSet' => $nextExamSet]));
@@ -39,12 +48,14 @@ class RedirectingController
     // -------------------------------- user --------------------------------------
     public function login()
     {
+        $_SESSION['error'] = null;
         $_SESSION['user'] = null;
         return (new ViewModel('users/login'));
     }
 
     public function signup()
     {
+        $_SESSION['error'] = null;
         return (new ViewModel('users/signup'));
     }
 
@@ -52,11 +63,13 @@ class RedirectingController
     {
         $_SESSION['user'] = null;
         $_SESSION['flash'] = 'Logout Successful';
+        $_SESSION['error'] = null;
         return new ViewModel('users/login');
     }
 
     public function profile()
     {
+        $_SESSION['error'] = null;
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
@@ -72,6 +85,7 @@ class RedirectingController
 
     public function usersList()
     {
+        $_SESSION['error'] = null;
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
@@ -90,6 +104,7 @@ class RedirectingController
     // ---------------------------------- questions ----------------------------------------
     public function showExamQuestions(string $exam_id)
     {
+        $_SESSION['error'] = null;
         $exam_id = (int) $exam_id;
         if (!$exam_id) {
             http_response_code(400);
@@ -103,13 +118,22 @@ class RedirectingController
         return (new ViewModel('exam/questions', ['questions' => Questions::getExamQuestions($exam_id)]));
     }
 
-    public function createQuestion()
+    public function createQuestion($course_id)
     {
-        return (new ViewModel('questions/create'));
+        $_SESSION['error'] = null;
+        $course_id = (int) $course_id;
+        if (!$course_id) {
+            http_response_code(400);
+            $_SESSION['error'] = 'Course ID Not Passed';
+            header("Location: " . BASE_PATH . "/api/courses/" . $course_id . '/teacher');
+            exit;
+        }
+        return (new ViewModel('questions/create', ['course_id' => $course_id]));
     }
 
     public function updateQuestion()
     {
+        $_SESSION['error'] = null;
         return (new ViewModel('questions/update'));
     }
 
@@ -117,6 +141,7 @@ class RedirectingController
 
     public function studentExamDetails($exam_id)
     {
+        $_SESSION['error'] = null;
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return new ViewModel('users/login', ['error' => 'User Not logged in']);
@@ -134,7 +159,7 @@ class RedirectingController
         $studentAttempt = '';
         $studentSelection = '';
         if ($user['role'] === 'student') {
-            $studentAttempt = Attempts::findByExamAndStudent($exam_id, $user['id']);
+            $studentAttempt = $this->attempts->findByExamAndStudent($exam_id, $user['id']);
             if (!$studentAttempt) {
                 $studentAttempt = [];
             }
@@ -155,6 +180,7 @@ class RedirectingController
 
     public function teacherExamDetails($exam_id)
     {
+        $_SESSION['error'] = null;
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return new ViewModel('users/login', ['error' => 'User Not Logged in']);
@@ -188,7 +214,7 @@ class RedirectingController
             $questionsChoices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
         }
 
-        $examAttemptStatus = Attempts::getExamAttemptStats($exam_id);
+        $examAttemptStatus = $this->attempts->getExamAttemptStats($exam_id);
         if (!$examAttemptStatus)
             $examAttemptStatus = [];
         return new ViewModel('exams/teacherExamDetails', ['exam' => $exam, 'questions' => $examQuestions, 'questionsChoices' => $questionsChoices, 'examAttemptStatus' => $examAttemptStatus]);
@@ -196,6 +222,7 @@ class RedirectingController
 
     public function examStart($exam_id, $page)
     {
+        $_SESSION['error'] = null;
         if (!isset($_SESSION['user'])) {
             header('Location: ' . BASE_PATH . '/api/users/login');
             exit;
@@ -218,9 +245,9 @@ class RedirectingController
 
         // Create the attempt row the FIRST time the student reaches this exam —
         // find-or-create, so navigating between pages never creates duplicates.
-        $attempt = Attempts::findByExamAndStudent($exam_id, $student_id);
+        $attempt = $this->attempts->findByExamAndStudent($exam_id, $student_id);
         if (!$attempt) {
-            Attempts::start($exam_id, $student_id);
+            $this->attempts->start($exam_id, $student_id);
         } elseif ($attempt['submitted_at'] !== null) {
             // Already submitted — don't let them re-enter and re-answer
             http_response_code(403);
@@ -246,6 +273,7 @@ class RedirectingController
 
     public function teacherCourse($course_id)
     {
+        $_SESSION['error'] = null;
         if (!$course_id) {
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Course Not Passed']);
@@ -259,12 +287,12 @@ class RedirectingController
             http_response_code(403);
             return new ViewModel('dashboard', ['error' => 'Forbidden For None Teachers']);
         }
-        $course = Courses::find($course_id);
+        $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'Course Not Found']);
         }
-        $courseStudents = Courses::getCourseStudents($course_id) ?? [];
+        $courseStudents = $this->courses->getCourseStudents($course_id) ?? [];
         $courseExams = Exams::getCourseExams($course_id) ?? [];
         $courseQuestions = Questions::getCourseQuestions($course_id) ?? [];
 
@@ -273,8 +301,10 @@ class RedirectingController
 
     public function examCreate($exam_id, $course_id)
     {
+        $_SESSION['error'] = null;
         $course_id = (int) $course_id;
         $exam_id = (int) $exam_id;
+        $page = $_GET['page'] ?? null;
         if (!$course_id || !$exam_id) {
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Course ID was not passed']);
@@ -287,7 +317,7 @@ class RedirectingController
         if ($auth !== null) {
             return $auth;
         }
-        $course = Courses::find($course_id);
+        $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'Course not Found']);
@@ -311,16 +341,6 @@ class RedirectingController
         if (!$questionsChoices)
             $questionsChoices = [];
 
-        $draft_questions = Questions::getQuestionsDraft($_SESSION['questions_draft_ids'] ?? null) ?? [];
-        if (!$draft_questions)
-            $draft_questions = [];
-        $draft_questions_choices = [];
-        foreach ($draft_questions as $question) {
-            $draft_questions_choices[$question['id']] = Questions::getQuestionChoices($question['id']);
-        }
-        if (!$draft_questions_choices)
-            $draft_questions_choices = [];
-
         $examQuestions = Questions::getExamQuestions($exam_id);
         $examQuestionsChices = [];
         if (!$examQuestions) {
@@ -332,6 +352,24 @@ class RedirectingController
         }
         if (!$examQuestionsChices)
             $examQuestionsChices = [];
-        return new ViewModel('exams/create', ['course_id' => $course_id, 'exam' => $exam, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices, 'draftQuestions' => $draft_questions, 'draftQuestionsChoices' => $draft_questions_choices, 'examQuestions' => $examQuestions, 'examQuestionsChoices' => $examQuestionsChices]);
+
+        $fullExamQuestions = [...$examQuestions, ...($_SESSION['auto_generated'] ?? [])];
+        unset($_SESSION['auto_generated']);
+        if (!$fullExamQuestions)
+            $fullExamQuestions = [];
+        $fullExamQuestionsChoices = [];
+        foreach ($fullExamQuestions as $question) {
+            $fullExamQuestionsChoices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
+        }
+        if (!$fullExamQuestionsChoices)
+            $fullExamQuestionsChoices = [];
+
+        if (count($fullExamQuestions) > count($courseQuestions)) {
+            http_response_code(400);
+            $_SESSION['error'] = 'Cannot generate questions more that the course bank has to offer';
+            header("Location: " . BASE_PATH . "/api/exams/" . $exam_id . "/create/courses/" . $course_id . "?page=questions");
+            exit;
+        }
+        return new ViewModel('exams/create', ['course_id' => $course_id, 'exam' => $exam, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices, 'examQuestions' => $fullExamQuestions, 'examQuestionsChoices' => $fullExamQuestionsChoices, "page" => $page]);
     }
 }

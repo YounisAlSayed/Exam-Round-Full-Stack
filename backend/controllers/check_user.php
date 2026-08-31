@@ -15,7 +15,9 @@ class Check_user
         }
         if ($user['role'] !== 'teacher') {
             http_response_code(403);
-            return new ViewModel('dashboard', ['error' => 'Forbidden']);
+            $_SESSION['error'] = "User Is Forbidden From Entering this page";
+            header("Location: " . BASE_PATH . "/api/dashboard");
+            exit;
         }
     }
 }

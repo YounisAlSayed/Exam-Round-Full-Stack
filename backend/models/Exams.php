@@ -4,11 +4,16 @@ namespace App\models;
 
 use App\Utils\Database;
 
+
 class Exams
 {
-    public static function all()
+    public function __construct()
     {
         $pdo = Database::getInstance();
+    }
+    public static function all()
+    {
+        global $pdo;
         $sql = "SELECT * FROM exams";
         $statement = $pdo->prepare($sql);
         $statement->execute();
@@ -17,14 +22,14 @@ class Exams
 
     public static function getCourseExamCount(int $course_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT COUNT(id) FROM exams WHERE course_id=:id";
         $statement = $pdo->prepare($sql);
         return $statement->execute(['id' => $course_id]);
     }
     public static function find(int $id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT * FROM exams WHERE id = :id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $id]);
@@ -33,7 +38,7 @@ class Exams
 
     public static function getByTeacher(int $teacher_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT * FROM exams WHERE teacher_id = :teacher_id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['teacher_id' => $teacher_id]);
@@ -42,7 +47,7 @@ class Exams
 
     public static function getNextCourseExam(int $course_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT e.* FROM exams e
                 INNER JOIN courses c ON c.next_exam_id = e.id
                 WHERE c.id = :course_id";
@@ -53,7 +58,7 @@ class Exams
 
     public static function getExamQuestions(int $exam_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT q.id, q.question, eq.question_mark
                 FROM exam_questions eq
                 INNER JOIN questions q ON q.id = eq.question_id
@@ -65,7 +70,7 @@ class Exams
 
     public static function getRandomQuestions(int $course_id, int $count)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT * FROM questions WHERE course_id = :course_id ORDER BY RAND() LIMIT :count";
         $statement = $pdo->prepare($sql);
         $statement->bindValue(':course_id', $course_id, \PDO::PARAM_INT);
@@ -83,7 +88,7 @@ class Exams
         string $end_date,
         int $randomize_order
     ) {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "INSERT INTO exams (title, course_id, total_marks, teacher_id, start_date, end_date, randomize_order)
                 VALUES (:title, :course_id, :total_marks, :teacher_id, :start_date, :end_date, :randomize_order)";
         $statement = $pdo->prepare($sql);
@@ -113,7 +118,7 @@ class Exams
         string $end_date,
         int $randomize_order
     ): bool {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "UPDATE exams
                 SET title = :title, status = :status, total_marks = :total_marks,
                     start_date = :start_date, end_date = :end_date, randomize_order = :randomize_order
@@ -132,7 +137,7 @@ class Exams
 
     public static function delete(int $id): bool
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "DELETE FROM exams WHERE id = :id";
         $statement = $pdo->prepare($sql);
         return $statement->execute(['id' => $id]);
@@ -140,7 +145,7 @@ class Exams
 
     public static function setNextCourseExam(int $course_id, int $exam_id): bool
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "UPDATE courses SET next_exam_id = :exam_id WHERE id = :course_id";
         $statement = $pdo->prepare($sql);
         return $statement->execute(['exam_id' => $exam_id, 'course_id' => $course_id]);
@@ -148,7 +153,7 @@ class Exams
 
     public static function getExamFullDetails($exam_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT e.id as exam_id, e.title, e.course_id, c.name as course_name, e.start_date, e.end_date, e.total_marks, e.status
         FROM exams e
         INNER JOIN courses c ON e.course_id = c.id
@@ -160,7 +165,7 @@ class Exams
 
     public static function getTotalMarks($exam_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT total_marks FROM exams WHERE id = :id;";
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $exam_id]);
@@ -169,7 +174,7 @@ class Exams
 
     public static function getById($exam_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = 'SELECT * FROM exams WHERE id = :id';
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $exam_id]);
@@ -178,7 +183,7 @@ class Exams
 
     public static function getCourseExams($course_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = 'SELECT * FROM exams WHERE course_id = :id';
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $course_id]);

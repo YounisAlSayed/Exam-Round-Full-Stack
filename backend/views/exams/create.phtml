@@ -35,7 +35,12 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
 
 <body>
     <?php renderHeader("Create New Exam") ?>
-
+    <?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($_SESSION['error']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
     <div class="container w-75 py-4">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -59,14 +64,14 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
             <!-- Tabs -->
             <ul class="nav exam-tabs mb-0" id="examTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" disabled id="details-tab" data-bs-toggle="tab"
-                        data-bs-target="#detailsPane" type="button" role="tab">
+                    <button class="nav-link <?= !$page ? 'active' : '' ?>" disabled id="details-tab"
+                        data-bs-toggle="tab" data-bs-target="#detailsPane" type="button" role="tab">
                         <span class="tab-num">1</span> Exam Details
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="questions-tab" disabled data-bs-toggle="tab"
-                        data-bs-target="#questionsPane" type="button" role="tab">
+                    <button class="nav-link <?= $page === 'questions' ? 'active' : '' ?>" id="questions-tab" disabled
+                        data-bs-toggle="tab" data-bs-target="#questionsPane" type="button" role="tab">
                         <span class="tab-num">2</span> Questions
                     </button>
                 </li>
@@ -81,7 +86,7 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
             <div class="tab-content">
 
                 <!-- ========== TAB 1: EXAM DETAILS ========== -->
-                <div class="tab-pane fade show active" id="detailsPane" role="tabpanel">
+                <div class="tab-pane fade <?= !$page ? 'show active' : '' ?>" id="detailsPane" role="tabpanel">
                     <div class="card border-0 shadow-sm tab-content-card">
                         <div class="card-body p-4">
                             <h5 class="fw-bold mb-3">
@@ -117,6 +122,9 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
                                     <input type="number" class="form-control" value="<?= $exam['total_marks'] ?? '' ?>"
                                         id="totalMarks" name="total_marks" placeholder="e.g., 100" min="1" required>
                                 </div>
+                                <div class="col-md-6">
+
+                                </div>
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">
@@ -129,7 +137,8 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
                 </div>
 
                 <!-- ========== TAB 2: QUESTIONS ========== -->
-                <div class="tab-pane fade" id="questionsPane" role="tabpanel">
+                <div class="tab-pane fade <?= $page === 'questions' ? 'show active' : '' ?>" id="questionsPane"
+                    role="tabpanel">
                     <div class="card border-0 shadow-sm tab-content-card">
                         <div class="card-body p-4">
 
@@ -139,8 +148,8 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
                                     <div class="col-md-4">
                                         <label for="numQuestions" class="form-label fw-semibold mb-1">Number of
                                             Questions</label>
-                                        <input type="number" class="form-control" id="numQuestions" value="5" min="1"
-                                            max="<?= $totalAvailableQuestions ?>">
+                                        <input type="number" class="form-control" name="limit" id="numQuestions"
+                                            value="5" min="1" max="<?= $totalAvailableQuestions ?>">
                                     </div>
                                     <div class="col-md-4">
                                         <span class="badge bg-info text-white rounded-pill">
@@ -149,7 +158,9 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
                                         </span>
                                     </div>
                                     <div class="col-md-4 text-md-end">
-                                        <button type="button" class="btn btn-primary" id="generateBtn">
+                                        <button type="submit" <?= $totalAvailableQuestions <= 0 ? 'disabled' : '' ?>
+                                            formaction="<?= BASE_PATH ?>/api/questions/generate/exams/<?= $exam['id'] ?? 0 ?>"
+                                            formmethod="POST" class="btn btn-primary" id="generateBtn">
                                             <i class="fas fa-magic me-1"></i> Generate Randomly
                                         </button>
                                     </div>
@@ -161,8 +172,9 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
                                     <i class="fas fa-list me-2 text-primary"></i>Exam Questions
                                 </h5>
                                 <div class="d-flex gap-3 align-items-center">
-                                    <button type="button" class="btn btn-outline-primary rounded-pill" id='addQuestion'
-                                        onclick="createQuestion()">
+                                    <button type="submit" class="btn btn-outline-primary rounded-pill" id='addQuestion'
+                                        formaction="<?= BASE_PATH ?>/api/questions/create/courses/<?= $course_id ?>/view?exam_id=<?= $exam['id'] ?? 0 ?>"
+                                        formmethod="post">
                                         Add Question
                                     </button>
                                     <span class="badge bg-primary rounded-pill" id="questionCounter">0 questions</span>
@@ -172,57 +184,58 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
                             <div id="questionsContainer">
                                 <div class="text-center text-muted py-5 empty-state" id="emptyQuestions">
                                     <?php if (!$examQuestions): ?>
-                                        <i class="fas fa-question-circle" style="font-size: 3rem;"></i>
-                                        <p class="mt-3 mb-0">No questions yet.</p>
-                                        <p class="small">Click "Generate Random Questions" above to get started.</p>
+                                    <i class="fas fa-question-circle" style="font-size: 3rem;"></i>
+                                    <p class="mt-3 mb-0">No questions yet.</p>
+                                    <p class="small">Click "Generate Random Questions" above to get started.</p>
                                     <?php else: ?>
-                                        <?php foreach ($examQuestions as $index => $question): ?>
-                                            <input type="hidden" name="question_ids[]" value="<?= $question['question_id'] ?>">
-                                            <div class="border rounded-3 p-3 mb-3 question-card-item">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div class="flex-grow-1">
-                                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                                            <span class="badge bg-secondary rounded-pill">Q<?= $index ?></span>
-                                                            <span
-                                                                class="badge bg-primary rounded-pill"><?= $question['question_mark'] ?>
-                                                                marks</span>
-                                                        </div>
-                                                        <p class="mb-1">Q. <?= htmlspecialchars($question['question_text']) ?>
-                                                        </p>
+                                    <?php foreach ($examQuestions as $index => $question): ?>
+                                    <input type="hidden" name="question_ids[]" value="<?= $question['question_id'] ?>">
+                                    <div class="border rounded-3 p-3 mb-3 question-card-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span
+                                                        class="badge bg-secondary rounded-pill">Q<?= $index + 1 ?></span>
+                                                    <span
+                                                        class="badge bg-primary rounded-pill"><?= $question['question_mark'] ?>
+                                                        marks</span>
+                                                </div>
+                                                <p class="mb-1">Q. <?= htmlspecialchars($question['question_text']) ?>
+                                                </p>
 
-                                                        <div class="d-flex flex-column gap-2 mt-1">
-                                                            <?php foreach ($examQuestionsChoices[$question['question_id']] as $choice): ?>
-                                                                <div
-                                                                    class="choice-row d-flex justify-content-between align-items-center <?= $choice['is_correct'] ? 'is-correct' : '' ?>">
-                                                                    <span
-                                                                        class="choice-row-text"><?= htmlspecialchars($choice['choice_text']) ?></span>
-                                                                    <?php if ($choice['is_correct']): ?>
-                                                                        <span class="badge rounded-pill bg-success ms-3">
-                                                                            <i class="fas fa-check me-1"></i>Correct
-                                                                        </span>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                            <?php endforeach; ?>
-                                                        </div>
+                                                <div class="d-flex flex-column gap-2 mt-1">
+                                                    <?php foreach ($examQuestionsChoices[$question['question_id']] as $choice): ?>
+                                                    <div
+                                                        class="choice-row d-flex justify-content-between align-items-center <?= $choice['is_correct'] ? 'is-correct' : '' ?>">
+                                                        <span
+                                                            class="choice-row-text"><?= htmlspecialchars($choice['choice_text']) ?></span>
+                                                        <?php if ($choice['is_correct']): ?>
+                                                        <span class="badge rounded-pill bg-success ms-3">
+                                                            <i class="fas fa-check me-1"></i>Correct
+                                                        </span>
+                                                        <?php endif; ?>
                                                     </div>
-
-                                                    <div class="d-flex gap-2">
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-outline-primary flex-shrink-0"
-                                                            onclick="updateQuestion(<?= $question['question_id'] ?>, '<?= htmlspecialchars($question['question_text'], ENT_QUOTES) ?>', <?= $question['question_mark'] ?>, '<?= $question['question_type'] ?>')">
-                                                            <i class="fa-solid fa-pen-to-square"></i>
-                                                        </button>
-
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-outline-danger flex-shrink-0"
-                                                            onclick="removeQuestion(<?= $index ?>)">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
+                                                    <?php endforeach; ?>
                                                 </div>
                                             </div>
 
-                                        <?php endforeach; ?>
+                                            <div class="d-flex gap-2">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary flex-shrink-0"
+                                                    onclick="updateQuestion(<?= $question['question_id'] ?>, '<?= htmlspecialchars($question['question_text'], ENT_QUOTES) ?>', <?= $question['question_mark'] ?>, '<?= $question['question_type'] ?>')">
+                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                </button>
+
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-danger flex-shrink-0"
+                                                    formaction="<?= BASE_PATH ?>/api/questions/delete/">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <?php endforeach; ?>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -335,16 +348,14 @@ $endValue = $examEndPlaceHolder->format('Y-m-d\TH:i');
     <?php renderFooter() ?>
 
     <script>
-        // Server data — each course question already carries its own real
-        // choices, keyed by question id, exactly as the controller built it.
-        const courseQuestions = <?= json_encode($courseQuestions, JSON_HEX_TAG) ?>;
-        const questionsChoices = <?= json_encode($questionsChoices, JSON_HEX_TAG) ?>;
-        const courseID = <?= json_encode($course['id'], JSON_HEX_TAG) ?>;
-        const basePath = "<?= BASE_PATH ?>";
-        const draftQuestions = <?= json_encode($draftQuestions ?? [], JSON_HEX_TAG); ?>;
-        const draftQuestionsChoices = <?= json_encode($draftQuestionsChoices ?? [], JSON_HEX_TAG); ?>;
-        const examQuestions = <?= json_encode($examQuestions ?? [], JSON_HEX_TAG) ?>;
-        const examQuestionsChoices = <?= json_encode($examQuestionsChoices ?? [], JSON_HEX_TAG) ?>;
+    // Server data — each course question already carries its own real
+    // choices, keyed by question id, exactly as the controller built it.
+    const courseQuestions = <?= json_encode($courseQuestions, JSON_HEX_TAG) ?>;
+    const questionsChoices = <?= json_encode($questionsChoices, JSON_HEX_TAG) ?>;
+    const courseID = <?= json_encode($course['id'], JSON_HEX_TAG) ?>;
+    const basePath = "<?= BASE_PATH ?>";
+    const examQuestions = <?= json_encode($examQuestions ?? [], JSON_HEX_TAG) ?>;
+    const examQuestionsChoices = <?= json_encode($examQuestionsChoices ?? [], JSON_HEX_TAG) ?>;
     </script>
     <script src="<?= BASE_PATH ?>/utils/js/modal.js"></script>
     <script src="<?= BASE_PATH ?>/utils/js/editExam.js"></script>

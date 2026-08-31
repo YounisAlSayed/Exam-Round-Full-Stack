@@ -20,6 +20,12 @@
     <?php $_SESSION['flash'] = null ?>
     <?php $user = $_SESSION['user'] ?>
 
+    <?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <?= htmlspecialchars($_SESSION['error']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
     <div class="dashboard-container">
         <!-- Next Exam Section -->
         <?php if (isset($nextExamSet) && $nextExamSet): ?>

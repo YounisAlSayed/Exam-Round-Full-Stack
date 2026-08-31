@@ -4,11 +4,12 @@ namespace App\models;
 
 use App\Utils\Database;
 
+$pdo = Database::getInstance();
 class Exam_question
 {
     public static function create(int $exam_id, int $question_id, float $question_mark)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = 'INSERT INTO exam_questions (exam_id, question_id, question_mark) VALUES (:exam_id, :question_id, :question_mark)';
         $statement = $pdo->prepare($sql);
         return $statement->execute(['exam_id' => $exam_id, 'question_id' => $question_id, 'question_mark' => $question_mark]);
@@ -16,7 +17,7 @@ class Exam_question
 
     public static function getQuestionMark($exam_id, $question_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT * FROM exam_questions WHERE exam_id = :exam_id AND question_id = :question_id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['exam_id' => $exam_id, 'question_id' => $question_id]);
@@ -25,7 +26,7 @@ class Exam_question
 
     public static function getStudentExamSelection($exam_id, $student_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT 
             q.id as question_id,
             q.question as question_text,

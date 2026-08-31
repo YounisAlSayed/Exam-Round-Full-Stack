@@ -4,11 +4,12 @@ namespace App\models;
 
 use App\Utils\Database;
 
+$pdo = Database::getInstance();
 class Enrolment
 {
     public static function find(int $id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT * FROM enrolment WHERE id = :id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['id' => $id]);
@@ -17,7 +18,7 @@ class Enrolment
 
     public static function getByStudent(int $student_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT en.id, en.courses_id, c.name AS course_name
                 FROM enrolment en
                 INNER JOIN courses c ON c.id = en.courses_id
@@ -29,7 +30,7 @@ class Enrolment
 
     public static function exists(int $student_id, int $courses_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "SELECT * FROM enrolment WHERE student_id = :student_id AND courses_id = :courses_id";
         $statement = $pdo->prepare($sql);
         $statement->execute(['student_id' => $student_id, 'courses_id' => $courses_id]);
@@ -38,7 +39,7 @@ class Enrolment
 
     public static function create(int $student_id, int $courses_id)
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "INSERT INTO enrolment (student_id, courses_id) VALUES (:student_id, :courses_id)";
         $statement = $pdo->prepare($sql);
         $success = $statement->execute(['student_id' => $student_id, 'courses_id' => $courses_id]);
@@ -52,7 +53,7 @@ class Enrolment
 
     public static function delete(int $id): bool
     {
-        $pdo = Database::getInstance();
+        global $pdo;
         $sql = "DELETE FROM enrolment WHERE id = :id";
         $statement = $pdo->prepare($sql);
         return $statement->execute(['id' => $id]);
