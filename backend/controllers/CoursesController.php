@@ -7,6 +7,11 @@ use App\Utils\ViewModel;
 
 class CoursesController
 {
+    private Courses $courses;
+    public function __construct()
+    {
+        $this->courses = new Courses();
+    }
     // Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
     public function getCourseStudents($course_id)
     {
@@ -18,13 +23,13 @@ class CoursesController
             exit;
         }
 
-        $course = Courses::find($course_id);
+        $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
             return new ViewModel('courses/not-found', ['id' => $course_id]);
         }
 
-        $students = Courses::getCourseStudents($course_id);
+        $students = $this->courses->getCourseStudents($course_id);
         return new ViewModel('courses/students', ['course' => $course, 'students' => $students]);
     }
 
@@ -39,13 +44,13 @@ class CoursesController
             exit;
         }
 
-        $course = Courses::find($course_id);
+        $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
             return new ViewModel('courses/not-found', ['id' => $course_id]);
         }
 
-        $teachers = Courses::getCourseTeachers($course_id);
+        $teachers = $this->courses->getCourseTeachers($course_id);
         return new ViewModel('courses/teachers', ['course' => $course, 'teachers' => $teachers]);
     }
 
@@ -69,12 +74,12 @@ class CoursesController
             return new ViewModel('courses/create', ['error' => 'Course name must be 100 characters or fewer']);
         }
 
-        if (Courses::findByName($name)) {
+        if ($this->courses->findByName($name)) {
             http_response_code(422);
             return new ViewModel('courses/create', ['error' => 'A course with this name already exists']);
         }
 
-        $courseId = Courses::create($name);
+        $courseId = $this->courses->create($name);
 
         if (!$courseId) {
             http_response_code(500);
@@ -95,7 +100,7 @@ class CoursesController
         }
 
         $course_id = (int) $course_id;
-        $course = Courses::find($course_id);
+        $course = $this->courses->find($course_id);
 
         if (!$course) {
             http_response_code(404);
@@ -115,13 +120,13 @@ class CoursesController
             return new ViewModel('courses/edit', ['error' => 'Course name must be 100 characters or fewer', 'course' => $course]);
         }
 
-        $existing = Courses::findByName($name);
+        $existing = $this->courses->findByName($name);
         if ($existing && (int) $existing['id'] !== $course_id) {
             http_response_code(422);
             return new ViewModel('courses/edit', ['error' => 'A course with this name already exists', 'course' => $course]);
         }
 
-        if (!Courses::edit($course_id, $name)) {
+        if (!$this->courses->edit($course_id, $name)) {
             http_response_code(500);
             return new ViewModel('courses/edit', ['error' => 'Internal Server Error', 'course' => $course]);
         }
@@ -141,12 +146,12 @@ class CoursesController
 
         $course_id = (int) $course_id;
 
-        if (!Courses::find($course_id)) {
+        if (!$this->courses->find($course_id)) {
             http_response_code(404);
             return new ViewModel('courses/not-found', ['id' => $course_id]);
         }
 
-        if (!Courses::delete($course_id)) {
+        if (!$this->courses->delete($course_id)) {
             http_response_code(500);
             return new ViewModel('courses/not-found', ['error' => 'Internal Server Error']);
         }

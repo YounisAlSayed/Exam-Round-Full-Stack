@@ -14,11 +14,18 @@ class RedirectingController
 {
     private Attempts $attempts;
     private Courses $courses;
+    private User $user;
+    private Questions $questions;
+    private Exam_question $exam_question;
+    private Exams $exams;
     public function __construct()
     {
         $this->attempts = new Attempts();
         $this->courses = new Courses();
-        throw new \Exception('Not implemented');
+        $this->user = new User();
+        $this->questions = new Questions();
+        $this->exam_question = new Exam_question();
+        $this->exams = new Exams();
     }
     public function dashboard()
     {
@@ -37,10 +44,10 @@ class RedirectingController
         }
         if ($user['role'] === 'teacher') {
             $courses = $this->courses->getTeacherCourses((int) $user['id']);
-            $nextExamSet = User::getTeacherNextExamSet((int) $user['id']);
+            $nextExamSet = $this->user->getTeacherNextExamSet((int) $user['id']);
         } else if ($user['role'] === 'student') {
             $courses = $this->courses->getStudentCourses((int) $user['id']);
-            $nextExamSet = User::getStudentsNextExamSet((int) $user['id']);
+            $nextExamSet = $this->user->getStudentsNextExamSet((int) $user['id']);
         }
         return (new ViewModel('dashboard', ['courses' => $courses, 'nextExamSet' => $nextExamSet]));
     }
@@ -77,7 +84,7 @@ class RedirectingController
             exit;
         }
 
-        $user = User::find($currentUser['id']);
+        $user = $this->user->find($currentUser['id']);
         unset($user['password']);
 
         return (new ViewModel('users/profile', ['user' => $user]));
@@ -98,7 +105,7 @@ class RedirectingController
             return (new ViewModel('users/forbidden', []));
         }
 
-        return (new ViewModel('users/list', ['users' => User::all()]));
+        return (new ViewModel('users/list', ['users' => $this->user->all()]));
     }
 
     // ---------------------------------- questions ----------------------------------------
@@ -111,11 +118,11 @@ class RedirectingController
             return (new ViewModel('exam/all', ['error' => 'No Exam ID passed']));
         }
 
-        if (!Exams::find($exam_id)) {
+        if (!$this->exams->find($exam_id)) {
             http_response_code(404);
             return (new ViewModel('exam/all', ['error' => 'Exam Not Found']));
         }
-        return (new ViewModel('exam/questions', ['questions' => Questions::getExamQuestions($exam_id)]));
+        return (new ViewModel('exam/questions', ['questions' => $this->questions->getExamQuestions($exam_id)]));
     }
 
     public function createQuestion($course_id)
@@ -151,7 +158,7 @@ class RedirectingController
             return new ViewModel('dashboard', ['error' => 'Exam ID Not Passed']);
         }
         $user = $_SESSION['user'];
-        $examDetails = Exams::getExamFullDetails($exam_id);
+        $examDetails = $this->exams->getExamFullDetails($exam_id);
         if (!$examDetails) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'Exam Not Found']);
@@ -164,15 +171,15 @@ class RedirectingController
                 $studentAttempt = [];
             }
 
-            $studentSelection = Exam_question::getStudentExamSelection($exam_id, $user['id']);
+            $studentSelection = $this->exam_question->getStudentExamSelection($exam_id, $user['id']);
             if (!$studentSelection) {
                 $studentSelection = [];
             }
         }
-        $examQuestions = Questions::getExamQuestions($exam_id);
+        $examQuestions = $this->questions->getExamQuestions($exam_id);
         $questionsChoices = [];
         foreach ($examQuestions as $question) {
-            $questionsChoices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
+            $questionsChoices[$question['question_id']] = $this->questions->getQuestionChoices($question['question_id']);
         }
 
         return new ViewModel('exams/studentExamDetails', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection, 'questionsChoices' => $questionsChoices]);
@@ -189,7 +196,7 @@ class RedirectingController
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Exam ID Not Passed']);
         }
-        if (!Exams::getById($exam_id)) {
+        if (!$this->exams->getById($exam_id)) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'Exam Not Found']);
         }
@@ -199,19 +206,19 @@ class RedirectingController
             return new ViewModel('dashboard', ['error' => 'User Does not have access to this page']);
         }
 
-        $exam = Exams::getExamFullDetails($exam_id);
+        $exam = $this->exams->getExamFullDetails($exam_id);
         if (!$exam) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'Exam Not found']);
         }
 
-        $examQuestions = Questions::getExamQuestions($exam_id);
+        $examQuestions = $this->questions->getExamQuestions($exam_id);
         if (!$examQuestions) {
             $examQuestions = [];
         }
         $questionsChoices = [];
         foreach ($examQuestions as $question) {
-            $questionsChoices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
+            $questionsChoices[$question['question_id']] = $this->questions->getQuestionChoices($question['question_id']);
         }
 
         $examAttemptStatus = $this->attempts->getExamAttemptStats($exam_id);
@@ -233,7 +240,7 @@ class RedirectingController
             return new ViewModel('dashboard', ['error' => 'Exam is not selected']);
         }
 
-        $exam = Exams::getExamFullDetails($exam_id);
+        $exam = $this->exams->getExamFullDetails($exam_id);
         if (!$exam) {
             http_response_code(404);
             header('Location: ' . BASE_PATH . '/api/dashboard');
@@ -256,16 +263,16 @@ class RedirectingController
 
         $size = 2;
         $offset = (int)($page - 1) * $size;
-        $questions = Questions::getExamQuestionSet($exam_id, $offset, $size);
+        $questions = $this->questions->getExamQuestionSet($exam_id, $offset, $size);
         if (!$questions) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'No Questions Were Found For the Specified Exam']);
         }
         $choices = [];
         foreach ($questions as $question) {
-            $choices[$question['id']] = Questions::getQuestionChoices($question['id']);
+            $choices[$question['id']] = $this->questions->getQuestionChoices($question['id']);
         }
-        $totalQuestions = Questions::getExamQuestionCount($exam_id);
+        $totalQuestions = $this->questions->getExamQuestionCount($exam_id);
         $totalQuestions ?? 0;
 
         return new ViewModel('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions, 'choices' => $choices]);
@@ -293,8 +300,8 @@ class RedirectingController
             return new ViewModel('dashboard', ['error' => 'Course Not Found']);
         }
         $courseStudents = $this->courses->getCourseStudents($course_id) ?? [];
-        $courseExams = Exams::getCourseExams($course_id) ?? [];
-        $courseQuestions = Questions::getCourseQuestions($course_id) ?? [];
+        $courseExams = $this->exams->getCourseExams($course_id) ?? [];
+        $courseQuestions = $this->questions->getCourseQuestions($course_id) ?? [];
 
         return new ViewModel('courses/teacherCourse', ['course' => $course, 'courseStudents' => $courseStudents, 'courseExams' => $courseExams, 'courseQuestions' => $courseQuestions]);
     }
@@ -323,31 +330,31 @@ class RedirectingController
             return new ViewModel('dashboard', ['error' => 'Course not Found']);
         }
 
-        $exam = Exams::getById($exam_id);
+        $exam = $this->exams->getById($exam_id);
         if (!$exam) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'Exam Not Found']);
         }
 
-        $courseQuestions = Questions::getCourseQuestions($course_id);
+        $courseQuestions = $this->questions->getCourseQuestions($course_id);
         if (!$courseQuestions) {
             $courseQuestions = [];
         }
 
         $questionsChoices = [];
         foreach ($courseQuestions as $question) {
-            $questionsChoices[$question['id']] = Questions::getQuestionChoices($question['id']);
+            $questionsChoices[$question['id']] = $this->questions->getQuestionChoices($question['id']);
         }
         if (!$questionsChoices)
             $questionsChoices = [];
 
-        $examQuestions = Questions::getExamQuestions($exam_id);
+        $examQuestions = $this->questions->getExamQuestions($exam_id);
         $examQuestionsChices = [];
         if (!$examQuestions) {
             $examQuestions = [];
         } else {
             foreach ($examQuestions as $question) {
-                $examQuestionsChices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
+                $examQuestionsChices[$question['question_id']] = $this->questions->getQuestionChoices($question['question_id']);
             }
         }
         if (!$examQuestionsChices)
@@ -359,7 +366,7 @@ class RedirectingController
             $fullExamQuestions = [];
         $fullExamQuestionsChoices = [];
         foreach ($fullExamQuestions as $question) {
-            $fullExamQuestionsChoices[$question['question_id']] = Questions::getQuestionChoices($question['question_id']);
+            $fullExamQuestionsChoices[$question['question_id']] = $this->questions->getQuestionChoices($question['question_id']);
         }
         if (!$fullExamQuestionsChoices)
             $fullExamQuestionsChoices = [];

@@ -3,30 +3,32 @@
 namespace App\models;
 
 use App\Utils\Database;
+use PDO;
 
-$pdo = Database::getInstance();
 class Exam_question
 {
-    public static function create(int $exam_id, int $question_id, float $question_mark)
+    private PDO $pdo;
+    public function __construct()
     {
-        global $pdo;
+        $this->pdo = Database::getInstance();
+    }
+    public function create(int $exam_id, int $question_id, float $question_mark)
+    {
         $sql = 'INSERT INTO exam_questions (exam_id, question_id, question_mark) VALUES (:exam_id, :question_id, :question_mark)';
-        $statement = $pdo->prepare($sql);
+        $statement = $this->pdo->prepare($sql);
         return $statement->execute(['exam_id' => $exam_id, 'question_id' => $question_id, 'question_mark' => $question_mark]);
     }
 
-    public static function getQuestionMark($exam_id, $question_id)
+    public function getQuestionMark($exam_id, $question_id)
     {
-        global $pdo;
         $sql = "SELECT * FROM exam_questions WHERE exam_id = :exam_id AND question_id = :question_id";
-        $statement = $pdo->prepare($sql);
+        $statement = $this->pdo->prepare($sql);
         $statement->execute(['exam_id' => $exam_id, 'question_id' => $question_id]);
         return $statement->fetch();
     }
 
-    public static function getStudentExamSelection($exam_id, $student_id)
+    public function getStudentExamSelection($exam_id, $student_id)
     {
-        global $pdo;
         $sql = "SELECT 
             q.id as question_id,
             q.question as question_text,
@@ -47,7 +49,7 @@ class Exam_question
             AND eq.question_id = sa.question_id 
             AND sa.selected_choice_id = c.id
             WHERE eq.exam_id = :exam_id AND sa.student_id = :student_id";
-        $statement = $pdo->prepare($sql);
+        $statement = $this->pdo->prepare($sql);
         $statement->execute(['exam_id' => $exam_id, 'student_id' => $student_id]);
         return $statement->fetchAll();
     }

@@ -2,12 +2,19 @@
 
 namespace App\Controllers;
 
-use App\models\StudentAnswers;
 use App\models\Attempts;
+use App\models\StudentsAnswers;
 use App\Utils\ViewModel;
 
 class StudentsAnswersController
 {
+    private StudentsAnswers $studentsAnswers;
+    private Attempts $attempts;
+    public function __construct()
+    {
+        $this->studentsAnswers = new StudentsAnswers();
+        $this->attempts = new Attempts();
+    }
     // Router::get('/api/students/{student_id}/exams/{exam_id}/answers', ['StudentsAnswersController', 'getStudentsExamAnswers']);
     public function getStudentExamAnswers($student_id, $exam_id)
     {
@@ -25,7 +32,7 @@ class StudentsAnswersController
             return new ViewModel('answers/forbidden', []);
         }
 
-        $answers = StudentAnswers::getByStudentExam($student_id, $exam_id);
+        $answers = $this->studentsAnswers->getByStudentExam($student_id, $exam_id);
         return new ViewModel('answers/list', ['answers' => $answers, 'student_id' => $student_id, 'exam_id' => $exam_id]);
     }
 
@@ -55,7 +62,7 @@ class StudentsAnswersController
             return new ViewModel('answers/list', ['error' => 'selected_choice_id is required', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        $attempt = Attempts::findByExamAndStudent($exam_id, $student_id);
+        $attempt = $this->attempts->findByExamAndStudent($exam_id, $student_id);
 
         if (!$attempt) {
             http_response_code(422);
@@ -67,22 +74,22 @@ class StudentsAnswersController
             return new ViewModel('answers/list', ['error' => 'This attempt has already been submitted', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        if (!StudentAnswers::questionBelongsToExam($exam_id, $question_id)) {
+        if (!$this->studentsAnswers->questionBelongsToExam($exam_id, $question_id)) {
             http_response_code(404);
             return new ViewModel('answers/list', ['error' => 'This question does not belong to this exam', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        if (!StudentAnswers::choiceBelongsToQuestion($selected_choice_id, $question_id)) {
+        if (!$this->studentsAnswers->choiceBelongsToQuestion($selected_choice_id, $question_id)) {
             http_response_code(422);
             return new ViewModel('answers/list', ['error' => 'That choice does not belong to this question', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        if (StudentAnswers::find($student_id, $exam_id, $question_id)) {
+        if ($this->studentsAnswers->find($student_id, $exam_id, $question_id)) {
             http_response_code(422);
             return new ViewModel('answers/list', ['error' => 'This question has already been answered — use edit instead', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        if (!StudentAnswers::create($student_id, $exam_id, $question_id, $selected_choice_id)) {
+        if (!$this->studentsAnswers->create($student_id, $exam_id, $question_id, $selected_choice_id)) {
             http_response_code(500);
             return new ViewModel('answers/list', ['error' => 'Internal Server Error', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
@@ -110,7 +117,7 @@ class StudentsAnswersController
             return new ViewModel('answers/forbidden', []);
         }
 
-        $attempt = Attempts::findByExamAndStudent($exam_id, $student_id);
+        $attempt = $this->attempts->findByExamAndStudent($exam_id, $student_id);
 
         if (!$attempt) {
             http_response_code(422);
@@ -122,7 +129,7 @@ class StudentsAnswersController
             return new ViewModel('answers/list', ['error' => 'This attempt has already been submitted', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        if (!StudentAnswers::find($student_id, $exam_id, $question_id)) {
+        if (!$this->studentsAnswers->find($student_id, $exam_id, $question_id)) {
             http_response_code(404);
             return new ViewModel('answers/list', ['error' => 'No existing answer to update — use add instead', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
@@ -135,12 +142,12 @@ class StudentsAnswersController
             return new ViewModel('answers/list', ['error' => 'selected_choice_id is required', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        if (!StudentAnswers::choiceBelongsToQuestion($selected_choice_id, $question_id)) {
+        if (!$this->studentsAnswers->choiceBelongsToQuestion($selected_choice_id, $question_id)) {
             http_response_code(422);
             return new ViewModel('answers/list', ['error' => 'That choice does not belong to this question', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }
 
-        if (!StudentAnswers::edit($student_id, $exam_id, $question_id, $selected_choice_id)) {
+        if (!$this->studentsAnswers->edit($student_id, $exam_id, $question_id, $selected_choice_id)) {
             http_response_code(500);
             return new ViewModel('answers/list', ['error' => 'Internal Server Error', 'student_id' => $student_id, 'exam_id' => $exam_id]);
         }

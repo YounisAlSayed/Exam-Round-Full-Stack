@@ -7,6 +7,11 @@ use App\Utils\ViewModel;
 
 class UserController
 {
+    private User $user;
+    public function __construct()
+    {
+        $this->user = new User();
+    }
     // Router::get('/api/users{role}', ['UserController', 'getAll']);
     public function getAll()
     {
@@ -14,7 +19,7 @@ class UserController
             http_response_code(403);
             return new ViewModel('users/dashboard', ['error' => 'Forbidden']);
         }
-        return User::all();
+        return $this->user->all();
     }
 
     // Router::get('/api/users/{id}', ['UserController', 'getById']);
@@ -32,7 +37,7 @@ class UserController
             return new ViewModel('users/forbidden');
         }
 
-        $user = User::find($user_id);
+        $user = $this->user->find($user_id);
         if (!$user) {
             http_response_code(404);
             return new ViewModel('users/notFound');
@@ -44,7 +49,7 @@ class UserController
     public function login()
     {
         $_SESSION['flash'] = null;
-        $user = User::findByEmail($_POST['email']);
+        $user = $this->user->findByEmail($_POST['email']);
         if (!$user || !password_verify($_POST['password'], $user['password'])) {
             return new ViewModel('users/login', ['error' => 'Invalid email or password']);
         }
@@ -91,16 +96,16 @@ class UserController
             return new ViewModel('users/signup', ['error' => 'Invalid Email Format']);
         }
 
-        if (User::findByEmail($email)) {
+        if ($this->user->findByEmail($email)) {
             http_response_code(422);
             return new ViewModel('users/signup', ['error' => 'Email Already exists']);
         }
 
-        if (!User::create($first_name, $last_name, $email, password_hash($password, PASSWORD_DEFAULT), $role)) {
+        if (!$this->user->create($first_name, $last_name, $email, password_hash($password, PASSWORD_DEFAULT), $role)) {
             http_response_code(500);
             return new ViewModel('users/signup', ['error' => 'Internal Server Error']);
         }
-        $user = User::findByEmail($email);
+        $user = $this->user->findByEmail($email);
         $_SESSION['user'] = ['id' => $user['id'], 'role' => $user['role']];
         $_SESSION['flash'] = 'signin Successful';
         header("Location:  " . BASE_PATH . "/api/dashboard");
@@ -123,7 +128,7 @@ class UserController
         $password = $_POST['password'] ?? null;
         $password_conf = $_POST['password_conf'] ?? null;
 
-        $user = User::find($user_id);
+        $user = $this->user->find($user_id);
         if (!$user) {
             header('Location: /api/login');
             exit;
@@ -149,13 +154,13 @@ class UserController
             return new ViewModel('users/profile', ['error' => 'Invalid Email Format']);
         }
 
-        $user_email = User::findByEmail($email);
+        $user_email = $this->user->findByEmail($email);
         if ($user_email && $user_email['id'] !== $user_id) {
             http_response_code(422);
             return new ViewModel('users/profile', ['error' => 'Email Already exists']);
         }
 
-        if (!User::edit($user_id, $first_name, $last_name, $email, password_hash($password, PASSWORD_DEFAULT))) {
+        if (!$this->user->edit($user_id, $first_name, $last_name, $email, password_hash($password, PASSWORD_DEFAULT))) {
             http_response_code(500);
             return new ViewModel('users/profile', ['error' => 'Internal Server Error']);
         }
@@ -174,7 +179,7 @@ class UserController
             return new ViewModel('users/list', ['error' => 'No User ID Passed']);
         }
 
-        if (!User::find($user_id)) {
+        if (!$this->user->find($user_id)) {
             http_response_code(404);
             return new ViewModel('users/list', ['error' => 'User Not Found']);
         }
@@ -183,7 +188,7 @@ class UserController
             http_response_code(403);
             return new ViewModel('dashboard', ['error' => 'Forbidden']);
         }
-        if (!User::delete($user_id)) {
+        if (!$this->user->delete($user_id)) {
             http_response_code(500);
             return new ViewModel('users/list', ['error' => 'Internal Server Error']);
         }

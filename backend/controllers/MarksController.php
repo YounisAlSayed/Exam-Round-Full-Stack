@@ -7,6 +7,11 @@ use App\Utils\ViewModel;
 
 class MarksController
 {
+    private Marks $marks;
+    public function __construct()
+    {
+        $this->marks = new Marks();
+    }
     // Router::get('/api/marks/student/{id}/average', ['MarksController', 'getStudentMarks']);
     public function getStudentMarks($student_id)
     {
@@ -23,7 +28,7 @@ class MarksController
             return new ViewModel('marks/forbidden', []);
         }
 
-        $average = Marks::getStudentAverage($student_id);
+        $average = $this->marks->getStudentAverage($student_id);
         return new ViewModel('marks/student-average', ['average' => $average['average'], 'student_id' => $student_id]);
     }
 
@@ -38,7 +43,7 @@ class MarksController
             exit;
         }
 
-        $average = Marks::getCourseAverage($course_id);
+        $average = $this->marks->getCourseAverage($course_id);
         return new ViewModel('marks/course-average', ['average' => $average['average'], 'course_id' => $course_id]);
     }
 
@@ -59,7 +64,7 @@ class MarksController
             return new ViewModel('marks/forbidden', []);
         }
 
-        $marks = Marks::getStudentCourseMarks($student_id, $course_id);
+        $marks = $this->marks->getStudentCourseMarks($student_id, $course_id);
         return new ViewModel('marks/student-course', ['marks' => $marks]);
     }
 
@@ -80,7 +85,7 @@ class MarksController
             return new ViewModel('marks/forbidden', []);
         }
 
-        $mark = Marks::find($student_id, $exam_id);
+        $mark = $this->marks->find($student_id, $exam_id);
 
         if (!$mark) {
             http_response_code(404);
@@ -114,12 +119,12 @@ class MarksController
             return new ViewModel('marks/add', ['error' => 'Mark must be between 0 and 100']);
         }
 
-        if (Marks::find($student_id, $exam_id)) {
+        if ($this->marks->find($student_id, $exam_id)) {
             http_response_code(422);
             return new ViewModel('marks/add', ['error' => 'A mark for this student/exam already exists — use edit instead']);
         }
 
-        if (!Marks::create($student_id, $exam_id, $student_mark)) {
+        if (!$this->marks->create($student_id, $exam_id, $student_mark)) {
             http_response_code(500);
             return new ViewModel('marks/add', ['error' => 'Internal Server Error']);
         }
@@ -140,7 +145,7 @@ class MarksController
         $student_id = (int) $student_id;
         $exam_id = (int) $exam_id;
 
-        if (!Marks::find($student_id, $exam_id)) {
+        if (!$this->marks->find($student_id, $exam_id)) {
             http_response_code(404);
             return new ViewModel('marks/not-found', ['student_id' => $student_id, 'exam_id' => $exam_id]);
         }
@@ -160,7 +165,7 @@ class MarksController
             return new ViewModel('marks/student-exam', ['error' => 'Mark must be between 0 and 100']);
         }
 
-        if (!Marks::edit($student_id, $exam_id, $student_mark)) {
+        if (!$this->marks->edit($student_id, $exam_id, $student_mark)) {
             http_response_code(500);
             return new ViewModel('marks/student-exam', ['error' => 'Internal Server Error']);
         }

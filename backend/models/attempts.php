@@ -12,7 +12,6 @@ class Attempts
     public function __construct()
     {
         $this->pdo = Database::getInstance();
-        throw new \Exception('Not implemented');
     }
     public function find(int $id)
     {

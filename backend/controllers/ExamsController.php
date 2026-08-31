@@ -12,17 +12,32 @@ use App\Utils\ViewModel;
 
 class ExamsController
 {
+    private Exams $exams;
+    private Courses $courses;
+    private Attempts $attempts;
+    private Choices $choices;
+    private Exam_question $exam_question;
+    private StudentsAnswers $studentsAnswers;
+    public function __construct()
+    {
+        $this->exams = new Exams();
+        $this->courses = new Courses();
+        $this->attempts = new Attempts();
+        $this->choices = new Choices();
+        $this->exam_question = new Exam_question();
+        $this->studentsAnswers = new StudentsAnswers();
+    }
     // Router::get('/api/exams', ['ExamsController', 'getAll']);
     public function getAll()
     {
-        return new ViewModel('exams/list', ['exams' => Exams::all()]);
+        return new ViewModel('exams/list', ['exams' => $this->exams->all()]);
     }
 
     // Router::get('/api/exams/{id}', ['ExamsController', 'getById']);
     public function getById($exam_id)
     {
         $exam_id = (int) $exam_id;
-        $exam = Exams::find($exam_id);
+        $exam = $this->exams->find($exam_id);
 
         if (!$exam) {
             http_response_code(404);
@@ -36,7 +51,7 @@ class ExamsController
     public function getTeacherExams($teacher_id)
     {
         $teacher_id = (int) $teacher_id;
-        $exams = Exams::getByTeacher($teacher_id);
+        $exams = $this->exams->getByTeacher($teacher_id);
         return new ViewModel('exams/list', ['exams' => $exams]);
     }
 
@@ -53,7 +68,7 @@ class ExamsController
             return new ViewModel('exams/random-preview', ['error' => 'course_id and count are required']);
         }
 
-        $questions = Exams::getRandomQuestions($course_id, $count);
+        $questions = $this->exams->getRandomQuestions($course_id, $count);
         return new ViewModel('exams/random-preview', ['questions' => $questions]);
     }
 
@@ -61,7 +76,7 @@ class ExamsController
     public function getNextCourseExam($course_id)
     {
         $course_id = (int) $course_id;
-        $exam = Exams::getNextCourseExam($course_id);
+        $exam = $this->exams->getNextCourseExam($course_id);
 
         if (!$exam) {
             http_response_code(404);
@@ -75,14 +90,14 @@ class ExamsController
     public function getExamQuestions($exam_id)
     {
         $exam_id = (int) $exam_id;
-        $exam = Exams::find($exam_id);
+        $exam = $this->exams->find($exam_id);
 
         if (!$exam) {
             http_response_code(404);
             return new ViewModel('exams/not-found', ['id' => $exam_id]);
         }
 
-        $questions = Exams::getExamQuestions($exam_id);
+        $questions = $this->exams->getExamQuestions($exam_id);
         return new ViewModel('exams/questions', ['exam' => $exam, 'questions' => $questions]);
     }
 
@@ -98,7 +113,7 @@ class ExamsController
         if ($authError !== null) {
             return $authError;
         }
-        if (!Courses::find($course_id)) {
+        if (!$this->courses->find($course_id)) {
             http_response_code(404);
             return new ViewModel('dashboard', ['error' => 'Course Not Found']);
         }
@@ -126,7 +141,7 @@ class ExamsController
             return new ViewModel('exams/create', ['error' => 'End date must be after start date']);
         }
 
-        $examId = Exams::create(
+        $examId = $this->exams->create(
             $title,
             $course_id,
             $total_marks,
@@ -162,13 +177,13 @@ class ExamsController
             return new ViewModel('exams/list', ['error' => 'exam_id is required']);
         }
 
-        $exam = Exams::find($exam_id);
+        $exam = $this->exams->find($exam_id);
         if (!$exam) {
             http_response_code(404);
             return new ViewModel('exams/list', ['error' => 'Exam not found']);
         }
 
-        if (!Exams::setNextCourseExam($course_id, $exam_id)) {
+        if (!$this->exams->setNextCourseExam($course_id, $exam_id)) {
             http_response_code(500);
             return new ViewModel('exams/list', ['error' => 'Internal Server Error']);
         }
@@ -187,7 +202,7 @@ class ExamsController
         }
 
         $exam_id = (int) $exam_id;
-        $exam = Exams::find($exam_id);
+        $exam = $this->exams->find($exam_id);
 
         if (!$exam) {
             http_response_code(404);
@@ -223,7 +238,7 @@ class ExamsController
             return new ViewModel('exams/edit', ['error' => 'End date must be after start date', 'exam' => $exam]);
         }
 
-        if (!Exams::edit($exam_id, $title, $status, $total_marks, $start_date, $end_date, $randomize_order)) {
+        if (!$this->exams->edit($exam_id, $title, $status, $total_marks, $start_date, $end_date, $randomize_order)) {
             http_response_code(500);
             return new ViewModel('exams/edit', ['error' => 'Internal Server Error', 'exam' => $exam]);
         }
@@ -243,12 +258,12 @@ class ExamsController
 
         $exam_id = (int) $exam_id;
 
-        if (!Exams::find($exam_id)) {
+        if (!$this->exams->find($exam_id)) {
             http_response_code(404);
             return new ViewModel('exams/list', ['error' => 'Exam not found']);
         }
 
-        if (!Exams::delete($exam_id)) {
+        if (!$this->exams->delete($exam_id)) {
             http_response_code(500);
             return new ViewModel('exams/list', ['error' => 'Internal Server Error']);
         }
@@ -311,21 +326,21 @@ class ExamsController
 
         foreach ($answers as $questionId => $choiceId) {
             // Save student answer
-            StudentsAnswers::create($student_id, $exam_id, $questionId, $choiceId);
+            $this->studentsAnswers->create($student_id, $exam_id, $questionId, $choiceId);
 
             // Check if correct
-            $choice = Choices::getById($choiceId);
+            $choice = $this->choices->getById($choiceId);
             if ($choice && $choice['is_correct']) {
-                $question = Exam_question::getQuestionMark($exam_id, $questionId);
+                $question = $this->exam_question->getQuestionMark($exam_id, $questionId);
                 $earnedMarks += $question['question_mark'];
             }
         }
 
         // Get total marks
-        $totalMarks = (Exams::getTotalMarks($exam_id))['total_marks'];
+        $totalMarks = ($this->exams->getTotalMarks($exam_id))['total_marks'];
 
         // Save attempt
-        Attempts::updateSubmitted($exam_id, $student_id, $earnedMarks);
+        $this->attempts->updateSubmitted($exam_id, $student_id, $earnedMarks);
 
         // Clear session answers
         unset($_SESSION['exam_answers'][$exam_id]);

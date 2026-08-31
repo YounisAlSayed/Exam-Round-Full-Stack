@@ -9,6 +9,16 @@ use App\Utils\ViewModel;
 
 class TeacherCoursesController
 {
+    private TeacherCourses $teacherCourses;
+    private Courses $courses;
+    private User $user;
+
+    public function __construct()
+    {
+        $this->teacherCourses = new TeacherCourses();
+        $this->courses = new Courses();
+        $this->user = new User();
+    }
     // Router::get('/api/teachers/courses', ['TeacherCoursesController', 'getTeachersCourses']);
     public function getTeachersCourses()
     {
@@ -17,7 +27,7 @@ class TeacherCoursesController
             return $authError;
         }
 
-        $assignments = TeacherCourses::all();
+        $assignments = $this->teacherCourses->all();
         return new ViewModel('teacher-courses/list', ['assignments' => $assignments]);
     }
 
@@ -33,7 +43,7 @@ class TeacherCoursesController
         }
 
         // A teacher can view their own course list; anyone logged in can look up a teacher's courses.
-        $courses = TeacherCourses::getByTeacher($teacher_id);
+        $courses = $this->teacherCourses->getByTeacher($teacher_id);
         return new ViewModel('teacher-courses/teacher', ['courses' => $courses, 'teacher_id' => $teacher_id]);
     }
 
@@ -48,23 +58,23 @@ class TeacherCoursesController
         $teacher_id = (int) $teacher_id;
         $course_id = (int) $course_id;
 
-        $teacher = User::find($teacher_id);
+        $teacher = $this->user->find($teacher_id);
         if (!$teacher || $teacher['role'] !== 'teacher') {
             http_response_code(404);
             return new ViewModel('teacher-courses/teacher', ['error' => 'Teacher not found', 'teacher_id' => $teacher_id]);
         }
 
-        if (!Courses::find($course_id)) {
+        if (!$this->courses->find($course_id)) {
             http_response_code(404);
             return new ViewModel('teacher-courses/teacher', ['error' => 'Course not found', 'teacher_id' => $teacher_id]);
         }
 
-        if (TeacherCourses::exists($teacher_id, $course_id)) {
+        if ($this->teacherCourses->exists($teacher_id, $course_id)) {
             http_response_code(422);
             return new ViewModel('teacher-courses/teacher', ['error' => 'This teacher is already assigned to this course', 'teacher_id' => $teacher_id]);
         }
 
-        if (!TeacherCourses::create($teacher_id, $course_id)) {
+        if (!$this->teacherCourses->create($teacher_id, $course_id)) {
             http_response_code(500);
             return new ViewModel('teacher-courses/teacher', ['error' => 'Internal Server Error', 'teacher_id' => $teacher_id]);
         }
@@ -85,12 +95,12 @@ class TeacherCoursesController
         $teacher_id = (int) $teacher_id;
         $course_id = (int) $course_id;
 
-        if (!TeacherCourses::exists($teacher_id, $course_id)) {
+        if (!$this->teacherCourses->exists($teacher_id, $course_id)) {
             http_response_code(404);
             return new ViewModel('teacher-courses/teacher', ['error' => 'This assignment does not exist', 'teacher_id' => $teacher_id]);
         }
 
-        if (!TeacherCourses::delete($teacher_id, $course_id)) {
+        if (!$this->teacherCourses->delete($teacher_id, $course_id)) {
             http_response_code(500);
             return new ViewModel('teacher-courses/teacher', ['error' => 'Internal Server Error', 'teacher_id' => $teacher_id]);
         }

@@ -11,7 +11,6 @@ class Choices
     public function __construct()
     {
         $this->pdo = Database::getInstance();
-        throw new \Exception('Not implemented');
     }
     public function create(int $question_id, string $choice, int $correct)
     {
