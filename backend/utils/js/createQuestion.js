@@ -45,7 +45,7 @@ function updateChoiceControls() {
     });
 }
 
-function addChoiceRow(text = "", isCorrect = false) {
+function addChoiceRow(text = "", isCorrect = false, choiceId) {
     if (getChoiceCount() >= MAX_CHOICES) {
         return;
     }
@@ -136,8 +136,9 @@ function reindexChoices() {
 function initializeChoices() {
     choicesList.innerHTML = "";
 
-    addChoiceRow();
-    addChoiceRow();
+    questionChoices.forEach((choice) => {
+        addChoiceRow(choice["choice_text"], choice["is_correct"], choice["id"]);
+    });
 }
 
 function toggleQuestionType() {

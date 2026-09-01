@@ -3,14 +3,17 @@
 namespace App\Controllers;
 
 use App\models\Courses;
+use App\Controllers\Check_user;
 use App\Utils\ViewModel;
 
 class CoursesController
 {
     private Courses $courses;
+    private Check_user $auth;
     public function __construct()
     {
         $this->courses = new Courses();
+        $this->auth = new Check_user();
     }
     // Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
     public function getCourseStudents($course_id)
@@ -57,7 +60,7 @@ class CoursesController
     // Router::post('/api/courses', ['CoursesController', 'add']);
     public function add()
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -94,7 +97,7 @@ class CoursesController
     // Router::put('/api/courses/{id}', ['CoursesController', 'edit']);
     public function edit($course_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -139,7 +142,7 @@ class CoursesController
     // Router::delete('/api/courses/{id}', ['CoursesController', 'delete']);
     public function delete($course_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }

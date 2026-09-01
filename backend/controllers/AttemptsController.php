@@ -10,11 +10,13 @@ class AttemptsController
 {
     private Attempts $attempts;
     private Exams $exams;
+    private Check_user $auth;
 
     public function __construct()
     {
         $this->attempts = new Attempts();
         $this->exams = new Exams();
+        $this->auth = new Check_user();
     }
     // Router::get('/api/attempts/student/{id}', ['AttemptsController', 'getStudentAttempt']);
     public function getStudentAttempt($student_id)
@@ -117,7 +119,7 @@ class AttemptsController
     // Router::delete('/api/attempts/{id}', ['AttemptsController', 'deleteStudentAttempt']);
     public function deleteStudentAttempt($attempt_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }

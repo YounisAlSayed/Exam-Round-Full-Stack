@@ -28,6 +28,20 @@ class Questions
         return $statement->fetch();
     }
 
+    public function getQuestionDetails(int $question_id, $exam_id)
+    {
+        if (!$question_id || !$exam_id) {
+            http_response_code(400);
+            return null;
+        }
+        $sql = "SELECT q.id AS question_id, q.course_id, q.question AS question_text, q.type as question_type, eq.question_mark 
+                FROM questions q
+                Inner JOIN exam_questions eq ON q.id = eq.question_id
+                WHERE q.id=:question_id AND eq.exam_id=:exam_id";
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute(['question_id' => $question_id, 'exam_id' => $exam_id]);
+        return $statement->fetch();
+    }
     public function getExamQuestions(int $exam_id)
     {
         $sql = "SELECT q.id AS question_id, q.course_id, q.question AS question_text, q.type as question_type, eq.question_mark FROM questions q JOIN exam_questions eq ON q.id = eq.question_id WHERE eq.exam_id=:id";
@@ -52,9 +66,17 @@ class Questions
         return (int) $this->pdo->lastInsertId();
     }
 
-    public static function update($question_id, $question)
+    public static function update($question_id, $question_text, $question_type)
     {
+        if (!$question_id || !$question_text || !$question_type) {
+            http_response_code(400);
+            $_SESSION['error'] = "Missing required parameters for updating the question.";
+            return false;
+        }
         $pdo = Database::getInstance();
+        $sql = "UPDATE questions SET question=:question_text, type=:question_type WHERE id=:question_id";
+        $statement = $pdo->prepare($sql);
+        return $statement->execute(['question_text' => $question_text, 'question_type' => $question_type, 'question_id' => $question_id]);
     }
 
     public function delete(int $question_id)

@@ -17,6 +17,7 @@ class QuestionController
     private Exam_question $exam_question;
     private Exams $exams;
     private Questions $questions;
+    private Check_user $auth;
     public function __construct()
     {
         $this->choices = new Choices();
@@ -24,10 +25,11 @@ class QuestionController
         $this->exam_question = new Exam_question();
         $this->exams = new Exams();
         $this->questions = new Questions();
+        $this->auth = new Check_user();
     }
     public function addQuestion($course_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -39,9 +41,7 @@ class QuestionController
 
         $exam_id = isset($_GET['exam_id']) ? (int) $_GET['exam_id'] : null;
 
-        if (
-            $course_id <= 0 || $question === '' || !in_array($question_type, ['mc', 't/f'], true) || $question_mark <= 0
-        ) {
+        if ($course_id <= 0 || $question === '' || !in_array($question_type, ['mc', 't/f'], true) || $question_mark <= 0) {
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Incomplete input']);
         }
@@ -76,7 +76,7 @@ class QuestionController
                 return new ViewModel('dashboard', ['error' => 'Please select a correct answer.']);
             }
         } elseif ($question_type === 't/f') {
-            $tf_correct = $_POST['tf_correct'] ?? null;
+            $tf_correct = strtolower($_POST['tf_correct']) ?? null;
 
             if ($tf_correct !== 'true' && $tf_correct !== 'false') {
                 http_response_code(400);
@@ -121,96 +121,59 @@ class QuestionController
 
         $_SESSION['flash'] = 'Created the question successfully.';
         if ($exam_id) {
-            header("Location: " . BASE_PATH . "/api/exams/" . $exam_id . "/create/courses/" . $course_id . "?page=questions");
+            header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
             exit;
         }
         header("Location: " . BASE_PATH . "/api/dashboard");
         exit;
     }
 
-
-    // Router::post('/api/questions/{id}/choices', ['QuestionController', 'updateQuestionChoices']);
-    public function addQuestionChoices(string $question_id)
-    {
-        $question_id = (int) $question_id;
-        $exam_id = (int) $_GET['exam_id'] ?? null;
-        if (!$question_id || !$exam_id) {
-            http_response_code(400);
-            return (new ViewModel('exam/questions', ['error' => 'Question ID not passed']));
-        }
-        $auth = Check_user::checkTeacherCredentials();
-        if ($auth !== null) {
-            return $auth;
-        }
-
-        $choices = $_POST['choices'];
-        foreach ($choices as $choice) {
-            if (!$this->choices->create($question_id, $choice['text'], $choice['is_correct'])) {
-                http_response_code(500);
-                return new ViewModel(['questions/choices/create'], ['error' => 'Internal Server Error']);
-            }
-        }
-        $_SESSION['flash'] = 'Added the question choices successfully';
-        header("Location: /api/exam/questions?exam_id=$exam_id");
-        exit;
-    }
-
     // Router::put('/api/questions/{id}', ['QuestionController', 'editQuestion']);
     public function editQuestion($question_id)
     {
+        unset($_SESSION['error']);
         $question_id = (int) $question_id;
-        $course_id = (int) $_POST['course_id'] ?? null;
-        $question = $_POST['question'] ?? null;
-        $auth = Check_user::checkTeacherCredentials();
+        $update = $_GET['update'] ?? null;
+        $exam_id = isset($_GET['exam_id']) ? (int) $_GET['exam_id'] : null;
+        $course_id = $_GET['course_id'] ?? null;
+        $auth = $this->auth->checkTeacherCredentials();
         if ($auth !== null) {
             return $auth;
         }
-        if (!$question_id || !$course_id) {
-            http_response_code(400);
-            return new ViewModel('dashboard', ['error', 'Question ID or course ID not passed']);
-        }
+        $question = $this->questions->getQuestionDetails($question_id, $exam_id);
         if (!$question) {
-            http_response_code(400);
-            return new ViewModel('questions/edit', ['error' => 'Please fill the Question Text', 'question_id' => $question_id]);
+            http_response_code(404);
+            $_SESSION['error'] = 'Question not found';
+            header("Location: " . BASE_PATH . "/api/courses/teacher/" . $course_id);
+            exit;
         }
-        if (!Questions::update($question_id, $question)) {
+        $course_id = $question['course_id'];
+        $questionChoices = $this->questions->getQuestionChoices($question_id);
+        if (!$questionChoices) {
+            $questionChoices = [];
+        }
+        if (!$update) {
+            return new ViewModel('questions/preview', ['question' => $question, 'questionChoices' => $questionChoices, 'exam_id' => $exam_id]);
+        }
+        if (!$exam_id) {
+            http_response_code(400);
+            $_SESSION['error'] = 'Exam ID not passed';
+            header("Location: " . BASE_PATH . "/api/courses/teacher/" . $course_id);
+            exit;
+        }
+        $question_text = trim($_POST['question_text'] ?? '');
+        $question_mark = isset($_POST['question_mark']) ?? 1;
+        $question_type = $_POST['question_type'] ?? 'mc';
+        if (!$this->questions->update($question_id, $question_text, $question_type)) {
             http_response_code(500);
-            return new ViewModel('questions/edit', ['error' => 'Internal Server Error']);
+            if (!isset($_SESSION['error'])) {
+                $_SESSION['error'] = 'Failed to update the question';
+            }
+            header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+            exit;
         }
         $_SESSION['flash'] = 'Updated the question successfully';
-        header("Location: /api/questions/course?$course_id");
-        exit;
-    }
-
-    // Router::put('/api/questions/{id}/choices', ['QuestionController', 'editQuestionChoices']);
-    public function editQuestionChoices($question_id)
-    {
-        $auth = Check_user::checkTeacherCredentials();
-        if ($auth !== null) {
-            return $auth;
-        }
-
-        $question_id = (int) $question_id;
-        $course_id = (int) $_GET['course_id'] ?? null;
-        if (!$question_id || !$course_id) {
-            http_response_code(400);
-            return new ViewModel('dashboard', ['error' => 'Question ID was not passed or Course ID']);
-        }
-
-        $choices = $_POST['choices'];
-        if (!$this->choices->reset($question_id)) {
-            http_response_code(500);
-            return new ViewModel('questions/choices', ['error' => 'Internal Server Error', 'question_id' => $question_id]);
-        }
-        foreach ($choices as $choice) {
-            if (!$this->choices->edit($choice['id'], $choice['text'], $choice['is_correct'])) {
-                http_response_code(500);
-                return new ViewModel('questions/choices', ['error' => 'Internal Server Error', 'question_id' => $question_id]);
-            }
-        }
-
-        $_SESSION['flash'] = 'successfully updated the question choices';
-        header("Location: /api/questions/course?course_id=$course_id");
+        header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
         exit;
     }
 
@@ -223,7 +186,7 @@ class QuestionController
             http_response_code(400);
             return (new ViewModel('courses/questions', ['error' => 'Question ID or Course ID not passed']));
         }
-        $auth = Check_user::checkTeacherCredentials();
+        $auth = $this->auth->checkTeacherCredentials();
         if ($auth !== null)
             return $auth;
 
@@ -254,7 +217,7 @@ class QuestionController
             header("Location: " . BASE_PATH . "/api/dashboard");
             exit;
         }
-        $auth = Check_user::checkTeacherCredentials();
+        $auth = $this->auth->checkTeacherCredentials();
         if ($auth !== null) {
             return $auth;
         }

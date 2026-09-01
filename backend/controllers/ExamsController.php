@@ -18,6 +18,7 @@ class ExamsController
     private Choices $choices;
     private Exam_question $exam_question;
     private StudentsAnswers $studentsAnswers;
+    private Check_user $auth;
     public function __construct()
     {
         $this->exams = new Exams();
@@ -26,6 +27,7 @@ class ExamsController
         $this->choices = new Choices();
         $this->exam_question = new Exam_question();
         $this->studentsAnswers = new StudentsAnswers();
+        $this->auth = new Check_user();
     }
     // Router::get('/api/exams', ['ExamsController', 'getAll']);
     public function getAll()
@@ -109,7 +111,7 @@ class ExamsController
             return new ViewModel('dashboard', ['error' => 'course ID was not Passed']);
         }
         $course_id = (int) $course_id;
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -164,7 +166,7 @@ class ExamsController
     // Router::post('/api/exams/course/{id}', ['ExamsController', 'setNextCourseExam']);
     public function setNextCourseExam($course_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -196,7 +198,7 @@ class ExamsController
     // Router::put('/api/exams/{id}', ['ExamsController', 'edit']);
     public function edit($exam_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -251,7 +253,7 @@ class ExamsController
     // Router::delete('/api/exams/{id}', ['ExamsController', 'delete']);
     public function delete($exam_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }

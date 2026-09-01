@@ -18,6 +18,7 @@ class RedirectingController
     private Questions $questions;
     private Exam_question $exam_question;
     private Exams $exams;
+    private Check_user $auth;
     public function __construct()
     {
         $this->attempts = new Attempts();
@@ -26,6 +27,7 @@ class RedirectingController
         $this->questions = new Questions();
         $this->exam_question = new Exam_question();
         $this->exams = new Exams();
+        $this->auth = new Check_user();
     }
     public function dashboard()
     {
@@ -135,7 +137,7 @@ class RedirectingController
             header("Location: " . BASE_PATH . "/api/courses/" . $course_id . '/teacher');
             exit;
         }
-        return (new ViewModel('questions/create', ['course_id' => $course_id]));
+        return (new ViewModel('questions/preview', ['course_id' => $course_id]));
     }
 
     public function updateQuestion()
@@ -306,10 +308,10 @@ class RedirectingController
         return new ViewModel('courses/teacherCourse', ['course' => $course, 'courseStudents' => $courseStudents, 'courseExams' => $courseExams, 'courseQuestions' => $courseQuestions]);
     }
 
-    public function examCreate($exam_id, $course_id)
+    public function examCreate($exam_id)
     {
         $_SESSION['error'] = null;
-        $course_id = (int) $course_id;
+        $course_id = (int) $_GET['course_id'] ?? null;
         $exam_id = (int) $exam_id;
         $page = $_GET['page'] ?? null;
         if (!$course_id || !$exam_id) {
@@ -320,7 +322,7 @@ class RedirectingController
             http_response_code(400);
             return new ViewModel('users/login', ['error' => 'User is Not logged in']);
         }
-        $auth = Check_user::checkTeacherCredentials();
+        $auth = $this->auth->checkTeacherCredentials();
         if ($auth !== null) {
             return $auth;
         }

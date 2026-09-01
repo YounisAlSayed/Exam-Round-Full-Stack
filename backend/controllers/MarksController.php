@@ -8,9 +8,11 @@ use App\Utils\ViewModel;
 class MarksController
 {
     private Marks $marks;
+    private Check_user $auth;
     public function __construct()
     {
         $this->marks = new Marks();
+        $this->auth = new Check_user();
     }
     // Router::get('/api/marks/student/{id}/average', ['MarksController', 'getStudentMarks']);
     public function getStudentMarks($student_id)
@@ -98,7 +100,7 @@ class MarksController
     // Router::post('/api/marks/student/{student_id}/exam/{exam_id}', ['MarksController', 'addStudentMark']);
     public function addStudentMark($student_id, $exam_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -137,7 +139,7 @@ class MarksController
     // Router::put('/api/marks/student/{student_id}/exam/{exam_id}', ['MarksController', 'edit']);
     public function edit($student_id, $exam_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }

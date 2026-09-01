@@ -12,17 +12,19 @@ class TeacherCoursesController
     private TeacherCourses $teacherCourses;
     private Courses $courses;
     private User $user;
+    private Check_user $auth;
 
     public function __construct()
     {
         $this->teacherCourses = new TeacherCourses();
         $this->courses = new Courses();
         $this->user = new User();
+        $this->auth = new Check_user();
     }
     // Router::get('/api/teachers/courses', ['TeacherCoursesController', 'getTeachersCourses']);
     public function getTeachersCourses()
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -50,7 +52,7 @@ class TeacherCoursesController
     // Router::post('/api/teachers/{teacher_id}/courses/{course_id}', ['TeacherCoursesController', 'addTeacherCourse']);
     public function addTeacherCourse($teacher_id, $course_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }
@@ -87,7 +89,7 @@ class TeacherCoursesController
     // Router::delete('/api/teachers/{teacher_id}/courses/{course_id}', ['TeacherCoursesController', 'deleteTeacherCourse']);
     public function deleteTeacherCourse($teacher_id, $course_id)
     {
-        $authError = Check_user::checkTeacherCredentials();
+        $authError = $this->auth->checkTeacherCredentials();
         if ($authError !== null) {
             return $authError;
         }

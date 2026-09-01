@@ -154,7 +154,7 @@ foreach ($courseExams as $exam) {
                                         $daysUntil = $now->diff($startDate)->days;
                                         $isUpcoming = $now < $startDate;
                                     ?>
-                            <a href="<?= BASE_PATH ?>/api/exams/<?= $exam['id'] ?>/create/courses/<?= $course['id']; ?>"
+                            <a href="<?= BASE_PATH ?>/api/exams/preview/<?= $exam['id'] ?>?course_id=<?= $course['id'] ?>"
                                 class="exam-card-link text-decoration-none">
                                 <div class="exam-card card border-0 shadow-sm h-100">
                                     <div class="card-body p-4">

@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . "/../layout.phtml";
 $course_id = $course_id ?? 0;
+$exam_id = $_GET['exam_id'] ?? null;
+$question = $question ?? null;
+$questionChoices = $questionChoices ?? null;
 ?>
 
 <!DOCTYPE html>
@@ -18,11 +21,10 @@ $course_id = $course_id ?? 0;
 
 <body>
     <?php renderHeader("Create A Question"); ?>
-
-    <div class="container py-4 w-75">
-        <h1 class="mb-4">Create a Question</h1>
+    <div class="container card py-4 w-50">
+        <h1 class="mb-4"><?= $exam_id ? 'Update Question' : 'Create Question' ?></h1>
         <form id="addQuestionForm" method="POST"
-            action="<?= BASE_PATH ?>/api/questions/create/<?= $course_id ?>?exam_id=<?= $_GET['exam_id'] ?? null ?>">
+            action="<?= BASE_PATH ?>/api/questions/<?= isset($exam_id) ? 'update' : 'create' ?>/<?= isset($exam_id) ? $question['question_id'] : $course_id ?>?exam_id=<?= $_GET['exam_id'] ?? '' ?>&update=true">
             <div class="row g-3">
                 <!-- Question -->
                 <div class="col-12">
@@ -30,19 +32,23 @@ $course_id = $course_id ?? 0;
                         Question
                     </label>
 
-                    <input type="text" id="qp_questionText" name="question" class="form-control"
-                        placeholder="e.g., What does CRUD stand for?" required>
+                    <input type="text" id="qp_questionText"
+                        value="<?= isset($question) ? $question['question_text'] : '' ?>" name="question_text"
+                        class="form-control" placeholder="e.g., What does CRUD stand for?" required>
                 </div>
 
                 <!-- Marks -->
+                <?php if (isset($_GET['exam_id'])): ?>
                 <div class="col-md-4">
                     <label for="qp_questionMark" class="form-label fw-semibold">
                         Marks
                     </label>
 
-                    <input type="number" id="qp_questionMark" name="question_mark" class="form-control" min="1"
+                    <input type="number" id="qp_questionMark" name="question_mark"
+                        value="<?= $question ? $question['question_mark'] : '' ?>" class="form-control" min="1"
                         max="100" required>
                 </div>
+                <?php endif; ?>
 
                 <!-- Question Type -->
                 <div class="col-12">
@@ -53,7 +59,7 @@ $course_id = $course_id ?? 0;
                     <div class="d-flex gap-3">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="question_type" id="qp_typeMC" value="mc"
-                                checked required>
+                                <?= $question ? ($question['question_type'] === 'mc' ? 'checked' : '') : '' ?> required>
 
                             <label class="form-check-label" for="qp_typeMC">
                                 Multiple Choice
@@ -61,8 +67,9 @@ $course_id = $course_id ?? 0;
                         </div>
 
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="question_type" id="qp_typeTF"
-                                value="t/f">
+                            <input class="form-check-input" type="radio"
+                                <?= $question ? ($question['question_type'] === 't/f' ? 'checked' : '') : '' ?>
+                                name="question_type" id="qp_typeTF" value="t/f">
 
                             <label class="form-check-label" for="qp_typeTF">
                                 True / False
@@ -83,56 +90,60 @@ $course_id = $course_id ?? 0;
                         </small>
 
                     </div>
-
                     <div id="qp_choicesList" class="mt-2"></div>
                     <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="qp_addChoiceBtn">
                         <i class="fas fa-plus me-1"></i>
                         Add Choice
                     </button>
-
                 </div>
+            </div>
 
-                <!-- True / False -->
-                <div class="col-12 d-none" id="qp_tfContainer">
+            <!-- True / False -->
+            <div class="col-12 d-none" id="qp_tfContainer">
 
-                    <label class="form-label fw-semibold d-block">
-                        Correct Answer
-                    </label>
+                <label class="form-label fw-semibold d-block">
+                    Correct Answer
+                </label>
 
-                    <div class="d-flex gap-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfTrue" value="true">
+                <div class="d-flex gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input"
+                            <?= $question ? ($question['question_type'] === 't/f' ? ((($questionChoices[0]['choice_text'] === 'True' && $questionChoices[0]['is_correct']) || ($questionChoices[1]['choice_text'] === 'True' && $questionChoices[1]['is_correct'])) ? 'checked' : '') : '') : '' ?>
+                            type="radio" name="tf_correct" id="qp_tfTrue" value="true">
 
-                            <label class="form-check-label" for="qp_tfTrue">
-                                True
-                            </label>
-                        </div>
+                        <label class="form-check-label" for="qp_tfTrue">
+                            True
+                        </label>
+                    </div>
 
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfFalse"
-                                value="false">
+                    <div class="form-check">
+                        <input class="form-check-input"
+                            <?= $question ? ($question['question_type'] === 't/f' ? ((($questionChoices[1]['choice_text'] === 'False' && $questionChoices[1]['is_correct']) || ($questionChoices[0]['choice_text'] === 'False' && $questionChoices[0]['is_correct'])) ? 'checked' : '') : '') : '' ?>
+                            type="radio" name="tf_correct" id="qp_tfFalse" value="false">
 
-                            <label class="form-check-label" for="qp_tfFalse">
-                                False
-                            </label>
-                        </div>
+                        <label class="form-check-label" for="qp_tfFalse">
+                            False
+                        </label>
                     </div>
                 </div>
             </div>
 
             <!-- Buttons -->
-            <div class="d-flex gap-2 mt-4">
+            <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
                 <button type="button" class="btn btn-outline-danger" onclick="history.back()">
                     Cancel
                 </button>
 
                 <button type="submit" class="btn btn-outline-primary" id="qp_confirmBtn">
-                    Create
+                    <?= $exam_id ? 'Update Question' : 'Create Question' ?>
                 </button>
             </div>
         </form>
     </div>
-
+    <script>
+    const questionChoices = <?= json_encode($questionChoices ?? [], JSON_HEX_TAG) ?>;
+    const basePath = <?= json_encode(BASE_PATH, JSON_HEX_TAG) ?>;
+    </script>
     <script src="<?= BASE_PATH ?>/utils/js/createQuestion.js"></script>
 </body>
 
