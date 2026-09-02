@@ -8,11 +8,12 @@ use App\Utils\ViewModel;
 class MarksController
 {
     private Marks $marks;
-    private Check_user $auth;
+    private Check $auth;
     public function __construct()
     {
         $this->marks = new Marks();
-        $this->auth = new Check_user();
+        $this->auth = new Check();
+        $this->auth->unsetAll();
     }
     // Router::get('/api/marks/student/{id}/average', ['MarksController', 'getStudentMarks']);
     public function getStudentMarks($student_id)

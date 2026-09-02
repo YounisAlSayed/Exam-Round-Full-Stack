@@ -18,7 +18,8 @@ class RedirectingController
     private Questions $questions;
     private Exam_question $exam_question;
     private Exams $exams;
-    private Check_user $auth;
+    private Check $auth;
+    private ViewModel $viewModel;
     public function __construct()
     {
         $this->attempts = new Attempts();
@@ -27,14 +28,15 @@ class RedirectingController
         $this->questions = new Questions();
         $this->exam_question = new Exam_question();
         $this->exams = new Exams();
-        $this->auth = new Check_user();
+        $this->auth = new Check();
+        $this->viewModel = new ViewModel("");
+        $this->auth->unsetAll();
     }
     public function dashboard()
     {
         $courses = [];
         $nextExamSet = [];
         $user = $_SESSION['user'] ?? null;
-        $_SESSION['error'] = null;
         if (!$user) {
             http_response_code(404);
             return new ViewModel('users/login', ['error' => 'User has to be logged in']);
@@ -57,28 +59,23 @@ class RedirectingController
     // -------------------------------- user --------------------------------------
     public function login()
     {
-        $_SESSION['error'] = null;
         $_SESSION['user'] = null;
         return (new ViewModel('users/login'));
     }
 
     public function signup()
     {
-        $_SESSION['error'] = null;
         return (new ViewModel('users/signup'));
     }
 
     public function logout()
     {
         $_SESSION['user'] = null;
-        $_SESSION['flash'] = 'Logout Successful';
-        $_SESSION['error'] = null;
         return new ViewModel('users/login');
     }
 
     public function profile()
     {
-        $_SESSION['error'] = null;
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
@@ -94,7 +91,6 @@ class RedirectingController
 
     public function usersList()
     {
-        $_SESSION['error'] = null;
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
@@ -113,7 +109,6 @@ class RedirectingController
     // ---------------------------------- questions ----------------------------------------
     public function showExamQuestions(string $exam_id)
     {
-        $_SESSION['error'] = null;
         $exam_id = (int) $exam_id;
         if (!$exam_id) {
             http_response_code(400);
@@ -129,7 +124,6 @@ class RedirectingController
 
     public function createQuestion($course_id)
     {
-        $_SESSION['error'] = null;
         $course_id = (int) $course_id;
         if (!$course_id) {
             http_response_code(400);
@@ -142,7 +136,6 @@ class RedirectingController
 
     public function updateQuestion()
     {
-        $_SESSION['error'] = null;
         return (new ViewModel('questions/update'));
     }
 
@@ -150,7 +143,6 @@ class RedirectingController
 
     public function studentExamDetails($exam_id)
     {
-        $_SESSION['error'] = null;
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return new ViewModel('users/login', ['error' => 'User Not logged in']);
@@ -189,7 +181,6 @@ class RedirectingController
 
     public function teacherExamDetails($exam_id)
     {
-        $_SESSION['error'] = null;
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return new ViewModel('users/login', ['error' => 'User Not Logged in']);
@@ -231,7 +222,6 @@ class RedirectingController
 
     public function examStart($exam_id, $page)
     {
-        $_SESSION['error'] = null;
         if (!isset($_SESSION['user'])) {
             header('Location: ' . BASE_PATH . '/api/users/login');
             exit;
@@ -282,7 +272,6 @@ class RedirectingController
 
     public function teacherCourse($course_id)
     {
-        $_SESSION['error'] = null;
         if (!$course_id) {
             http_response_code(400);
             return new ViewModel('dashboard', ['error' => 'Course Not Passed']);
@@ -310,7 +299,6 @@ class RedirectingController
 
     public function examCreate($exam_id)
     {
-        $_SESSION['error'] = null;
         $course_id = (int) $_GET['course_id'] ?? null;
         $exam_id = (int) $exam_id;
         $page = $_GET['page'] ?? null;

@@ -53,4 +53,26 @@ class Exam_question
         $statement->execute(['exam_id' => $exam_id, 'student_id' => $student_id]);
         return $statement->fetchAll();
     }
+
+    public function updateMark($exam_id, $question_id, $new_mark)
+    {
+        if (!$exam_id || !$question_id || $new_mark < 0) {
+            http_response_code(400);
+            $_SESSION['error'] = "Invalid input for updating question mark";
+            $_SESSION['redirect_to'] = "/api/dashboard";
+            return false;
+        }
+
+        $sql = "UPDATE exam_questions SET question_mark = :new_mark WHERE exam_id = :exam_id AND question_id = :question_id";
+        $statement = $this->pdo->prepare($sql);
+        $res = $statement->execute(['new_mark' => $new_mark, 'exam_id' => $exam_id, 'question_id' => $question_id]);
+
+        if (!$res) {
+            http_response_code(500);
+            $_SESSION['error'] = "Failed to update question mark";
+            $_SESSION['redirect_to'] = "/api/questions/update/" . $question_id . "?exam_id=" . $exam_id;
+            return false;
+        }
+        return $res;
+    }
 }

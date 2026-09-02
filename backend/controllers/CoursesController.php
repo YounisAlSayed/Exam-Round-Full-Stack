@@ -3,17 +3,30 @@
 namespace App\Controllers;
 
 use App\models\Courses;
-use App\Controllers\Check_user;
 use App\Utils\ViewModel;
 
 class CoursesController
 {
     private Courses $courses;
-    private Check_user $auth;
+    private Check $auth;
     public function __construct()
     {
         $this->courses = new Courses();
-        $this->auth = new Check_user();
+        $this->auth = new Check();
+        $this->auth->unsetAll();
+    }
+
+    public function getAll()
+    {
+        $currentUser = $_SESSION['user'] ?? null;
+
+        if ($currentUser === null) {
+            header('Location: /api/users/login');
+            exit;
+        }
+
+        $courses = $this->courses->all();
+        return new ViewModel('courses/list', ['courses' => $courses]);
     }
     // Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
     public function getCourseStudents($course_id)

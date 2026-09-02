@@ -4,6 +4,20 @@ $course_id = $course_id ?? 0;
 $exam_id = $_GET['exam_id'] ?? null;
 $question = $question ?? null;
 $questionChoices = $questionChoices ?? null;
+
+
+$trueChoice = null;
+$falseChoice = null;
+
+if ($questionChoices) {
+    foreach ($questionChoices as $c) {
+        if (strcasecmp($c['choice_text'], 'True') === 0) {
+            $trueChoice = $c;
+        } elseif (strcasecmp($c['choice_text'], 'False') === 0) {
+            $falseChoice = $c;
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -100,32 +114,24 @@ $questionChoices = $questionChoices ?? null;
 
             <!-- True / False -->
             <div class="col-12 d-none" id="qp_tfContainer">
-
-                <label class="form-label fw-semibold d-block">
-                    Correct Answer
-                </label>
+                <label class="form-label fw-semibold d-block">Correct Answer</label>
 
                 <div class="d-flex gap-3">
                     <div class="form-check">
-                        <input class="form-check-input"
-                            <?= $question ? ($question['question_type'] === 't/f' ? ((($questionChoices[0]['choice_text'] === 'True' && $questionChoices[0]['is_correct']) || ($questionChoices[1]['choice_text'] === 'True' && $questionChoices[1]['is_correct'])) ? 'checked' : '') : '') : '' ?>
-                            type="radio" name="tf_correct" id="qp_tfTrue" value="true">
-
-                        <label class="form-check-label" for="qp_tfTrue">
-                            True
-                        </label>
+                        <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfTrue" value="True"
+                            <?= ($trueChoice && $trueChoice['is_correct']) ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="qp_tfTrue">True</label>
                     </div>
 
                     <div class="form-check">
-                        <input class="form-check-input"
-                            <?= $question ? ($question['question_type'] === 't/f' ? ((($questionChoices[1]['choice_text'] === 'False' && $questionChoices[1]['is_correct']) || ($questionChoices[0]['choice_text'] === 'False' && $questionChoices[0]['is_correct'])) ? 'checked' : '') : '') : '' ?>
-                            type="radio" name="tf_correct" id="qp_tfFalse" value="false">
-
-                        <label class="form-check-label" for="qp_tfFalse">
-                            False
-                        </label>
+                        <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfFalse" value="False"
+                            <?= ($falseChoice && $falseChoice['is_correct']) ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="qp_tfFalse">False</label>
                     </div>
                 </div>
+
+                <input type="hidden" name="true_choice_id" value="<?= $trueChoice['id'] ?? '' ?>">
+                <input type="hidden" name="false_choice_id" value="<?= $falseChoice['id'] ?? '' ?>">
             </div>
 
             <!-- Buttons -->

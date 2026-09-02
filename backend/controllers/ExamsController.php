@@ -18,7 +18,7 @@ class ExamsController
     private Choices $choices;
     private Exam_question $exam_question;
     private StudentsAnswers $studentsAnswers;
-    private Check_user $auth;
+    private Check $auth;
     public function __construct()
     {
         $this->exams = new Exams();
@@ -27,7 +27,8 @@ class ExamsController
         $this->choices = new Choices();
         $this->exam_question = new Exam_question();
         $this->studentsAnswers = new StudentsAnswers();
-        $this->auth = new Check_user();
+        $this->auth = new Check();
+        $this->auth->unsetAll();
     }
     // Router::get('/api/exams', ['ExamsController', 'getAll']);
     public function getAll()

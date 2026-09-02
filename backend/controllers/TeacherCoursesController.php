@@ -12,14 +12,15 @@ class TeacherCoursesController
     private TeacherCourses $teacherCourses;
     private Courses $courses;
     private User $user;
-    private Check_user $auth;
+    private Check $auth;
 
     public function __construct()
     {
         $this->teacherCourses = new TeacherCourses();
         $this->courses = new Courses();
         $this->user = new User();
-        $this->auth = new Check_user();
+        $this->auth = new Check();
+        $this->auth->unsetAll();
     }
     // Router::get('/api/teachers/courses', ['TeacherCoursesController', 'getTeachersCourses']);
     public function getTeachersCourses()

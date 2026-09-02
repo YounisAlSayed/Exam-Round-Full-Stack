@@ -8,9 +8,12 @@ use App\Utils\ViewModel;
 class UserController
 {
     private User $user;
+    private Check $auth;
     public function __construct()
     {
         $this->user = new User();
+        $this->auth = new Check();
+        $this->auth->unsetAll();
     }
     // Router::get('/api/users{role}', ['UserController', 'getAll']);
     public function getAll()

@@ -10,10 +10,13 @@ class StudentsAnswersController
 {
     private StudentsAnswers $studentsAnswers;
     private Attempts $attempts;
+    private Check $auth;
     public function __construct()
     {
         $this->studentsAnswers = new StudentsAnswers();
         $this->attempts = new Attempts();
+        $this->auth = new Check();
+        $this->auth->unsetAll();
     }
     // Router::get('/api/students/{student_id}/exams/{exam_id}/answers', ['StudentsAnswersController', 'getStudentsExamAnswers']);
     public function getStudentExamAnswers($student_id, $exam_id)

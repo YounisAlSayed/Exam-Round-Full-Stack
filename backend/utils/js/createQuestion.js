@@ -45,7 +45,7 @@ function updateChoiceControls() {
     });
 }
 
-function addChoiceRow(text = "", isCorrect = false, choiceId) {
+function addChoiceRow(text = "", isCorrect = false, choiceId = null, newEntry = false) {
     if (getChoiceCount() >= MAX_CHOICES) {
         return;
     }
@@ -53,55 +53,66 @@ function addChoiceRow(text = "", isCorrect = false, choiceId) {
     const index = getChoiceCount();
 
     const row = document.createElement("div");
-
     row.className = "d-flex align-items-center gap-2 mb-2 qp-choice-row";
 
-    const input = document.createElement("input");
+    if (newEntry) {
+        const newInput = document.createElement("input");
+        newInput.type = "hidden";
+        newInput.name = `choices[${index}][new]`;
+        newInput.value = "1";
+        row.appendChild(newInput);
+    }
+    if (choiceId !== null) {
+        const idInput = document.createElement("input");
+        idInput.type = "hidden";
+        idInput.name = `choices[${index}][id]`;
+        idInput.value = choiceId;
+        row.appendChild(idInput);
+    }
 
+    const input = document.createElement("input");
     input.type = "text";
-    input.name = "choices[]";
+    input.name = `choices[${index}][text]`;
     input.className = "form-control qp-choice-text";
     input.placeholder = `Choice ${String.fromCharCode(65 + index)}`;
-
     input.value = text;
 
     const correctContainer = document.createElement("div");
-
     correctContainer.className = "form-check";
 
     const correctRadio = document.createElement("input");
-
     correctRadio.type = "radio";
     correctRadio.name = "correct_choice";
     correctRadio.value = index;
     correctRadio.className = "form-check-input qp-choice-correct";
-
     correctRadio.checked = isCorrect;
-
     const correctLabel = document.createElement("label");
-
     correctLabel.className = "form-check-label";
     correctLabel.textContent = "Correct";
 
     const removeBtn = document.createElement("button");
-
     removeBtn.type = "button";
     removeBtn.className = "btn btn-sm btn-outline-danger qp-choice-remove";
-
     removeBtn.innerHTML = '<i class="fas fa-times"></i>';
 
     removeBtn.addEventListener("click", () => {
         if (getChoiceCount() <= MIN_CHOICES) {
             return;
         }
-        const wasCorrect = correctRadio.checked;
 
+        if (choiceId !== null) {
+            const deletedInput = document.createElement("input");
+            deletedInput.type = "hidden";
+            deletedInput.name = `deleted_choice_ids[${choiceId}]`;
+            deletedInput.value = "1";
+            choicesList.appendChild(deletedInput);
+        }
+
+        const wasCorrect = correctRadio.checked;
         row.remove();
 
         if (wasCorrect) {
-            const radios = choicesList.querySelectorAll(".qp-choice-correct");
-
-            radios.forEach((radio) => {
+            choicesList.querySelectorAll(".qp-choice-correct").forEach((radio) => {
                 radio.checked = false;
             });
         }
@@ -164,7 +175,7 @@ function toggleQuestionType() {
 
 typeMC.addEventListener("change", toggleQuestionType);
 typeTF.addEventListener("change", toggleQuestionType);
-addChoiceBtn.addEventListener("click", () => addChoiceRow());
+addChoiceBtn.addEventListener("click", () => addChoiceRow("", false, null, true));
 
 form.addEventListener("submit", function (event) {
     const question = questionText.value.trim();

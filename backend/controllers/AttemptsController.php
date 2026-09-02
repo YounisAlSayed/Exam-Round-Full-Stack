@@ -10,13 +10,14 @@ class AttemptsController
 {
     private Attempts $attempts;
     private Exams $exams;
-    private Check_user $auth;
+    private Check $auth;
 
     public function __construct()
     {
         $this->attempts = new Attempts();
         $this->exams = new Exams();
-        $this->auth = new Check_user();
+        $this->auth = new Check();
+        $this->auth->unsetAll();
     }
     // Router::get('/api/attempts/student/{id}', ['AttemptsController', 'getStudentAttempt']);
     public function getStudentAttempt($student_id)

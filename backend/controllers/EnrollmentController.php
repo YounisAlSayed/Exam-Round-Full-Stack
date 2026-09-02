@@ -10,11 +10,13 @@ class EnrollmentController
 {
     private Enrolment $enrolment;
     private Courses $courses;
+    private Check $auth;
 
     public function __construct()
     {
         $this->enrolment = new Enrolment();
         $this->courses = new Courses();
+        $this->auth->unsetAll();
     }
     // Router::get('/api/enrollment/students/{id}', ['EnrollmentController', 'getStudentEnrollments']);
     public function getStudentEnrollments($student_id)

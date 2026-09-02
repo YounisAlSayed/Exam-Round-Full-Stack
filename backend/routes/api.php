@@ -11,7 +11,7 @@ Router::post('/api/questions/update/{question_id}', ['QuestionController', 'edit
 Router::delete('/api/questions/delete/{question_id}', ['QuestionController', 'delete']);
 
 // =------------------------------ choices routers -----------------------------------
-Router::delete('api/choices/delete/{choice_id}', ['ChoicesController', 'deleteChoice']);
+Router::delete('/api/choices/delete/{choice_id}', ['ChoicesController', 'deleteChoice']);
 //-------------------------- user routers ----------------------------
 Router::post('/api/users/login', ['UserController', 'login']);
 Router::post('/api/users/signup', ['UserController', 'signup']);
@@ -49,6 +49,8 @@ Router::delete('/api/attempts/{id}', ['AttemptsController', 'deleteStudentAttemp
 //------------------ courses routes -----------------------------
 Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
 Router::get('/api/courses/{id}/teachers', ['CoursesController', 'getCourseTeachers']);
+
+Router::get('/api/courses/list', ['CoursesController', 'getAll']);
 
 Router::post('/api/courses', ['CoursesController', 'add']);
 
