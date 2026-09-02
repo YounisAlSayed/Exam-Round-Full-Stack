@@ -7,7 +7,6 @@ use App\models\Courses;
 use App\models\Exam_question;
 use App\models\Exams;
 use App\models\Questions;
-use App\Utils\ViewModel;
 
 class QuestionController
 {
@@ -16,7 +15,7 @@ class QuestionController
     private Exam_question $exam_question;
     private Exams $exams;
     private Questions $questions;
-    private Check $auth;
+    private Check $elp;
     public function __construct()
     {
         $this->choices = new Choices();
@@ -24,14 +23,14 @@ class QuestionController
         $this->exam_question = new Exam_question();
         $this->exams = new Exams();
         $this->questions = new Questions();
-        $this->auth = new Check();
-        $this->auth->unsetAll();
+        $this->elp = new Check();
+        $this->elp->unsetAll();
     }
     public function addQuestion($course_id)
     {
-        $authError = $this->auth->checkTeacherCredentials();
-        if ($authError !== null) {
-            return $authError;
+        $elp = $this->elp->checkTeacherCredentials();
+        if ($elp !== null) {
+            return $elp;
         }
 
         $course_id = (int) $course_id;
@@ -44,13 +43,13 @@ class QuestionController
 
         if (!$course_id || !$question || !in_array($question_type, ['mc', 't/f'], true) || $question_mark <= 0) {
             http_response_code(400);
-            return new ViewModel('dashboard', ['error' => 'Incomplete input']);
+            $this->elp->changeView('dashboard', ['error' => 'Incomplete input'])->render();
         }
         $course = $this->courses->find($course_id);
 
         if (!$course) {
             http_response_code(404);
-            return new ViewModel('dashboard', ['error' => 'Course not found']);
+            $this->elp->changeView('dashboard', ['error' => 'Course not found'])->render();
         }
         $choices = [];
         $correctIndex = null;
@@ -61,27 +60,27 @@ class QuestionController
 
             if (count($choices) < 2 || count($choices) > 4) {
                 http_response_code(400);
-                return new ViewModel('dashboard', ['error' => 'A multiple-choice question must have 2 to 4 choices.']);
+                $this->elp->changeView('dashboard', ['error' => 'A multiple-choice question must have 2 to 4 choices.'])->render();
             }
 
             foreach ($choices as $index => $choice) {
                 $choices[$index] = trim((string) $choice);
                 if ($choices[$index] === '') {
                     http_response_code(400);
-                    return new ViewModel('dashboard', ['error' => 'All choices must be filled in.']);
+                    $this->elp->changeView('dashboard', ['error' => 'All choices must be filled in.'])->render();
                 }
             }
 
             if ($correctIndex === null || !isset($choices[$correctIndex])) {
                 http_response_code(400);
-                return new ViewModel('dashboard', ['error' => 'Please select a correct answer.']);
+                $this->elp->changeView('dashboard', ['error' => 'Please select a correct answer.'])->render();
             }
         } elseif ($question_type === 't/f') {
             $tf_correct = $_POST['tf_correct'] ?? null;
 
             if ($tf_correct !== 'True' && $tf_correct !== 'False') {
                 http_response_code(400);
-                return new ViewModel('dashboard', ['error' => 'Please select True or False.']);
+                $this->elp->changeView('dashboard', ['error' => 'Please select True or False.'])->render();
             }
 
             $choices = ['True', 'False'];
@@ -92,7 +91,7 @@ class QuestionController
 
         if (!$question_id) {
             http_response_code(500);
-            return new ViewModel('dashboard', ['error' => 'Failed to create question.']);
+            $this->elp->changeView('dashboard', ['error' => 'Failed to create question.'])->render();
         }
 
         foreach ($choices as $index => $choice) {
@@ -107,7 +106,7 @@ class QuestionController
                     exit;
                 }
 
-                return new ViewModel('dashboard', ['error' => 'Failed to create choice.']);
+                $this->elp->changeView('dashboard', ['error' => 'Failed to create choice.'])->render();
             }
         }
         if ($exam_id) {
@@ -136,9 +135,9 @@ class QuestionController
         $update = $_GET['update'] ?? null;
         $exam_id = isset($_GET['exam_id']) ? (int) $_GET['exam_id'] : null;
         $course_id = $_GET['course_id'] ?? null;
-        $auth = $this->auth->checkTeacherCredentials();
-        if ($auth !== null) {
-            return $auth;
+        $elpErr = $this->elp->checkTeacherCredentials();
+        if (!$elpErr) {
+            return;
         }
         $question = $this->questions->getQuestionDetails($question_id, $exam_id);
         if (!$question) {
@@ -153,7 +152,7 @@ class QuestionController
             $questionChoices = [];
         }
         if (!$update) {
-            return new ViewModel('questions/preview', ['question' => $question, 'questionChoices' => $questionChoices, 'exam_id' => $exam_id]);
+            $this->elp->changeView('questions/preview', ['question' => $question, 'questionChoices' => $questionChoices, 'exam_id' => $exam_id])->render();
         }
         if (!$exam_id) {
             http_response_code(400);
@@ -262,7 +261,7 @@ class QuestionController
             exit;
         }
         if (!$this->exam_question->updateMark($exam_id, $question_id, $question_mark)) {
-            $this->auth->redirect($_SESSION['redirect_to']);
+            $this->elp->redirect($_SESSION['redirect_to']);
         }
         $_SESSION['flash'] = 'Updated the question successfully';
         header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
@@ -276,20 +275,20 @@ class QuestionController
         $course_id = (int) $course_id;
         if (!$question_id || !$course_id) {
             http_response_code(400);
-            return (new ViewModel('courses/questions', ['error' => 'Question ID or Course ID not passed']));
+            $this->elp->changeView('courses/questions', ['error' => 'Question ID or Course ID not passed'])->render();
         }
-        $auth = $this->auth->checkTeacherCredentials();
-        if ($auth !== null)
-            return $auth;
+        $elp = $this->elp->checkTeacherCredentials();
+        if ($elp !== null)
+            return $elp;
 
         if (!$this->questions->getByID($question_id)) {
-            http_response_code(500);
-            return (new ViewModel('courses/questions', ['error' => 'Internal Server error', 'course_id' => $course_id]));
+            http_response_code(404);
+            $this->elp->changeView('courses/questions', ['error' => 'Question Not Found', 'course_id' => $course_id])->render();
         }
 
         if (!$this->questions->delete($question_id)) {
             http_response_code(500);
-            return new ViewModel('courses/questions', ['error' => 'Internal Server Error', 'course_id' => $course_id]);
+            $this->elp->changeView('courses/questions', ['error' => 'Internal Server Error', 'course_id' => $course_id])->render();
         }
         $_SESSION['flash'] = 'Successfully deleted the question';
         header("Location: /api/course/questions?course_id=$course_id");
@@ -308,9 +307,9 @@ class QuestionController
             header("Location: " . BASE_PATH . "/api/dashboard");
             exit;
         }
-        $auth = $this->auth->checkTeacherCredentials();
-        if ($auth !== null) {
-            return $auth;
+        $elpErr = $this->elp->checkTeacherCredentials();
+        if (!$elpErr) {
+            return;
         }
         if (!$this->courses->find($course_id)) {
             http_response_code(404);

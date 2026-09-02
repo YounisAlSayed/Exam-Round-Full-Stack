@@ -100,7 +100,6 @@ Router::get('/api/profile', ['RedirectingController', 'profile']);
 Router::get('/api/users/list', ['RedirectingController', 'usersList']);
 Router::get('/api/questions/create/courses/{course_id}/view', ['RedirectingController', 'createQuestion']);
 Router::post('/api/questions/create/courses/{course_id}/view', ['RedirectingController', 'createQuestion']);
-Router::get('/api/questions/update', ['RedirectingController', 'updateQuestion']);
 Router::get('/api/exams/{id}/details/student', ['RedirectingController', 'studentExamDetails']);
 Router::get('/api/exams/{id}/details/teacher', ['RedirectingController', 'teacherExamDetails']);
 Router::get('/api/exams/{id}/start/{page}', ['RedirectingController', 'examStart']);

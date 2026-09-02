@@ -3,17 +3,16 @@
 namespace App\Controllers;
 
 use App\models\Courses;
-use App\Utils\ViewModel;
 
 class CoursesController
 {
     private Courses $courses;
-    private Check $auth;
+    private Check $elp;
     public function __construct()
     {
         $this->courses = new Courses();
-        $this->auth = new Check();
-        $this->auth->unsetAll();
+        $this->elp = new Check();
+        $this->elp->unsetAll();
     }
 
     public function getAll()
@@ -21,12 +20,11 @@ class CoursesController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: /api/users/login');
-            exit;
+            $this->elp->redirect("/api/users/login");
         }
 
         $courses = $this->courses->all();
-        return new ViewModel('courses/list', ['courses' => $courses]);
+        $this->elp->changeView('courses/list', ['courses' => $courses])->render();
     }
     // Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
     public function getCourseStudents($course_id)
@@ -35,18 +33,17 @@ class CoursesController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: /api/users/login');
-            exit;
+            $this->elp->redirect('/api/users/login');
         }
 
         $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
-            return new ViewModel('courses/not-found', ['id' => $course_id]);
+            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
         }
 
         $students = $this->courses->getCourseStudents($course_id);
-        return new ViewModel('courses/students', ['course' => $course, 'students' => $students]);
+        $this->elp->changeView('courses/students', ['course' => $course, 'students' => $students])->render();
     }
 
     // Router::get('/api/courses/{id}/teachers', ['CoursesController', 'getCourseTeachers']);
@@ -56,63 +53,61 @@ class CoursesController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: /api/users/login');
-            exit;
+            $this->elp->redirect("/api/users/login");
         }
 
         $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
-            return new ViewModel('courses/not-found', ['id' => $course_id]);
+            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
         }
 
         $teachers = $this->courses->getCourseTeachers($course_id);
-        return new ViewModel('courses/teachers', ['course' => $course, 'teachers' => $teachers]);
+        $this->elp->changeView('courses/teachers', ['course' => $course, 'teachers' => $teachers])->render();
     }
 
     // Router::post('/api/courses', ['CoursesController', 'add']);
     public function add()
     {
-        $authError = $this->auth->checkTeacherCredentials();
-        if ($authError !== null) {
-            return $authError;
+        $elpError = $this->elp->checkTeacherCredentials();
+        if (!$elpError) {
+            return;
         }
 
         $name = trim($_POST['name'] ?? '');
 
         if ($name === '') {
             http_response_code(400);
-            return new ViewModel('courses/create', ['error' => 'Course name is required']);
+            $this->elp->changeView('courses/create', ['error' => 'Course name is required'])->render();
         }
 
         if (strlen($name) > 100) {
             http_response_code(422);
-            return new ViewModel('courses/create', ['error' => 'Course name must be 100 characters or fewer']);
+            $this->elp->changeView('courses/create', ['error' => 'Course name must be 100 characters or fewer'])->render();
         }
 
         if ($this->courses->findByName($name)) {
             http_response_code(422);
-            return new ViewModel('courses/create', ['error' => 'A course with this name already exists']);
+            $this->elp->changeView('courses/create', ['error' => 'A course with this name already exists'])->render();
         }
 
         $courseId = $this->courses->create($name);
 
         if (!$courseId) {
             http_response_code(500);
-            return new ViewModel('courses/create', ['error' => 'Internal Server Error']);
+            $this->elp->changeView('courses/create', ['error' => 'Internal Server Error'])->render();
         }
 
         $_SESSION['flash'] = 'Course created successfully';
-        header('Location: /api/courses/' . $courseId . '/students');
-        exit;
+        $this->elp->redirect("/api/courses/" . $courseId . "/students");
     }
 
     // Router::put('/api/courses/{id}', ['CoursesController', 'edit']);
     public function edit($course_id)
     {
-        $authError = $this->auth->checkTeacherCredentials();
-        if ($authError !== null) {
-            return $authError;
+        $elpError = $this->elp->checkTeacherCredentials();
+        if (!$elpError) {
+            return;
         }
 
         $course_id = (int) $course_id;
@@ -120,60 +115,57 @@ class CoursesController
 
         if (!$course) {
             http_response_code(404);
-            return new ViewModel('courses/not-found', ['id' => $course_id]);
+            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
         }
 
-        parse_str(file_get_contents('php://input'), $data);
-        $name = trim($data['name'] ?? '');
+        $name = $_POST['name'] ?? '';
 
         if ($name === '') {
             http_response_code(400);
-            return new ViewModel('courses/edit', ['error' => 'Course name is required', 'course' => $course]);
+            $this->elp->changeView('courses/edit', ['error' => 'Course name is required', 'course' => $course])->render();
         }
 
         if (strlen($name) > 100) {
             http_response_code(422);
-            return new ViewModel('courses/edit', ['error' => 'Course name must be 100 characters or fewer', 'course' => $course]);
+            $this->elp->changeView('courses/edit', ['error' => 'Course name must be 100 characters or fewer', 'course' => $course])->render();
         }
 
         $existing = $this->courses->findByName($name);
         if ($existing && (int) $existing['id'] !== $course_id) {
             http_response_code(422);
-            return new ViewModel('courses/edit', ['error' => 'A course with this name already exists', 'course' => $course]);
+            $this->elp->changeView('courses/edit', ['error' => 'A course with this name already exists', 'course' => $course])->render();
         }
 
         if (!$this->courses->edit($course_id, $name)) {
             http_response_code(500);
-            return new ViewModel('courses/edit', ['error' => 'Internal Server Error', 'course' => $course]);
+            $this->elp->changeView('courses/edit', ['error' => 'Internal Server Error', 'course' => $course])->render();
         }
 
         $_SESSION['flash'] = 'Course updated successfully';
-        header('Location: /api/courses/' . $course_id . '/students');
-        exit;
+        $this->elp->redirect("/api/courses/" . $course_id . "/students'");
     }
 
     // Router::delete('/api/courses/{id}', ['CoursesController', 'delete']);
     public function delete($course_id)
     {
-        $authError = $this->auth->checkTeacherCredentials();
-        if ($authError !== null) {
-            return $authError;
+        $elpError = $this->elp->checkTeacherCredentials();
+        if (!$elpError) {
+            return;
         }
 
         $course_id = (int) $course_id;
 
         if (!$this->courses->find($course_id)) {
             http_response_code(404);
-            return new ViewModel('courses/not-found', ['id' => $course_id]);
+            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
         }
 
         if (!$this->courses->delete($course_id)) {
             http_response_code(500);
-            return new ViewModel('courses/not-found', ['error' => 'Internal Server Error']);
+            $this->elp->changeView('courses/not-found', ['error' => 'Internal Server Error'])->render();
         }
 
         $_SESSION['flash'] = 'Course deleted successfully';
-        header('Location: /api/users/list');
-        exit;
+        $this->elp->redirect("/api/users/list");
     }
 }

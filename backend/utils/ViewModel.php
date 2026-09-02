@@ -13,7 +13,7 @@ class ViewModel
         $this->data = $data;
     }
 
-    public function render($template, $data)
+    public function render()
     {
         // Extract array keys as variables (e.g. ['tests' => $tests] becomes $tests)
         extract($this->data);

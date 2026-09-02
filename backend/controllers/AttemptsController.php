@@ -10,14 +10,13 @@ class AttemptsController
 {
     private Attempts $attempts;
     private Exams $exams;
-    private Check $auth;
-
+    private Check $elp;
     public function __construct()
     {
         $this->attempts = new Attempts();
         $this->exams = new Exams();
-        $this->auth = new Check();
-        $this->auth->unsetAll();
+        $this->elp = new Check();
+        $this->elp->unsetAll();
     }
     // Router::get('/api/attempts/student/{id}', ['AttemptsController', 'getStudentAttempt']);
     public function getStudentAttempt($student_id)
@@ -26,8 +25,7 @@ class AttemptsController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: /api/users/login');
-            exit;
+            $this->elp->redirect('/api/users/login');
         }
 
         if ((int) $currentUser['id'] !== $student_id && $currentUser['role'] !== 'teacher') {
@@ -120,9 +118,9 @@ class AttemptsController
     // Router::delete('/api/attempts/{id}', ['AttemptsController', 'deleteStudentAttempt']);
     public function deleteStudentAttempt($attempt_id)
     {
-        $authError = $this->auth->checkTeacherCredentials();
-        if ($authError !== null) {
-            return $authError;
+        $elpError = $this->elp->checkTeacherCredentials();
+        if (!$elpError) {
+            return;
         }
 
         $attempt_id = (int) $attempt_id;

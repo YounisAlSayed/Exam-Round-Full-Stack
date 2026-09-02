@@ -4,39 +4,38 @@ namespace App\Controllers;
 
 use App\models\Enrolment;
 use App\models\Courses;
-use App\Utils\ViewModel;
 
 class EnrollmentController
 {
     private Enrolment $enrolment;
     private Courses $courses;
-    private Check $auth;
+    private Check $elp;
 
     public function __construct()
     {
         $this->enrolment = new Enrolment();
         $this->courses = new Courses();
-        $this->auth->unsetAll();
+        $this->elp->unsetAll();
     }
     // Router::get('/api/enrollment/students/{id}', ['EnrollmentController', 'getStudentEnrollments']);
-    public function getStudentEnrollments($student_id)
-    {
-        $student_id = (int) $student_id;
-        $currentUser = $_SESSION['user'] ?? null;
+    // public function getStudentEnrollments($student_id)
+    // {
+    //     $student_id = (int) $student_id;
+    //     $currentUser = $_SESSION['user'] ?? null;
 
-        if ($currentUser === null) {
-            header('Location: /api/users/login');
-            exit;
-        }
+    //     if ($currentUser === null) {
+    //         header('Location: /api/users/login');
+    //         exit;
+    //     }
 
-        if ((int) $currentUser['id'] !== $student_id && $currentUser['role'] !== 'teacher') {
-            http_response_code(403);
-            return new ViewModel('enrollment/forbidden', []);
-        }
+    //     if ((int) $currentUser['id'] !== $student_id && $currentUser['role'] !== 'teacher') {
+    //         http_response_code(403);
+    //         return new ViewModel('enrollment/forbidden', []);
+    //     }
 
-        $enrollments = $this->enrolment->getByStudent($student_id);
-        return new ViewModel('enrollment/list', ['enrollments' => $enrollments, 'student_id' => $student_id]);
-    }
+    //     $enrollments = $this->enrolment->getByStudent($student_id);
+    //     return new ViewModel('dashboard', ['enrollments' => $enrollments, 'student_id' => $student_id]);
+    // }
 
     // Router::post('/api/enrolment/students/{id}', ['EnrollmentController', 'enrollStudent']);
     // A student may enroll themself, or a teacher may enroll any student.
@@ -46,40 +45,38 @@ class EnrollmentController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: /api/users/login');
-            exit;
+            $this->elp->redirect("/api/users/login");
         }
 
         if ((int) $currentUser['id'] !== $student_id && $currentUser['role'] !== 'teacher') {
             http_response_code(403);
-            return new ViewModel('enrollment/forbidden', []);
+            $this->elp->changeView("dashboard", ['error' => "User if Forbidden From doing the action"])->render();
         }
 
         $courses_id = (int) ($_POST['courses_id'] ?? 0);
 
         if (!$courses_id) {
             http_response_code(400);
-            return new ViewModel('enrollment/list', ['error' => 'courses_id is required', 'student_id' => $student_id]);
+            $this->elp->changeView('dashboard', ['error' => 'courses_id is required', 'student_id' => $student_id])->render();
         }
 
         if (!$this->courses->find($courses_id)) {
             http_response_code(404);
-            return new ViewModel('enrollment/list', ['error' => 'Course not found', 'student_id' => $student_id]);
+            $this->elp->changeView('dashboard', ['error' => 'Course not found', 'student_id' => $student_id])->render();
         }
 
         if ($this->enrolment->exists($student_id, $courses_id)) {
             http_response_code(422);
-            return new ViewModel('enrollment/list', ['error' => 'Already enrolled in this course', 'student_id' => $student_id]);
+            $this->elp->changeView('dashboard', ['error' => 'Already enrolled in this course', 'student_id' => $student_id])->render();
         }
 
         if (!$this->enrolment->create($student_id, $courses_id)) {
             http_response_code(500);
-            return new ViewModel('enrollment/list', ['error' => 'Internal Server Error', 'student_id' => $student_id]);
+            $this->elp->changeView('dashboard', ['error' => 'Internal Server Error', 'student_id' => $student_id])->render();
         }
 
         $_SESSION['flash'] = 'Enrolled successfully';
-        header('Location: /api/enrollment/students/' . $student_id);
-        exit;
+        $this->elp->redirect("/api/dashboard");
     }
 
     // Router::delete('/api/enrolment/{id}', ['EnrollmentController', 'deleteStudentEnrollment']);
@@ -89,29 +86,27 @@ class EnrollmentController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: /api/users/login');
-            exit;
+            $this->elp->redirect("/api/users/login");
         }
 
         $enrollment = $this->enrolment->find($enrolment_id);
 
         if (!$enrollment) {
             http_response_code(404);
-            return new ViewModel('enrollment/not-found', ['id' => $enrolment_id]);
+            $this->elp->changeView('dashboard', ['id' => $enrolment_id])->render();
         }
 
         if ((int) $currentUser['id'] !== (int) $enrollment['student_id'] && $currentUser['role'] !== 'teacher') {
             http_response_code(403);
-            return new ViewModel('enrollment/forbidden', []);
+            $this->elp->changeView('dashboard', [])->render();
         }
 
         if (!$this->enrolment->delete($enrolment_id)) {
             http_response_code(500);
-            return new ViewModel('enrollment/not-found', ['error' => 'Internal Server Error']);
+            $this->elp->changeView('dashboard', ['error' => 'Internal Server Error'])->render();
         }
 
         $_SESSION['flash'] = 'Enrollment removed successfully';
-        header('Location: /api/enrollment/students/' . $enrollment['student_id']);
-        exit;
+        $this->elp->redirect("/api/dashboard");
     }
 }

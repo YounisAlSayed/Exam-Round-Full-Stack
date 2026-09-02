@@ -8,12 +8,12 @@ use App\Utils\ViewModel;
 class UserController
 {
     private User $user;
-    private Check $auth;
+    private Check $elp;
     public function __construct()
     {
         $this->user = new User();
-        $this->auth = new Check();
-        $this->auth->unsetAll();
+        $this->elp = new Check();
+        $this->elp->unsetAll();
     }
     // Router::get('/api/users{role}', ['UserController', 'getAll']);
     public function getAll()
@@ -54,13 +54,12 @@ class UserController
         $_SESSION['flash'] = null;
         $user = $this->user->findByEmail($_POST['email']);
         if (!$user || !password_verify($_POST['password'], $user['password'])) {
-            return new ViewModel('users/login', ['error' => 'Invalid email or password']);
+            $this->elp->changeView('users/login', ['error' => 'Invalid email or password'])->render();
         }
 
         $_SESSION['user'] = ["id" => $user["id"], "role" => $user['role']];
         $_SESSION['flash'] = "Login Successful";
-        header("Location: " . BASE_PATH . "/api/dashboard");
-        exit;
+        $this->elp->redirect("/api/dashboard");
     }
 
     // Router::post('/api/users/signin', ['UserController', 'signin']);
@@ -76,43 +75,42 @@ class UserController
 
         if (!$first_name || !$last_name || !$email || !$password || !$password_conf || !$role) {
             http_response_code(422);
-            return new ViewModel('users/signup', ['error' => 'One or more fields empty']);
+            $this->elp->changeView('users/signup', ['error' => 'One or more fields empty'])->render();
         }
 
         if ($password !== $password_conf) {
             http_response_code(422);
-            return new ViewModel('users/signup', ['error' => 'Passwords DO Not Match']);
+            $this->elp->changeView('users/signup', ['error' => 'Passwords DO Not Match'])->render();
         }
 
         if (strlen($first_name) < 1 || strlen($first_name) > 32 || strlen($last_name) < 1 || strlen($last_name) > 32) {
             http_response_code(422);
-            return new ViewModel('users/signup', ['error' => 'Name has to be between 1 and 32 characters']);
+            $this->elp->changeView('users/signup', ['error' => 'Name has to be between 1 and 32 characters'])->render();
         }
 
         if (!in_array($role, ['teacher', 'student'])) {
             http_response_code(422);
-            return new ViewModel('users/signup', ['error' => 'Undefined Role']);
+            $this->elp->changeView('users/signup', ['error' => 'Undefined Role'])->render();
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             http_response_code(422);
-            return new ViewModel('users/signup', ['error' => 'Invalid Email Format']);
+            $this->elp->changeView('users/signup', ['error' => 'Invalid Email Format'])->render();
         }
 
         if ($this->user->findByEmail($email)) {
             http_response_code(422);
-            return new ViewModel('users/signup', ['error' => 'Email Already exists']);
+            $this->elp->changeView('users/signup', ['error' => 'Email Already exists'])->render();
         }
 
         if (!$this->user->create($first_name, $last_name, $email, password_hash($password, PASSWORD_DEFAULT), $role)) {
             http_response_code(500);
-            return new ViewModel('users/signup', ['error' => 'Internal Server Error']);
+            $this->elp->changeView('users/signup', ['error' => 'Internal Server Error'])->render();
         }
         $user = $this->user->findByEmail($email);
         $_SESSION['user'] = ['id' => $user['id'], 'role' => $user['role']];
         $_SESSION['flash'] = 'signin Successful';
-        header("Location:  " . BASE_PATH . "/api/dashboard");
-        exit;
+        $this->elp->redirect("/api/dashboard");
     }
 
     // Router::put('/api/users/{id}', ['UserController', 'edit']);
