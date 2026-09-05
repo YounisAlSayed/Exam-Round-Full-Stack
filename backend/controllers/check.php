@@ -37,16 +37,14 @@ class Check
         $user = $_SESSION['user'] ?? null;
         if (!$user) {
             http_response_code(400);
-            $this->changeView('users/login', ['error' => "user Not Logged in"])->render();
-            return false;
+            return $this->changeView('users/login', ['error' => "user Not Logged in"]);
         }
         $this->checkUserExistence($user['id']);
         if ($user['role'] !== 'teacher') {
             http_response_code(403);
-            $this->changeView('dashboard', ['error' => "User Is Forbidden From Entering this page"])->render();
-            return false;
+            return  $this->changeView('dashboard', ['error' => "User Is Forbidden From Entering this page"]);
         }
-        return true;
+        return null;
     }
 
     public function checkStudentCredentials()
@@ -54,25 +52,22 @@ class Check
         $user = $_SESSION['user'] ?? null;
         if (!$user) {
             http_response_code(400);
-            $this->changeView('users/login', ['error' => "user Not Logged in"])->render();
-            return false;
+            return $this->changeView('users/login', ['error' => "user Not Logged in"]);
         }
         $this->checkUserExistence($user['id']);
         if ($user['role'] !== 'student') {
             http_response_code(403);
-            $this->changeView('dashboard', ['error' => "User Is Forbidden From Entering this page"])->render();
-            return false;
+            return $this->changeView('dashboard', ['error' => "User Is Forbidden From Entering this page"]);
         }
-        return true;
+        return null;
     }
 
     public function checkUserExistence($user_id)
     {
         if (!$this->user->find($user_id)) {
             http_response_code(404);
-            $this->changeView('users/signup', ['error' => 'no such user']);
-            return false;
+            return $this->changeView('users/signup', ['error' => 'no such user']);
         }
-        return true;
+        return null;
     }
 }

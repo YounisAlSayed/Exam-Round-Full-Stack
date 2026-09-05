@@ -27,7 +27,7 @@ class TeacherCoursesController
     {
         $authError = $this->auth->checkTeacherCredentials();
         if (!$authError) {
-            return;
+            return $authError;
         }
 
         $assignments = $this->teacherCourses->all();
@@ -92,7 +92,7 @@ class TeacherCoursesController
     {
         $authError = $this->auth->checkTeacherCredentials();
         if (!$authError) {
-            return;
+            return $authError;
         }
 
         $teacher_id = (int) $teacher_id;

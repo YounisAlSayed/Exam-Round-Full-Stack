@@ -35,7 +35,7 @@ class ExamsController
     {
         $teacher_id = (int) $teacher_id;
         $exams = $this->exams->getByTeacher($teacher_id);
-        $this->elp->changeView('exams/list', ['exams' => $exams])->render();
+        return $this->elp->changeView('exams/list', ['exams' => $exams]);
     }
 
     // Router::get('/api/exams/random', ['ExamsController', 'generateRandom']);
@@ -89,16 +89,16 @@ class ExamsController
     {
         if (!$course_id) {
             http_response_code(400);
-            $this->elp->changeView('dashboard', ['error' => 'course ID was not Passed'])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'course ID was not Passed']);
         }
         $course_id = (int) $course_id;
         $elpError = $this->elp->checkTeacherCredentials();
         if (!$elpError) {
-            return;
+            return $elpError;
         }
         if (!$this->courses->find($course_id)) {
             http_response_code(404);
-            $this->elp->changeView('dashboard', ['error' => 'Course Not Found'])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Course Not Found']);
         }
 
         $currentUser = $_SESSION['user'];
@@ -111,17 +111,17 @@ class ExamsController
 
         if (!$title || !$course_id || !$total_marks || !$start_date || !$end_date) {
             http_response_code(400);
-            $this->elp->changeView('exams/create', ['error' => 'Missing required fields'])->render();
+            return $this->elp->changeView('exams/create', ['error' => 'Missing required fields']);
         }
 
         if ($total_marks <= 0 || $total_marks > 100) {
             http_response_code(422);
-            $this->elp->changeView('exams/create', ['error' => 'Total marks must be between 1 and 100'])->render();
+            return $this->elp->changeView('exams/create', ['error' => 'Total marks must be between 1 and 100']);
         }
 
         if (strtotime($end_date) <= strtotime($start_date)) {
             http_response_code(422);
-            $this->elp->changeView('exams/create', ['error' => 'End date must be after start date'])->render();
+            return $this->elp->changeView('exams/create', ['error' => 'End date must be after start date']);
         }
 
         $examId = $this->exams->create(
@@ -136,11 +136,11 @@ class ExamsController
 
         if (!$examId) {
             http_response_code(500);
-            $this->elp->changeView('exams/create', ['error' => 'Internal Server Error'])->render();
+            return $this->elp->changeView('exams/create', ['error' => 'Internal Server Error']);
         }
 
         $_SESSION['flash'] = 'Exam created successfully';
-        header('Location: ' . BASE_PATH . '/api/exams/' . $examId . '/create/courses/' . $course_id);
+        header('Location: ' . BASE_PATH . '/api/exams/preview/' . $examId . '?course_id=' . $course_id);
         exit;
     }
 
@@ -149,7 +149,7 @@ class ExamsController
     // {
     //     $elpError = $this->elp->checkTeacherCredentials();
     //     if (!$elpError) {
-    //         return;
+    //         return $elpError;
     //     }
 
     //     $course_id = (int) $course_id;
@@ -181,7 +181,7 @@ class ExamsController
     {
         $elpError = $this->elp->checkTeacherCredentials();
         if (!$elpError) {
-            return;
+            return $elpError;
         }
 
         $exam_id = (int) $exam_id;
@@ -189,45 +189,43 @@ class ExamsController
 
         if (!$exam) {
             http_response_code(404);
-            $this->elp->changeView('exams/edit', ['error' => 'Exam not found'])->render();
+            return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=ExamNotFound");
         }
 
-        parse_str(file_get_contents('php://input'), $data);
-
-        $title = $data['title'] ?? null;
-        $status = $data['status'] ?? null;
-        $total_marks = (int) ($data['total_marks'] ?? 0);
-        $start_date = $data['start_date'] ?? null;
-        $end_date = $data['end_date'] ?? null;
-        $randomize_order = isset($data['randomize_order']) ? 1 : 0;
+        $title = $_POST['title'] ?? null;
+        $status = $_POST['exam_status'] ?? null;
+        $total_marks = (int) ($_POST['total_marks'] ?? 0);
+        $start_date = $_POST['start_date'] ?? null;
+        $end_date = $_POST['end_date'] ?? null;
+        $randomize_order = isset($_POST['randomize_order']) ? 1 : 0;
 
         if (!$title || !$status || !$total_marks || !$start_date || !$end_date) {
             http_response_code(400);
-            $this->elp->changeView('exams/edit', ['error' => 'Missing required fields', 'exam' => $exam])->render();
+            return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=EmptyFields");
         }
 
         if ($total_marks <= 0 || $total_marks > 100) {
             http_response_code(422);
-            $this->elp->changeView('exams/edit', ['error' => 'Total marks must be between 1 and 100', 'exam' => $exam])->render();
+            return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=IncorrectTotalMark");
         }
 
         if (!in_array($status, ['not_ready', 'ready', 'in_progress', 'completed'])) {
             http_response_code(422);
-            $this->elp->changeView('exams/edit', ['error' => 'Invalid status', 'exam' => $exam])->render();
+            return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=UndefinedStatus");
         }
 
         if (strtotime($end_date) <= strtotime($start_date)) {
             http_response_code(422);
-            $this->elp->changeView('exams/edit', ['error' => 'End date must be after start date', 'exam' => $exam])->render();
+            return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=EndDateLess");
         }
 
         if (!$this->exams->edit($exam_id, $title, $status, $total_marks, $start_date, $end_date, $randomize_order)) {
             http_response_code(500);
-            $this->elp->changeView('exams/edit', ['error' => 'Internal Server Error', 'exam' => $exam])->render();
+            return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=editDBError");
         }
 
         $_SESSION['flash'] = 'Exam updated successfully';
-        header('Location: /api/exams/' . $exam_id);
+        header('Location: ' . BASE_PATH . '/api/courses/teacher/' . $exam['course_id']);
         exit;
     }
 
@@ -236,24 +234,27 @@ class ExamsController
     {
         $elpError = $this->elp->checkTeacherCredentials();
         if (!$elpError) {
-            return;
+            return $elpError;
         }
 
         $exam_id = (int) $exam_id;
+        $course_id = $_GET['course_id'];
 
         if (!$this->exams->find($exam_id)) {
             http_response_code(404);
-            $this->elp->changeView('exams/list', ['error' => 'Exam not found'])->render();
+            $_SESSION['error'] = 'Exam not found';
+            $this->elp->redirect("/api/courses/teacher/" . $course_id);
         }
 
         if (!$this->exams->delete($exam_id)) {
             http_response_code(500);
-            $this->elp->changeView('exams/list', ['error' => 'Internal Server Error'])->render();
+            $_SESSION['error'] = 'Internal Server Error';
+            $this->elp->redirect("/api/courses/teacher/" . $course_id);
         }
 
         $_SESSION['flash'] = 'Exam deleted successfully';
 
-        $this->elp->redirect("");
+        $this->elp->redirect("/api/courses/teacher/" . $course_id);
     }
 
     public function saveProgress($exam_id)

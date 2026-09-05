@@ -50,29 +50,29 @@ class EnrollmentController
 
         if ((int) $currentUser['id'] !== $student_id && $currentUser['role'] !== 'teacher') {
             http_response_code(403);
-            $this->elp->changeView("dashboard", ['error' => "User if Forbidden From doing the action"])->render();
+            return $this->elp->changeView("dashboard", ['error' => "User if Forbidden From doing the action"]);
         }
 
         $courses_id = (int) ($_POST['courses_id'] ?? 0);
 
         if (!$courses_id) {
             http_response_code(400);
-            $this->elp->changeView('dashboard', ['error' => 'courses_id is required', 'student_id' => $student_id])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'courses_id is required', 'student_id' => $student_id]);
         }
 
         if (!$this->courses->find($courses_id)) {
             http_response_code(404);
-            $this->elp->changeView('dashboard', ['error' => 'Course not found', 'student_id' => $student_id])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Course not found', 'student_id' => $student_id]);
         }
 
         if ($this->enrolment->exists($student_id, $courses_id)) {
             http_response_code(422);
-            $this->elp->changeView('dashboard', ['error' => 'Already enrolled in this course', 'student_id' => $student_id])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Already enrolled in this course', 'student_id' => $student_id]);
         }
 
         if (!$this->enrolment->create($student_id, $courses_id)) {
             http_response_code(500);
-            $this->elp->changeView('dashboard', ['error' => 'Internal Server Error', 'student_id' => $student_id])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Internal Server Error', 'student_id' => $student_id]);
         }
 
         $_SESSION['flash'] = 'Enrolled successfully';
@@ -93,17 +93,17 @@ class EnrollmentController
 
         if (!$enrollment) {
             http_response_code(404);
-            $this->elp->changeView('dashboard', ['id' => $enrolment_id])->render();
+            return $this->elp->changeView('dashboard', ['id' => $enrolment_id]);
         }
 
         if ((int) $currentUser['id'] !== (int) $enrollment['student_id'] && $currentUser['role'] !== 'teacher') {
             http_response_code(403);
-            $this->elp->changeView('dashboard', [])->render();
+            return $this->elp->changeView('dashboard', []);
         }
 
         if (!$this->enrolment->delete($enrolment_id)) {
             http_response_code(500);
-            $this->elp->changeView('dashboard', ['error' => 'Internal Server Error'])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Internal Server Error']);
         }
 
         $_SESSION['flash'] = 'Enrollment removed successfully';

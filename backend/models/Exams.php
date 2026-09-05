@@ -31,7 +31,14 @@ class Exams
         $sql = "SELECT * FROM exams WHERE id = :id";
         $statement = $this->pdo->prepare($sql);
         $statement->execute(['id' => $id]);
-        return $statement->fetch();
+        $res = $statement->fetch();
+        if (!$res) {
+            http_response_code(404);
+            $_SESSION['error'] = "Exam Not Found";
+            $_SESSION['redirect'] = '/api/dashboard';
+            return false;
+        }
+        return $res;
     }
 
     public function getByTeacher(int $teacher_id)
@@ -174,5 +181,12 @@ class Exams
         $statement = $this->pdo->prepare($sql);
         $statement->execute(['id' => $course_id]);
         return $statement->fetchAll();
+    }
+
+    public function removeQuestion($question_id, $exam_id)
+    {
+        $sql = "DELETE FROM exam_questions WHERE question_id=:question_id AND exam_id=:exam_id";
+        $statement = $this->pdo->prepare($sql);
+        return $statement->execute(['question_id' => $question_id, 'exam_id' => $exam_id]);
     }
 }

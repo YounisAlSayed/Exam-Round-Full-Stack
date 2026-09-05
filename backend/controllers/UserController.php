@@ -54,7 +54,7 @@ class UserController
         $_SESSION['flash'] = null;
         $user = $this->user->findByEmail($_POST['email']);
         if (!$user || !password_verify($_POST['password'], $user['password'])) {
-            $this->elp->changeView('users/login', ['error' => 'Invalid email or password'])->render();
+            return $this->elp->changeView('users/login', ['error' => 'Invalid email or password']);
         }
 
         $_SESSION['user'] = ["id" => $user["id"], "role" => $user['role']];
@@ -75,37 +75,37 @@ class UserController
 
         if (!$first_name || !$last_name || !$email || !$password || !$password_conf || !$role) {
             http_response_code(422);
-            $this->elp->changeView('users/signup', ['error' => 'One or more fields empty'])->render();
+            return $this->elp->changeView('users/signup', ['error' => 'One or more fields empty']);
         }
 
         if ($password !== $password_conf) {
             http_response_code(422);
-            $this->elp->changeView('users/signup', ['error' => 'Passwords DO Not Match'])->render();
+            return $this->elp->changeView('users/signup', ['error' => 'Passwords DO Not Match']);
         }
 
         if (strlen($first_name) < 1 || strlen($first_name) > 32 || strlen($last_name) < 1 || strlen($last_name) > 32) {
             http_response_code(422);
-            $this->elp->changeView('users/signup', ['error' => 'Name has to be between 1 and 32 characters'])->render();
+            return $this->elp->changeView('users/signup', ['error' => 'Name has to be between 1 and 32 characters']);
         }
 
         if (!in_array($role, ['teacher', 'student'])) {
             http_response_code(422);
-            $this->elp->changeView('users/signup', ['error' => 'Undefined Role'])->render();
+            return $this->elp->changeView('users/signup', ['error' => 'Undefined Role']);
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             http_response_code(422);
-            $this->elp->changeView('users/signup', ['error' => 'Invalid Email Format'])->render();
+            return $this->elp->changeView('users/signup', ['error' => 'Invalid Email Format']);
         }
 
         if ($this->user->findByEmail($email)) {
             http_response_code(422);
-            $this->elp->changeView('users/signup', ['error' => 'Email Already exists'])->render();
+            return $this->elp->changeView('users/signup', ['error' => 'Email Already exists']);
         }
 
         if (!$this->user->create($first_name, $last_name, $email, password_hash($password, PASSWORD_DEFAULT), $role)) {
             http_response_code(500);
-            $this->elp->changeView('users/signup', ['error' => 'Internal Server Error'])->render();
+            return $this->elp->changeView('users/signup', ['error' => 'Internal Server Error']);
         }
         $user = $this->user->findByEmail($email);
         $_SESSION['user'] = ['id' => $user['id'], 'role' => $user['role']];

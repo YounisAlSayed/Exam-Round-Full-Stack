@@ -4,11 +4,11 @@ use App\Routes\Router;
 
 //------------------------------ questions routers -----------------------------------
 Router::post('/api/questions/create/{course_id}', ['QuestionController', 'addQuestion']);
-Router::post('/api/questions/generate/courses/{course_id}/exams/{exam_id}', ['QuestionController', 'autoGenerate']);
+Router::post('/api/questions/bank/{exam_id}', ['QuestionController', 'questionBank']);
 
 Router::post('/api/questions/update/{question_id}', ['QuestionController', 'editQuestion']);
 
-Router::delete('/api/questions/delete/{question_id}', ['QuestionController', 'delete']);
+Router::post('/api/questions/delete/{question_id}', ['QuestionController', 'delete']);
 
 // =------------------------------ choices routers -----------------------------------
 Router::delete('/api/choices/delete/{choice_id}', ['ChoicesController', 'deleteChoice']);
@@ -16,7 +16,7 @@ Router::delete('/api/choices/delete/{choice_id}', ['ChoicesController', 'deleteC
 Router::post('/api/users/login', ['UserController', 'login']);
 Router::post('/api/users/signup', ['UserController', 'signup']);
 
-Router::put('/api/users/{id}', ['UserController', 'edit']);
+Router::post('/api/users/{id}', ['UserController', 'edit']);
 
 Router::delete('/api/user/{id}', ['UserController', 'delete']);
 
@@ -31,9 +31,9 @@ Router::get('/api/exams/{id}/questions', ['ExamsController', 'getExamQuestions']
 Router::post('/api/exams/create/courses/{course_id}', ['ExamsController', 'create']);
 Router::post('/api/exams/course/{id}', ['ExamsController', 'setNextCourseExam']);
 
-Router::put('/api/exams/{id}', ['ExamsController', 'edit']);
+Router::post('/api/exams/update/{exam_id}', ['ExamsController', 'edit']);
 
-Router::delete('/api/exams/{id}', ['ExamsController', 'delete']);
+Router::post('/api/exams/delete/{exam_id}', ['ExamsController', 'delete']);
 
 // when the user is taking the exam
 Router::get('/api/exams/{id}/start/{page}', ['ExamsController', 'examStart']);

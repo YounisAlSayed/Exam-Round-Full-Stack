@@ -2,6 +2,8 @@
 
 namespace App\Routes;
 
+use App\Utils\ViewModel;
+
 class Router
 {
     private static array $routes = [
@@ -55,7 +57,10 @@ class Router
                 $fullClassName = "App\\Controllers\\" . $controllerName;
 
                 $controller = new $fullClassName();
-                $controller->$methodName(...$params);
+                $res = $controller->$methodName(...$params);
+
+                if ($res instanceof ViewModel)
+                    $res->render();
                 return;
             }
         }

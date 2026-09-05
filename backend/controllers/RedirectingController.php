@@ -37,12 +37,12 @@ class RedirectingController
         $user = $_SESSION['user'] ?? null;
         if (!$user) {
             http_response_code(404);
-            $this->help->changeView('users/login', ['error' => 'User Not Logged in'])->render();
+            return $this->help->changeView('users/login', ['error' => 'User Not Logged in']);
         }
         $user_id = $user['id'];
         if (!$user_id) {
             http_response_code(400);
-            $this->help->changeView('users/login', ['error' => 'User ID Not Found'])->render();
+            return $this->help->changeView('users/login', ['error' => 'User ID Not Found']);
         }
         if ($user['role'] === 'teacher') {
             $courses = $this->courses->getTeacherCourses((int) $user['id']);
@@ -51,7 +51,7 @@ class RedirectingController
             $courses = $this->courses->getStudentCourses((int) $user['id']);
             $nextExamSet = $this->user->getStudentsNextExamSet((int) $user['id']);
         }
-        $this->help->changeView('dashboard', ['courses' => $courses, 'nextExamSet' => $nextExamSet])->render();
+        return $this->help->changeView('dashboard', ['courses' => $courses, 'nextExamSet' => $nextExamSet]);
     }
 
     // -------------------------------- user --------------------------------------
@@ -59,20 +59,20 @@ class RedirectingController
     {
         $this->help->unsetAll();
         $_SESSION['user'] = null;
-        $this->help->changeView('users/login')->render();
+        return $this->help->changeView('users/login');
     }
 
     public function signup()
     {
         $this->help->unsetAll();
-        $this->help->changeView('users/signup')->render();
+        return $this->help->changeView('users/signup');
     }
 
     public function logout()
     {
         $this->help->unsetAll();
         $_SESSION['user'] = null;
-        $this->help->changeView('users/login')->render();
+        return $this->help->changeView('users/login');
     }
 
     public function profile()
@@ -81,13 +81,13 @@ class RedirectingController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            $this->help->changeView('users/login')->render();
+            return $this->help->changeView('users/login');
         }
 
         $user = $this->user->find($currentUser['id']);
         unset($user['password']);
 
-        $this->help->changeView('users/profile', ['user' => $user])->render();
+        return $this->help->changeView('users/profile', ['user' => $user]);
     }
 
     public function usersList()
@@ -97,10 +97,10 @@ class RedirectingController
 
         $this->help->checkTeacherCredentials();
         $usersList = $this->user->all();
-        if (!$usersList) {
+        if ($usersList !== null) {
             $usersList = [];
         }
-        $this->help->changeView('users/list', ['usersList' => $usersList])->render();
+        return $this->help->changeView('users/list', ['usersList' => $usersList]);
     }
 
     // ---------------------------------- questions ----------------------------------------
@@ -130,7 +130,7 @@ class RedirectingController
             header("Location: " . BASE_PATH . "/api/courses/teacher/" . $course_id);
             exit;
         }
-        $this->help->changeView('questions/preview', ['course_id' => $course_id])->render();
+        return $this->help->changeView('questions/preview', ['course_id' => $course_id]);
     }
 
     // ------------------------------ exam ----------------------------------
@@ -140,17 +140,17 @@ class RedirectingController
         $this->help->unsetAll();
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
-            $this->help->changeView("users/login", ['error' => 'User Not logged in'])->render();
+            return $this->help->changeView("users/login", ['error' => 'User Not logged in']);
         }
         if (!$exam_id) {
             http_response_code(400);
-            $this->help->changeView("dashboard", ['error' => 'Exam ID not Passed'])->render();
+            return $this->help->changeView("dashboard", ['error' => 'Exam ID not Passed']);
         }
         $user = $_SESSION['user'];
         $examDetails = $this->exams->getExamFullDetails($exam_id);
         if (!$examDetails) {
             http_response_code(404);
-            $this->help->changeView("dashboard", ['error' => 'Exam Not Found'])->render();
+            return $this->help->changeView("dashboard", ['error' => 'Exam Not Found']);
         }
         $studentAttempt = '';
         $studentSelection = '';
@@ -171,7 +171,7 @@ class RedirectingController
             $questionsChoices[$question['question_id']] = $this->questions->getQuestionChoices($question['question_id']);
         }
 
-        $this->help->changeView('exams/studentExamDetails', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection, 'questionsChoices' => $questionsChoices])->render();
+        return $this->help->changeView('exams/studentExamDetails', ['examDetails' => $examDetails, 'studentAttempt' => $studentAttempt, 'studentSelection' => $studentSelection, 'questionsChoices' => $questionsChoices]);
     }
 
     public function teacherExamDetails($exam_id)
@@ -179,26 +179,26 @@ class RedirectingController
         $this->help->unsetAll();
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
-            $this->help->changeView('users/login', ['error' => 'User Not Logged in'])->render();
+            return $this->help->changeView('users/login', ['error' => 'User Not Logged in']);
         }
         if (!$exam_id) {
             http_response_code(400);
-            $this->help->changeView('dashboard', ['error' => 'Exam ID Not Passed'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Exam ID Not Passed']);
         }
         if (!$this->exams->getById($exam_id)) {
             http_response_code(404);
-            $this->help->changeView('dashboard', ['error' => 'Exam Not Found'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Exam Not Found']);
         }
         $user = $_SESSION['user'];
         if ($user['role'] !== 'teacher') {
             http_response_code(403);
-            $this->help->changeView('dashboard', ['error' => 'User Does not have access to this page'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'User Does not have access to this page']);
         }
 
         $exam = $this->exams->getExamFullDetails($exam_id);
         if (!$exam) {
             http_response_code(404);
-            $this->help->changeView('dashboard', ['error' => 'Exam Not found'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Exam Not found']);
         }
 
         $examQuestions = $this->questions->getExamQuestions($exam_id);
@@ -214,7 +214,7 @@ class RedirectingController
         if (!$examAttemptStatus)
             $examAttemptStatus = [];
 
-        $this->help->changeView('exams/teacherExamDetails', ['exam' => $exam, 'questions' => $examQuestions, 'questionsChoices' => $questionsChoices, 'examAttemptStatus' => $examAttemptStatus])->render();
+        return $this->help->changeView('exams/teacherExamDetails', ['exam' => $exam, 'questions' => $examQuestions, 'questionsChoices' => $questionsChoices, 'examAttemptStatus' => $examAttemptStatus]);
     }
 
     public function examStart($exam_id, $page)
@@ -226,7 +226,7 @@ class RedirectingController
 
         if (!$exam_id || !$page) {
             http_response_code(400);
-            $this->help->changeView('dashboard', ['error' => 'Exam is not selected'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Exam is not selected']);
         }
 
         $exam = $this->exams->getExamFullDetails($exam_id);
@@ -246,7 +246,7 @@ class RedirectingController
         } elseif ($attempt['submitted_at'] !== null) {
             // Already submitted — don't let them re-enter and re-answer
             http_response_code(403);
-            $this->help->changeView('dashboard', ['error' => 'You have already submitted this exam'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'You have already submitted this exam']);
         }
 
         $size = 2;
@@ -254,7 +254,7 @@ class RedirectingController
         $questions = $this->questions->getExamQuestionSet($exam_id, $offset, $size);
         if (!$questions) {
             http_response_code(404);
-            $this->help->changeView('dashboard', ['error' => 'No Questions Were Found For the Specified Exam'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'No Questions Were Found For the Specified Exam']);
         }
         $choices = [];
         foreach ($questions as $question) {
@@ -263,7 +263,7 @@ class RedirectingController
         $totalQuestions = $this->questions->getExamQuestionCount($exam_id);
         $totalQuestions ?? 0;
 
-        $this->help->changeView('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions, 'choices' => $choices])->render();
+        return $this->help->changeView('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions, 'choices' => $choices]);
     }
 
     public function teacherCourse($course_id)
@@ -271,27 +271,27 @@ class RedirectingController
         $this->help->unsetAll();
         if (!$course_id) {
             http_response_code(400);
-            $this->help->changeView('dashboard', ['error' => 'Course Not Passed'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Course Not Passed']);
         }
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
-            $this->help->changeView('users/login', ['error' => 'user Not Logged in'])->render();
+            return $this->help->changeView('users/login', ['error' => 'user Not Logged in']);
         }
         $user = $_SESSION['user'];
         if ($user['role'] !== 'teacher') {
             http_response_code(403);
-            $this->help->changeView('dashboard', ['error' => 'Forbidden For None Teachers'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Forbidden For None Teachers']);
         }
         $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
-            $this->help->changeView('dashboard', ['error' => 'Course Not Found'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Course Not Found']);
         }
         $courseStudents = $this->courses->getCourseStudents($course_id) ?? [];
         $courseExams = $this->exams->getCourseExams($course_id) ?? [];
         $courseQuestions = $this->questions->getCourseQuestions($course_id) ?? [];
 
-        $this->help->changeView('courses/teacherCourse', ['course' => $course, 'courseStudents' => $courseStudents, 'courseExams' => $courseExams, 'courseQuestions' => $courseQuestions])->render();
+        return $this->help->changeView('courses/teacherCourse', ['course' => $course, 'courseStudents' => $courseStudents, 'courseExams' => $courseExams, 'courseQuestions' => $courseQuestions]);
     }
 
     public function examCreate($exam_id)
@@ -302,28 +302,27 @@ class RedirectingController
         $page = $_GET['page'] ?? null;
         if (!$course_id || !$exam_id) {
             http_response_code(400);
-            $this->help->changeView('dashboard', ['error' => 'Course ID was not passed'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Course ID was not passed']);
         }
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
-            $this->help->changeView('users/login', ['error' => 'User is Not logged in'])->render();
+            return $this->help->changeView('users/login', ['error' => 'User is Not logged in']);
         }
         $check = $this->help->checkTeacherCredentials();
-        if (!$check) {
-            return;
+        if ($check !== null) {
+            return $check;
         }
         $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
-            $this->help->changeView('dashboard', ['error' => 'Course not Found'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Course not Found']);
         }
 
         $exam = $this->exams->getById($exam_id);
         if (!$exam) {
             http_response_code(404);
-            $this->help->changeView('dashboard', ['error' => 'Exam Not Found'])->render();
+            return $this->help->changeView('dashboard', ['error' => 'Exam Not Found']);
         }
-
         $courseQuestions = $this->questions->getCourseQuestions($course_id);
         if (!$courseQuestions) {
             $courseQuestions = [];
@@ -368,6 +367,6 @@ class RedirectingController
             $this->help->redirect("/api/exams/" . $exam_id . "/create/courses/" . $course_id . "?page=questions");
         }
 
-        $this->help->changeView('exams/create', ['course_id' => $course_id, 'exam' => $exam, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices, 'examQuestions' => $fullExamQuestions, 'examQuestionsChoices' => $fullExamQuestionsChoices, "page" => $page])->render();
+        return $this->help->changeView('exams/create', ['course_id' => $course_id, 'exam' => $exam, 'course' => $course, 'courseQuestions' => $courseQuestions, 'questionsChoices' => $questionsChoices, 'examQuestions' => $fullExamQuestions, 'examQuestionsChoices' => $fullExamQuestionsChoices, "page" => $page]);
     }
 }

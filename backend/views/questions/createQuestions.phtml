@@ -4,7 +4,6 @@ $course_id = $course_id ?? 0;
 $exam_id = $_GET['exam_id'] ?? null;
 $question = $question ?? null;
 $questionChoices = $questionChoices ?? null;
-$update = $_GET['update'] ?? null;
 
 $trueChoice = null;
 $falseChoice = null;
@@ -36,9 +35,9 @@ if ($questionChoices) {
 <body>
     <?php renderHeader("Create A Question"); ?>
     <div class="container card py-4 w-50">
-        <h1 class="mb-4"><?= $exam_id ? 'Update Question' : 'Create Question' ?></h1>
+        <h1 class="mb-4">Create Question</h1>
         <form id="addQuestionForm" method="POST"
-            action="<?= BASE_PATH ?>/api/questions/<?= $update ? 'update' : 'create' ?>/<?= $update ? $question['question_id'] : $course_id ?>?exam_id=<?= $_GET['exam_id'] ?? '' ?>&update=true">
+            action="<?= BASE_PATH ?>/api/questions/create/<?= $course_id ?>?exam_id=<?= $exam_id ?? '' ?>&update=true">
             <div class="row g-3">
                 <!-- Question -->
                 <div class="col-12">
@@ -50,19 +49,6 @@ if ($questionChoices) {
                         value="<?= isset($question) ? $question['question_text'] : '' ?>" name="question_text"
                         class="form-control" placeholder="e.g., What does CRUD stand for?" required>
                 </div>
-
-                <!-- Marks -->
-                <?php if ($update): ?>
-                    <div class="col-md-4">
-                        <label for="qp_questionMark" class="form-label fw-semibold">
-                            Marks
-                        </label>
-
-                        <input type="number" id="qp_questionMark" name="question_mark"
-                            value="<?= $question ? $question['question_mark'] : '' ?>" class="form-control" min="1"
-                            max="100" required>
-                    </div>
-                <?php endif; ?>
 
                 <!-- Question Type -->
                 <div class="col-12">

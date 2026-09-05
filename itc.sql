@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 27, 2026 at 09:02 AM
+-- Generation Time: Sep 05, 2026 at 10:47 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,7 +41,8 @@ CREATE TABLE `attempts` (
 --
 
 INSERT INTO `attempts` (`id`, `exam_id`, `student_id`, `started_at`, `submitted_at`, `exam_mark`) VALUES
-(1, 1, 2, '2026-08-25 15:00:02', '2026-08-25 15:02:19', 0);
+(1, 1, 2, '2026-08-25 15:00:02', '2026-08-25 15:02:19', 0),
+(2, 1, 1, '2026-09-01 08:50:15', NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -66,8 +67,7 @@ INSERT INTO `choices` (`id`, `question_id`, `choice_text`, `is_correct`) VALUES
 (2, 1, 'Simple Question Logic', 0),
 (3, 1, 'Sequential Query List', 0),
 (4, 2, 'ch 1', 0),
-(5, 2, 'ch2', 1),
-(6, 2, 'ch 3', 0),
+(5, 2, 'ch2', 0),
 (7, 3, 'ch 1', 0),
 (8, 3, 'ch2', 1),
 (9, 3, 'ch 3', 0),
@@ -106,7 +106,37 @@ INSERT INTO `choices` (`id`, `question_id`, `choice_text`, `is_correct`) VALUES
 (42, 14, 'ch 3', 0),
 (43, 15, 'ch 1', 0),
 (44, 15, 'ch 2', 1),
-(45, 15, 'ch 3', 0);
+(45, 15, 'ch 3', 0),
+(46, 16, 'ttttttt', 1),
+(47, 16, 'ttttttt', 0),
+(48, 17, 'test11', 1),
+(49, 17, 'test11', 0),
+(50, 18, 'test2222', 1),
+(51, 18, 'test2222', 0),
+(52, 18, 'test2222', 0),
+(53, 19, 'test3333', 1),
+(54, 19, 'test33333', 0),
+(55, 19, 'test3333', 0),
+(56, 19, 'test33333', 0),
+(57, 20, 'test2', 1),
+(58, 20, 'test2', 0),
+(59, 21, 'test1 ', 1),
+(60, 21, 'test2', 0),
+(61, 21, 'test1', 0),
+(62, 21, 'test test test', 0),
+(65, 23, 'True', 0),
+(66, 23, 'False', 1),
+(67, 24, 'True', 0),
+(68, 24, 'False', 1),
+(69, 25, 'sdf', 1),
+(70, 25, 'fsdfs', 0),
+(71, 26, 'True', 0),
+(72, 26, 'False', 1),
+(74, 1, 'Simple Question Logic', 0),
+(82, 3, 'ch 1', 0),
+(86, 2, 'test', 1),
+(87, 22, 'True', 0),
+(88, 22, 'False', 1);
 
 -- --------------------------------------------------------
 
@@ -170,7 +200,8 @@ CREATE TABLE `exams` (
 --
 
 INSERT INTO `exams` (`id`, `title`, `course_id`, `status`, `total_marks`, `teacher_id`, `start_date`, `end_date`, `randomize_order`) VALUES
-(1, 'Midterm', 1, 'ready', 100, 1, '2026-09-01 09:00:00', '2026-09-01 10:00:00', 0);
+(1, 'Midterm test', 1, 'ready', 100, 1, '2026-09-12 08:05:00', '2026-09-12 10:05:00', 1),
+(8, 'test1', 1, 'not_ready', 100, 1, '2026-08-30 20:32:00', '2026-08-30 22:32:00', 0);
 
 -- --------------------------------------------------------
 
@@ -204,7 +235,11 @@ INSERT INTO `exam_questions` (`id`, `exam_id`, `question_id`, `question_mark`) V
 (12, 1, 12, 3),
 (13, 1, 13, 3),
 (14, 1, 14, 3),
-(15, 1, 15, 3);
+(15, 1, 15, 3),
+(16, 1, 21, 11),
+(17, 1, 22, 12),
+(18, 1, 23, 12),
+(19, 1, 26, 13);
 
 -- --------------------------------------------------------
 
@@ -237,7 +272,7 @@ CREATE TABLE `questions` (
 --
 
 INSERT INTO `questions` (`id`, `course_id`, `question`, `type`) VALUES
-(1, 1, 'What does SQL stand for?', 'mc'),
+(1, 1, 'What does SQL stand for???', 'mc'),
 (2, 1, 'testing', 'mc'),
 (3, 1, 'testing', 'mc'),
 (4, 1, 'testing', 'mc'),
@@ -251,7 +286,18 @@ INSERT INTO `questions` (`id`, `course_id`, `question`, `type`) VALUES
 (12, 1, 'testing', 'mc'),
 (13, 1, 'testing', 'mc'),
 (14, 1, 'testing', 'mc'),
-(15, 1, 'testing', 'mc');
+(15, 1, 'testing', 'mc'),
+(16, 1, 'ttttttt', 'mc'),
+(17, 1, 'test11', 'mc'),
+(18, 1, 'test2222', 'mc'),
+(19, 1, 'test3333', 'mc'),
+(20, 1, 'test1', 'mc'),
+(21, 1, 'test test', 'mc'),
+(22, 1, 'test test test', 't/f'),
+(23, 1, 'test test test', 't/f'),
+(24, 1, 'hfghfg', 't/f'),
+(25, 1, 'fsfsdfsfds', 'mc'),
+(26, 1, 'test new api', 't/f');
 
 -- --------------------------------------------------------
 
@@ -285,8 +331,7 @@ INSERT INTO `student_answers` (`id`, `student_id`, `exam_id`, `question_id`, `se
 (13, 2, 1, 6, 18),
 (14, 2, 1, 3, 9),
 (15, 2, 1, 4, 11),
-(16, 2, 1, 1, 1),
-(17, 2, 1, 2, 6);
+(16, 2, 1, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -434,13 +479,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `attempts`
 --
 ALTER TABLE `attempts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `choices`
 --
 ALTER TABLE `choices`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -476,7 +521,7 @@ ALTER TABLE `marks`
 -- AUTO_INCREMENT for table `questions`
 --
 ALTER TABLE `questions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `student_answers`

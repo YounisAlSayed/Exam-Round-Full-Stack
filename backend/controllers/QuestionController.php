@@ -43,13 +43,13 @@ class QuestionController
 
         if (!$course_id || !$question || !in_array($question_type, ['mc', 't/f'], true) || $question_mark <= 0) {
             http_response_code(400);
-            $this->elp->changeView('dashboard', ['error' => 'Incomplete input'])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Incomplete input']);
         }
         $course = $this->courses->find($course_id);
 
         if (!$course) {
             http_response_code(404);
-            $this->elp->changeView('dashboard', ['error' => 'Course not found'])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Course not found']);
         }
         $choices = [];
         $correctIndex = null;
@@ -60,27 +60,27 @@ class QuestionController
 
             if (count($choices) < 2 || count($choices) > 4) {
                 http_response_code(400);
-                $this->elp->changeView('dashboard', ['error' => 'A multiple-choice question must have 2 to 4 choices.'])->render();
+                return $this->elp->changeView('dashboard', ['error' => 'A multiple-choice question must have 2 to 4 choices.']);
             }
 
             foreach ($choices as $index => $choice) {
                 $choices[$index] = trim((string) $choice);
                 if ($choices[$index] === '') {
                     http_response_code(400);
-                    $this->elp->changeView('dashboard', ['error' => 'All choices must be filled in.'])->render();
+                    return $this->elp->changeView('dashboard', ['error' => 'All choices must be filled in.']);
                 }
             }
 
             if ($correctIndex === null || !isset($choices[$correctIndex])) {
                 http_response_code(400);
-                $this->elp->changeView('dashboard', ['error' => 'Please select a correct answer.'])->render();
+                return $this->elp->changeView('dashboard', ['error' => 'Please select a correct answer.']);
             }
         } elseif ($question_type === 't/f') {
             $tf_correct = $_POST['tf_correct'] ?? null;
 
             if ($tf_correct !== 'True' && $tf_correct !== 'False') {
                 http_response_code(400);
-                $this->elp->changeView('dashboard', ['error' => 'Please select True or False.'])->render();
+                return $this->elp->changeView('dashboard', ['error' => 'Please select True or False.']);
             }
 
             $choices = ['True', 'False'];
@@ -91,7 +91,7 @@ class QuestionController
 
         if (!$question_id) {
             http_response_code(500);
-            $this->elp->changeView('dashboard', ['error' => 'Failed to create question.'])->render();
+            return $this->elp->changeView('dashboard', ['error' => 'Failed to create question.']);
         }
 
         foreach ($choices as $index => $choice) {
@@ -106,7 +106,7 @@ class QuestionController
                     exit;
                 }
 
-                $this->elp->changeView('dashboard', ['error' => 'Failed to create choice.'])->render();
+                return $this->elp->changeView('dashboard', ['error' => 'Failed to create choice.']);
             }
         }
         if ($exam_id) {
@@ -131,13 +131,14 @@ class QuestionController
     // Router::put('/api/questions/{id}', ['QuestionController', 'editQuestion']);
     public function editQuestion($question_id)
     {
+        $isCorrect = 0;
         $question_id = (int) $question_id;
         $update = $_GET['update'] ?? null;
         $exam_id = isset($_GET['exam_id']) ? (int) $_GET['exam_id'] : null;
         $course_id = $_GET['course_id'] ?? null;
         $elpErr = $this->elp->checkTeacherCredentials();
-        if (!$elpErr) {
-            return;
+        if ($elpErr !== null) {
+            return $elpErr;
         }
         $question = $this->questions->getQuestionDetails($question_id, $exam_id);
         if (!$question) {
@@ -152,7 +153,7 @@ class QuestionController
             $questionChoices = [];
         }
         if (!$update) {
-            $this->elp->changeView('questions/preview', ['question' => $question, 'questionChoices' => $questionChoices, 'exam_id' => $exam_id])->render();
+            return $this->elp->changeView('questions/preview', ['question' => $question, 'questionChoices' => $questionChoices, 'exam_id' => $exam_id]);
         }
         if (!$exam_id) {
             http_response_code(400);
@@ -171,13 +172,23 @@ class QuestionController
         }
         if ($question_type === 'mc') {
             $choices = $_POST['choices'] ?? [];
-
+            if (count($choices) < 2) {
+                http_response_code(400);
+                $this->elp->redirect("/api/questions/update/" . $question['question_id'] . "?exam_id=" . $exam_id);
+            }
             $correctIndex = isset($_POST['correct_choice']) ? (int) $_POST['correct_choice'] : null;
             $deleted_choice_ids = $_POST['deleted_choice_ids'] ?? [];
+
+            foreach ($deleted_choice_ids as $choiceId => $deleted) {
+                if ($deleted === '1') {
+                    $this->choices->delete((int) $choiceId);
+                }
+            }
             if (count($choices) < 2 || count($choices) > 4) {
                 http_response_code(400);
                 $_SESSION['error'] = 'A multiple-choice question must have 2 to 4 choices.';
-                header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+                header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id .
+                    "&page=questions");
                 exit;
             }
 
@@ -186,68 +197,61 @@ class QuestionController
                 if ($choice['text'] === '') {
                     http_response_code(400);
                     $_SESSION['error'] = 'All choices must be filled in.';
-                    header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+                    header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id .
+                        "&page=questions");
                     exit;
                 }
-
+                $isCorrect = !empty($choice['is_correct']) ? 1 : 0;
                 if (!empty($choice['id']) && !isset($deleted_choice_ids[$choice['id']])) {
-                    $response = $this->choices->edit($choice['id'], $choice['text'], ($index === $correctIndex) ? 1 : 0);
+                    $response = $this->choices->edit($choice['id'], $choice['text'], $isCorrect);
                 }
 
-                if (is_array($choice) && isset($deleted_choice_ids[$choice['id']]) && $deleted_choice_ids[$choice['id']] === '1') {
-                    foreach (array_keys($deleted_choice_ids) as $choiceId) {
-                        $this->choices->delete((int) $choiceId);
-                    }
-                }
-
-                if (!empty($choice['id'])) {
-                    $response = $this->choices->create($question_id, $choice['text'], ($index === $correctIndex) ? 1 : 0);
+                if (!empty($choice['new'])) {
+                    $response = $this->choices->create($question_id, $choice['text'], $isCorrect);
                 }
 
                 if (!$response) {
                     http_response_code(500);
                     $_SESSION['error'] = 'Failed to update the choices.';
-                    header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+                    header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id .
+                        "&page=questions");
                     exit;
                 }
             }
         } else if ($question_type === 't/f') {
+
             $tf_correct = $_POST['tf_correct'] ?? null;
+
             if ($tf_correct !== 'True' && $tf_correct !== 'False') {
                 http_response_code(400);
                 $_SESSION['error'] = 'Please select True or False.';
-                header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
-                exit;
-            }
-            $choices = ['True', 'False'];
-            $correctIndex = $tf_correct === 'True' ? 0 : 1;
-            $questionChoices = $this->questions->getQuestionChoices($question_id);
-            $trueChoiceId = $_POST['true_choice_id'] ?? null;
-            $falseChoiceId = $_POST['false_choice_id'] ?? null;
-            if (!$questionChoices) {
-                http_response_code(500);
-                $_SESSION['error'] = 'Failed to retrieve existing choices for the question.';
-                header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
-                exit;
-            }
-            foreach ($choices as $index => $choice) {
 
-                $isCorrect = ($index === $correctIndex) ? 1 : 0;
-                if ($choice === 'True') {
-                    $choiceId = $trueChoiceId ?? null;
+                header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+                exit;
+            }
+
+            $trueChoiceId = !empty($_POST['true_choice_id']) ? (int) $_POST['true_choice_id'] : null;
+
+            $falseChoiceId = !empty($_POST['false_choice_id']) ? (int) $_POST['false_choice_id'] : null;
+
+            $choices = ['True' => $trueChoiceId, 'False' => $falseChoiceId];
+
+            foreach ($choices as $choiceText => $choiceId) {
+
+                $isCorrect = ($choiceText === $tf_correct) ? 1 : 0;
+
+                if ($choiceId) {
+                    $response = $this->choices->edit($choiceId, $choiceText, $isCorrect);
                 } else {
-                    $choiceId = $falseChoiceId ?? null;
+                    $response = $this->choices->create($question_id, $choiceText, $isCorrect);
                 }
-                if (!$choiceId) {
-                    http_response_code(400);
-                    $_SESSION['error'] = 'Choice ID for True/False not provided.';
-                    header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
-                    exit;
-                }
-                if (!$this->choices->edit($choiceId, $choice, $isCorrect)) {
+
+                if (!$response) {
                     http_response_code(500);
-                    $_SESSION['error'] = 'Failed to update the True/False choices.';
-                    header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+                    $_SESSION['error'] = 'Failed to update True/False choices.';
+
+                    header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id .
+                        "?course_id=" . $course_id . "&page=questions");
                     exit;
                 }
             }
@@ -257,25 +261,31 @@ class QuestionController
             if (!isset($_SESSION['error'])) {
                 $_SESSION['error'] = 'Failed to update the question';
             }
-            header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+            header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id .
+                "&page=questions");
             exit;
         }
         if (!$this->exam_question->updateMark($exam_id, $question_id, $question_mark)) {
             $this->elp->redirect($_SESSION['redirect_to']);
         }
         $_SESSION['flash'] = 'Updated the question successfully';
-        header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+        header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id .
+            "&page=questions");
         exit;
     }
 
     // Router::delete('/api/questions/{id}', ['QuestionController', 'delete']);
-    public function delete(string $question_id, string $course_id)
+    public function delete(string $question_id)
     {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->elp->changeView('dashboard');
+        }
         $question_id = (int) $question_id;
-        $course_id = (int) $course_id;
-        if (!$question_id || !$course_id) {
+        $course_id = $_GET['course_id'] ?? null;
+        $exam_id = $_GET['exam_id'] ?? null;
+        if (!$question_id) {
             http_response_code(400);
-            $this->elp->changeView('courses/questions', ['error' => 'Question ID or Course ID not passed'])->render();
+            return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
         }
         $elp = $this->elp->checkTeacherCredentials();
         if ($elp !== null)
@@ -283,58 +293,35 @@ class QuestionController
 
         if (!$this->questions->getByID($question_id)) {
             http_response_code(404);
-            $this->elp->changeView('courses/questions', ['error' => 'Question Not Found', 'course_id' => $course_id])->render();
+            $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
         }
 
-        if (!$this->questions->delete($question_id)) {
+        if (!$this->exams->removeQuestion($question_id, $exam_id)) {
             http_response_code(500);
-            $this->elp->changeView('courses/questions', ['error' => 'Internal Server Error', 'course_id' => $course_id])->render();
+            $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
         }
         $_SESSION['flash'] = 'Successfully deleted the question';
-        header("Location: /api/course/questions?course_id=$course_id");
-        exit;
+        $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
     }
 
-    public function autoGenerate($exam_id)
+    public function questionBank($exam_id)
     {
-        $course_id = (int) $_POST['course_id'] ?? null;;
+        $authError = $this->elp->checkTeacherCredentials();
+        if ($authError !== null)
+            return $authError;
+
         $exam_id = (int) $exam_id;
-        $limit = (int) $_POST['limit'] ?? null;
-
-        if (!$course_id) {
+        if (!$exam_id) {
             http_response_code(400);
-            $_SESSION['error'] = "Course ID Not Passed";
-            header("Location: " . BASE_PATH . "/api/dashboard");
-            exit;
+            $_SESSION['error'] = 'Exam ID not Passed';
+            $this->elp->redirect("/api/dashboard");
         }
-        $elpErr = $this->elp->checkTeacherCredentials();
-        if (!$elpErr) {
-            return;
+        $exam = $this->exams->find($exam_id);
+        if (!$exam) {
+            $this->elp->redirect($_SESSION['redirect']);
         }
-        if (!$this->courses->find($course_id)) {
-            http_response_code(404);
-            $_SESSION['error'] = "Course Not Found";
-            header("Location: " . BASE_PATH . "/api/dashboard");
-            exit;
-        }
-
-        $autoGeneratedQuestions = $this->questions->getAutoGenerated($course_id, $limit);
-
-        $autoGeneratedQuestionsChoices = [];
-        if (!$autoGeneratedQuestions) {
-            $autoGeneratedQuestions = [];
-        } else
-            foreach ($autoGeneratedQuestions as $question) {
-                $autoGeneratedQuestionsChoices[$question['question_id']] = $this->questions->getQuestionChoices($question['question_id']);
-            }
-
-        if (!$autoGeneratedQuestionsChoices)
-            $autoGeneratedQuestionsChoices = [];
-
-        $_SESSION['auto_generated'] = $autoGeneratedQuestions;
-        $_SESSION['auto_generated_choices'] = $autoGeneratedQuestionsChoices;
-
-        header("Location: " . BASE_PATH . "/api/exams/" . $exam_id . "/create/courses/" . $course_id . "?page=questions");
-        exit;
+        $course_id = $exam['course_id'];
+        $questions = $this->questions->getCourseQuestions($course_id);
+        return $this->elp->changeView('questions/bank', ['questions' => $questions, 'exam_id' => $exam_id, 'course_id' => $exam['course_id']]);
     }
 }

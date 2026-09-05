@@ -24,7 +24,7 @@ class CoursesController
         }
 
         $courses = $this->courses->all();
-        $this->elp->changeView('courses/list', ['courses' => $courses])->render();
+        return $this->elp->changeView('courses/list', ['courses' => $courses]);
     }
     // Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
     public function getCourseStudents($course_id)
@@ -39,11 +39,11 @@ class CoursesController
         $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
-            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
+            return $this->elp->changeView('courses/not-found', ['id' => $course_id]);
         }
 
         $students = $this->courses->getCourseStudents($course_id);
-        $this->elp->changeView('courses/students', ['course' => $course, 'students' => $students])->render();
+        return $this->elp->changeView('courses/students', ['course' => $course, 'students' => $students]);
     }
 
     // Router::get('/api/courses/{id}/teachers', ['CoursesController', 'getCourseTeachers']);
@@ -59,11 +59,11 @@ class CoursesController
         $course = $this->courses->find($course_id);
         if (!$course) {
             http_response_code(404);
-            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
+            return $this->elp->changeView('courses/not-found', ['id' => $course_id]);
         }
 
         $teachers = $this->courses->getCourseTeachers($course_id);
-        $this->elp->changeView('courses/teachers', ['course' => $course, 'teachers' => $teachers])->render();
+        return $this->elp->changeView('courses/teachers', ['course' => $course, 'teachers' => $teachers]);
     }
 
     // Router::post('/api/courses', ['CoursesController', 'add']);
@@ -71,31 +71,31 @@ class CoursesController
     {
         $elpError = $this->elp->checkTeacherCredentials();
         if (!$elpError) {
-            return;
+            return $elpError;
         }
 
         $name = trim($_POST['name'] ?? '');
 
         if ($name === '') {
             http_response_code(400);
-            $this->elp->changeView('courses/create', ['error' => 'Course name is required'])->render();
+            return $this->elp->changeView('courses/create', ['error' => 'Course name is required']);
         }
 
         if (strlen($name) > 100) {
             http_response_code(422);
-            $this->elp->changeView('courses/create', ['error' => 'Course name must be 100 characters or fewer'])->render();
+            return $this->elp->changeView('courses/create', ['error' => 'Course name must be 100 characters or fewer']);
         }
 
         if ($this->courses->findByName($name)) {
             http_response_code(422);
-            $this->elp->changeView('courses/create', ['error' => 'A course with this name already exists'])->render();
+            return $this->elp->changeView('courses/create', ['error' => 'A course with this name already exists']);
         }
 
         $courseId = $this->courses->create($name);
 
         if (!$courseId) {
             http_response_code(500);
-            $this->elp->changeView('courses/create', ['error' => 'Internal Server Error'])->render();
+            return $this->elp->changeView('courses/create', ['error' => 'Internal Server Error']);
         }
 
         $_SESSION['flash'] = 'Course created successfully';
@@ -107,7 +107,7 @@ class CoursesController
     {
         $elpError = $this->elp->checkTeacherCredentials();
         if (!$elpError) {
-            return;
+            return $elpError;
         }
 
         $course_id = (int) $course_id;
@@ -115,30 +115,30 @@ class CoursesController
 
         if (!$course) {
             http_response_code(404);
-            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
+            return $this->elp->changeView('courses/not-found', ['id' => $course_id]);
         }
 
         $name = $_POST['name'] ?? '';
 
         if ($name === '') {
             http_response_code(400);
-            $this->elp->changeView('courses/edit', ['error' => 'Course name is required', 'course' => $course])->render();
+            return $this->elp->changeView('courses/edit', ['error' => 'Course name is required', 'course' => $course]);
         }
 
         if (strlen($name) > 100) {
             http_response_code(422);
-            $this->elp->changeView('courses/edit', ['error' => 'Course name must be 100 characters or fewer', 'course' => $course])->render();
+            return $this->elp->changeView('courses/edit', ['error' => 'Course name must be 100 characters or fewer', 'course' => $course]);
         }
 
         $existing = $this->courses->findByName($name);
         if ($existing && (int) $existing['id'] !== $course_id) {
             http_response_code(422);
-            $this->elp->changeView('courses/edit', ['error' => 'A course with this name already exists', 'course' => $course])->render();
+            return $this->elp->changeView('courses/edit', ['error' => 'A course with this name already exists', 'course' => $course]);
         }
 
         if (!$this->courses->edit($course_id, $name)) {
             http_response_code(500);
-            $this->elp->changeView('courses/edit', ['error' => 'Internal Server Error', 'course' => $course])->render();
+            return $this->elp->changeView('courses/edit', ['error' => 'Internal Server Error', 'course' => $course]);
         }
 
         $_SESSION['flash'] = 'Course updated successfully';
@@ -150,19 +150,19 @@ class CoursesController
     {
         $elpError = $this->elp->checkTeacherCredentials();
         if (!$elpError) {
-            return;
+            return $elpError;
         }
 
         $course_id = (int) $course_id;
 
         if (!$this->courses->find($course_id)) {
             http_response_code(404);
-            $this->elp->changeView('courses/not-found', ['id' => $course_id])->render();
+            return $this->elp->changeView('courses/not-found', ['id' => $course_id]);
         }
 
         if (!$this->courses->delete($course_id)) {
             http_response_code(500);
-            $this->elp->changeView('courses/not-found', ['error' => 'Internal Server Error'])->render();
+            return $this->elp->changeView('courses/not-found', ['error' => 'Internal Server Error']);
         }
 
         $_SESSION['flash'] = 'Course deleted successfully';

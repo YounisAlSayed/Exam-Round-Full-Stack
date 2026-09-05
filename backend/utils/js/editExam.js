@@ -213,11 +213,3 @@ function createQuestion() {
 function updateQuestion(questionID, questionText, questionMark, questionType) {
     const modal = questionPreview("Update", questionID, questionText, questionMark, questionType);
 }
-document.addEventListener("DOMContentLoaded", function () {
-    const now = new Date();
-    const start = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-
-    document.getElementById("startDate").value = start.toISOString().slice(0, 16);
-    document.getElementById("endDate").value = end.toISOString().slice(0, 16);
-});

@@ -80,12 +80,34 @@ function addChoiceRow(text = "", isCorrect = false, choiceId = null, newEntry = 
     const correctContainer = document.createElement("div");
     correctContainer.className = "form-check";
 
+    const hiddenCorrect = document.createElement("input");
+
+    hiddenCorrect.type = "hidden";
+    hiddenCorrect.name = `choices[${index}][is_correct]`;
+    hiddenCorrect.value = isCorrect ? "1" : "0";
+    hiddenCorrect.className = "qp-choice-is-correct";
+
     const correctRadio = document.createElement("input");
+
     correctRadio.type = "radio";
     correctRadio.name = "correct_choice";
-    correctRadio.value = index;
     correctRadio.className = "form-check-input qp-choice-correct";
     correctRadio.checked = isCorrect;
+
+    correctRadio.addEventListener("change", () => {
+        const rows = getChoiceRows();
+
+        rows.forEach((row) => {
+            const correctInput = row.querySelector(".qp-choice-is-correct");
+
+            if (correctInput) {
+                correctInput.value = "0";
+            }
+        });
+
+        hiddenCorrect.value = "1";
+    });
+
     const correctLabel = document.createElement("label");
     correctLabel.className = "form-check-label";
     correctLabel.textContent = "Correct";
@@ -127,6 +149,7 @@ function addChoiceRow(text = "", isCorrect = false, choiceId = null, newEntry = 
     row.appendChild(input);
     row.appendChild(correctContainer);
     row.appendChild(removeBtn);
+    row.appendChild(hiddenCorrect);
 
     choicesList.appendChild(row);
     updateChoiceControls();
@@ -136,11 +159,25 @@ function reindexChoices() {
     const rows = getChoiceRows();
 
     rows.forEach((row, index) => {
-        const input = row.querySelector(".qp-choice-text");
-        const radio = row.querySelector(".qp-choice-correct");
+        const textInput = row.querySelector(".qp-choice-text");
+        const correctInput = row.querySelector(".qp-choice-is-correct");
+        const idInput = row.querySelector('input[name*="[id]"]');
+        const newInput = row.querySelector('input[name*="[new]"]');
 
-        input.placeholder = `Choice ${String.fromCharCode(65 + index)}`;
-        radio.value = index;
+        textInput.name = `choices[${index}][text]`;
+        textInput.placeholder = `Choice ${String.fromCharCode(65 + index)}`;
+
+        if (correctInput) {
+            correctInput.name = `choices[${index}][is_correct]`;
+        }
+
+        if (idInput) {
+            idInput.name = `choices[${index}][id]`;
+        }
+
+        if (newInput) {
+            newInput.name = `choices[${index}][new]`;
+        }
     });
 }
 
