@@ -271,7 +271,7 @@ foreach ($courseExams as $exam) {
                         <?php if (!empty($courseQuestions)): ?>
                         <div class="list-group">
                             <?php foreach ($courseQuestions as $question): ?>
-                            <a href="<?= BASE_PATH ?>/api/questions/<?= $question['id'] ?>/edit"
+                            <a href="<?= BASE_PATH ?>/api/questions/update/<?= $question['id'] ?>?soul=<?= $question['id'] ?>"
                                 class="list-group-item list-group-item-action clickable-item d-flex justify-content-between align-items-center">
                                 <div class="flex-grow-1 me-3">
                                     <h6 class="mb-1 fw-semibold"><?= htmlspecialchars($question['question']) ?>
@@ -280,17 +280,14 @@ foreach ($courseExams as $exam) {
                                         <i class="fas fa-tag me-1"></i>
                                         <?= htmlspecialchars($question['question_type'] ?? 'Multiple Choice') ?>
                                         <span class="mx-2">|</span>
-                                        <i class="fas fa-star me-1"></i>
-                                        <?= $question['question_mark'] ?? 2 ?> marks
                                     </small>
                                 </div>
                                 <div>
-                                    <?php if (!empty($question['exam_id'])): ?>
-                                    <span class="badge bg-info rounded-pill me-2">In Exam</span>
-                                    <?php else: ?>
-                                    <span class="badge bg-secondary rounded-pill me-2">Unused</span>
-                                    <?php endif ?>
-                                    <i class="fas fa-chevron-right text-muted small"></i>
+                                    <form class="form form_actions"
+                                        action="<?= BASE_PATH ?>/api/questions/delete/<?= $question['id'] ?>?full=<?= $question['id'] ?>"
+                                        method="post">
+                                        <button type="submit" class="btn btn-small btn-outline-danger">Delete</button>
+                                    </form>
                                 </div>
                             </a>
                             <?php endforeach ?>

@@ -9,6 +9,7 @@ Router::get('/api/questions/bank/{exam_id}', ['QuestionController', 'questionBan
 Router::post('/api/questions/view/{question_id}', ['QuestionController', 'previewQuestion']);
 
 Router::post('/api/questions/update/{question_id}', ['QuestionController', 'editQuestion']);
+Router::get('/api/questions/update/{question_id}', ['QuestionController', 'editQuestion']);
 
 Router::post('/api/questions/delete/{question_id}', ['QuestionController', 'delete']);
 
@@ -52,7 +53,7 @@ Router::delete('/api/attempts/{id}', ['AttemptsController', 'deleteStudentAttemp
 Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
 Router::get('/api/courses/{id}/teachers', ['CoursesController', 'getCourseTeachers']);
 
-Router::get('/api/courses/list', ['CoursesController', 'getAll']);
+Router::get('/api/courses/list', ['CoursesController', 'list']);
 
 Router::post('/api/courses', ['CoursesController', 'add']);
 

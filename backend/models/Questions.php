@@ -35,6 +35,21 @@ class Questions
         return $res;
     }
 
+    public function getByIDForUpdate(int $id)
+    {
+        $sql = "SELECT q.id AS question_id, q.course_id, q.question AS question_text, q.type AS question_type FROM questions q WHERE q.id=:id";
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute(['id' => $id]);
+        $res = $statement->fetch();
+
+        if (!$res) {
+            http_response_code(404);
+            $_SESSION['error'] = "INternal Server Error (Question Not Found)";
+            return null;
+        }
+        return $res;
+    }
+
     public function getQuestionDetails(int $question_id, $exam_id)
     {
         if (!$question_id || !$exam_id) {
@@ -185,7 +200,14 @@ class Questions
     {
         $sql = 'DELETE FROM questions WHERE id=:id';
         $statement = $this->pdo->prepare($sql);
-        return $statement->execute(['id' => $question_id]);
+        $res = $statement->execute(['id' => $question_id]);
+
+        if (!$res) {
+            http_response_code(500);
+            $_SESSION['error'] = "Internal Server Error";
+            return null;
+        }
+        return $res;
     }
 
     public function getExamQuestionSet($exam_id, $offset, $size = 2)

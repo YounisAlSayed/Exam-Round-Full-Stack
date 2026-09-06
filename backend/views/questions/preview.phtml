@@ -23,119 +23,118 @@ if ($questionChoices) {
 ?>
 
 <?php renderHeader($isUpdate ? "Update Question" : "Create A Question", [BASE_PATH . "/utils/css/createExam.css"]); ?>
-    <div class="container card py-4 w-50">
-        <h1 class="mb-4"><?= $isUpdate ? 'Update Question' : 'Create Question' ?></h1>
-        <form id="addQuestionForm" method="POST"
-            action="<?= BASE_PATH ?>/api/questions/<?= $isUpdate ? 'update' : 'create' ?>/<?= $isUpdate ? $question['question_id'] : $course_id ?>?exam_id=<?= $exam_id ?? '' ?><?= $isUpdate ? '&update=true' : '' ?>">
-            <div class="row g-3">
-                <!-- Question -->
-                <div class="col-12">
-                    <label for="qp_questionText" class="form-label fw-semibold">
-                        Question
-                    </label>
+<div class="container card py-4 w-50">
+    <h1 class="mb-4"><?= $isUpdate ? 'Update Question' : 'Create Question' ?></h1>
+    <form id="addQuestionForm" method="POST"
+        action="<?= BASE_PATH ?>/api/questions/<?= $isUpdate ? 'update' : 'create' ?>/<?= $isUpdate ? $question['question_id'] : $course_id ?>?exam_id=<?= $exam_id ?? '' ?><?= $isUpdate ? '&update=true' : '' ?>">
+        <div class="row g-3">
+            <!-- Question -->
+            <div class="col-12">
+                <label for="qp_questionText" class="form-label fw-semibold">
+                    Question
+                </label>
 
-                    <input type="text" id="qp_questionText"
-                        value="<?= isset($question) ? $question['question_text'] : '' ?>" name="question_text"
-                        class="form-control" placeholder="e.g., What does CRUD stand for?" required>
-                </div>
-
-                <!-- Marks -->
-                <?php if ($showQuestionMark): ?>
-                    <div class="col-md-4">
-                        <label for="qp_questionMark" class="form-label fw-semibold">
-                            Marks
-                        </label>
-
-                        <input type="number" id="qp_questionMark" name="question_mark"
-                            value="<?= $question ? $question['question_mark'] : '2' ?>" class="form-control" min="1"
-                            max="100" required>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Question Type -->
-                <div class="col-12">
-                    <label class="form-label fw-semibold d-block">
-                        Question Type
-                    </label>
-
-                    <div class="d-flex gap-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="question_type" id="qp_typeMC" value="mc"
-                                <?= $questionType === 'mc' ? 'checked' : '' ?> required>
-
-                            <label class="form-check-label" for="qp_typeMC">
-                                Multiple Choice
-                            </label>
-                        </div>
-
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio"
-                                <?= $questionType === 't/f' ? 'checked' : '' ?>
-                                name="question_type" id="qp_typeTF" value="t/f">
-
-                            <label class="form-check-label" for="qp_typeTF">
-                                True / False
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Multiple Choice -->
-                <div class="col-12" id="qp_mcContainer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label class="form-label fw-semibold mb-0">
-                            Choices
-                        </label>
-
-                        <small class="text-muted" id="qp_choiceHint">
-                            2-4 choices
-                        </small>
-
-                    </div>
-                    <div id="qp_choicesList" class="mt-2"></div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="qp_addChoiceBtn">
-                        <i class="fas fa-plus me-1"></i>
-                        Add Choice
-                    </button>
-                </div>
+                <input type="text" id="qp_questionText"
+                    value="<?= isset($question) ? $question['question_text'] : '' ?>" name="question_text"
+                    class="form-control" placeholder="e.g., What does CRUD stand for?" required>
             </div>
 
-            <!-- True / False -->
-            <div class="col-12 d-none" id="qp_tfContainer">
-                <label class="form-label fw-semibold d-block">Correct Answer</label>
+            <!-- Marks -->
+            <?php if ($showQuestionMark): ?>
+            <div class="col-md-4">
+                <label for="qp_questionMark" class="form-label fw-semibold">
+                    Marks
+                </label>
+
+                <input type="number" id="qp_questionMark" name="question_mark"
+                    value="<?= $question ? $question['question_mark'] : '2' ?>" class="form-control" min="1" max="100"
+                    required>
+            </div>
+            <?php endif; ?>
+
+            <!-- Question Type -->
+            <div class="col-12">
+                <label class="form-label fw-semibold d-block">
+                    Question Type
+                </label>
 
                 <div class="d-flex gap-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfTrue" value="True"
-                            <?= ($trueChoice && $trueChoice['is_correct']) ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="qp_tfTrue">True</label>
+                        <input class="form-check-input" type="radio" name="question_type" id="qp_typeMC" value="mc"
+                            <?= $questionType === 'mc' ? 'checked' : '' ?> required>
+
+                        <label class="form-check-label" for="qp_typeMC">
+                            Multiple Choice
+                        </label>
                     </div>
 
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfFalse" value="False"
-                            <?= ($falseChoice && $falseChoice['is_correct']) ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="qp_tfFalse">False</label>
+                        <input class="form-check-input" type="radio" <?= $questionType === 't/f' ? 'checked' : '' ?>
+                            name="question_type" id="qp_typeTF" value="t/f">
+
+                        <label class="form-check-label" for="qp_typeTF">
+                            True / False
+                        </label>
                     </div>
                 </div>
-
-                <input type="hidden" name="true_choice_id" value="<?= $trueChoice['id'] ?? '' ?>">
-                <input type="hidden" name="false_choice_id" value="<?= $falseChoice['id'] ?? '' ?>">
             </div>
 
-            <!-- Buttons -->
-            <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
-                <button type="button" class="btn btn-outline-danger" onclick="history.back()">
-                    Cancel
-                </button>
+            <!-- Multiple Choice -->
+            <div class="col-12" id="qp_mcContainer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <label class="form-label fw-semibold mb-0">
+                        Choices
+                    </label>
 
-                <button type="submit" class="btn btn-outline-primary" id="qp_confirmBtn">
-                    <?= $isUpdate ? 'Update Question' : 'Create Question' ?>
+                    <small class="text-muted" id="qp_choiceHint">
+                        2-4 choices
+                    </small>
+
+                </div>
+                <div id="qp_choicesList" class="mt-2"></div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="qp_addChoiceBtn">
+                    <i class="fas fa-plus me-1"></i>
+                    Add Choice
                 </button>
             </div>
-        </form>
-    </div>
-    <script>
-        const questionChoices = <?= json_encode($questionChoices ?? [], JSON_HEX_TAG) ?>;
-        const basePath = <?= json_encode(BASE_PATH, JSON_HEX_TAG) ?>;
-    </script>
-    <?php renderFooter([BASE_PATH . "/utils/js/createQuestion.js"]) ?>
+        </div>
+
+        <!-- True / False -->
+        <div class="col-12 d-none" id="qp_tfContainer">
+            <label class="form-label fw-semibold d-block">Correct Answer</label>
+
+            <div class="d-flex gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfTrue" value="True"
+                        <?= ($trueChoice && $trueChoice['is_correct']) ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="qp_tfTrue">True</label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tf_correct" id="qp_tfFalse" value="False"
+                        <?= ($falseChoice && $falseChoice['is_correct']) ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="qp_tfFalse">False</label>
+                </div>
+            </div>
+
+            <input type="hidden" name="true_choice_id" value="<?= $trueChoice['id'] ?? '' ?>">
+            <input type="hidden" name="false_choice_id" value="<?= $falseChoice['id'] ?? '' ?>">
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
+            <button type="button" class="btn btn-outline-danger" onclick="history.back()">
+                Cancel
+            </button>
+
+            <button type="submit" class="btn btn-outline-primary" id="qp_confirmBtn">
+                <?= $isUpdate ? 'Update Question' : 'Create Question' ?>
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+const questionChoices = <?= json_encode($questionChoices ?? [], JSON_HEX_TAG) ?>;
+const basePath = <?= json_encode(BASE_PATH, JSON_HEX_TAG) ?>;
+</script>
+<?php renderFooter([BASE_PATH . "/utils/js/createQuestion.js"]) ?>

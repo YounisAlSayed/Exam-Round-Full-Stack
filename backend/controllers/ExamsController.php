@@ -7,6 +7,7 @@ use App\models\Choices;
 use App\models\Courses;
 use App\models\Exam_question;
 use App\models\Exams;
+use App\models\Questions;
 use App\models\StudentsAnswers;
 
 class ExamsController
@@ -17,6 +18,7 @@ class ExamsController
     private Choices $choices;
     private Exam_question $exam_question;
     private StudentsAnswers $studentsAnswers;
+    private Questions $questions;
     private Check $elp;
     public function __construct()
     {
@@ -26,6 +28,7 @@ class ExamsController
         $this->choices = new Choices();
         $this->exam_question = new Exam_question();
         $this->studentsAnswers = new StudentsAnswers();
+        $this->questions = new Questions();
         $this->elp = new Check();
         $this->elp->unsetAll();
     }
@@ -219,6 +222,12 @@ class ExamsController
             return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=EndDateLess");
         }
 
+        $examQuestionsCount = $this->questions->getExamQuestionCount($exam_id);
+        if ($exam['status'] === 'not_ready' && $status === 'not_ready' && $examQuestionsCount > 0)
+            $status = 'ready';
+        if ($examQuestionsCount <= 0)
+            $status = "not_ready";
+
         if (!$this->exams->edit($exam_id, $title, $status, $total_marks, $start_date, $end_date, $randomize_order)) {
             http_response_code(500);
             return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $exam['course_id'] . "&page=questions&error=editDBError");
@@ -330,7 +339,7 @@ class ExamsController
         unset($_SESSION['exam_answers'][$exam_id]);
 
         $_SESSION['flash'] = 'Exam submitted successfully!';
-        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/details');
+        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/details/' . $_SESSION['user']['role']);
         exit;
     }
 }

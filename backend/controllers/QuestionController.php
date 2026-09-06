@@ -218,9 +218,11 @@ class QuestionController
 
         $question_id = (int) $question_id;
         $exam_id = (int) ($_GET['exam_id'] ?? 0);
-        if ($exam_id <= 0) {
+        $soul = $_GET['soul'] ?? 0;
+        if ($exam_id <= 0 && !$soul) {
             http_response_code(400);
-            return $this->elp->changeView('dashboard', ['error' => 'Exam ID not passed.']);
+            $_SESSION['error'] = "Exam ID Not Passed";
+            $this->elp->redirect('/api/dashboard');
         }
         $exam = $this->exams->find($exam_id);
         if (!$exam) {
@@ -320,6 +322,7 @@ class QuestionController
             );
         } catch (\DomainException $error) {
             http_response_code(409);
+            $_SESSION['error'] = $error->getMessage();
             return $this->elp->changeView('dashboard', ['error' => $error->getMessage()]);
         } catch (\Throwable $error) {
             error_log('Failed to save exam question: ' . $error->getMessage());
@@ -338,12 +341,11 @@ class QuestionController
     // Router::delete('/api/questions/{id}', ['QuestionController', 'delete']);
     public function delete(string $question_id)
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->elp->changeView('dashboard');
-        }
         $question_id = (int) $question_id;
         $course_id = $_GET['course_id'] ?? null;
         $exam_id = $_GET['exam_id'] ?? null;
+        $full = $_GET['full'] ?? null;
+
         if (!$question_id) {
             http_response_code(400);
             return $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
@@ -352,9 +354,19 @@ class QuestionController
         if ($elp !== null)
             return $elp;
 
-        if (!$this->questions->getByID($question_id)) {
+        $question = $this->questions->getByID($question_id);
+        if (!$question) {
             http_response_code(404);
             $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
+        }
+
+        if ($full) {
+            if (!$this->questions->delete($question_id)) {
+                $this->elp->redirect('/api/courses/teacher/' . $question['course_id'] . "?page=questions");
+            }
+
+            $_SESSION['flash'] = "Successfully Deleted the Question Fully";
+            $this->elp->redirect('/api/courses/teacher/' . $question['course_id'] . "?page=questions");
         }
 
         if (!$this->exams->removeQuestion($question_id, $exam_id)) {

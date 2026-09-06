@@ -17,7 +17,14 @@ class Courses
         $sql = "SELECT * FROM courses";
         $statement = $this->pdo->prepare($sql);
         $statement->execute();
-        return $statement->fetchAll();
+        $res = $statement->fetchAll();
+
+        if (!$res) {
+            http_response_code(500);
+            $_SESSION['error'] = "Internal Server Error";
+            return null;
+        }
+        return $res;
     }
 
     public function find(int $id)
