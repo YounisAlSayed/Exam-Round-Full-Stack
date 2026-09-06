@@ -70,7 +70,7 @@ class CoursesController
     public function add()
     {
         $elpError = $this->elp->checkTeacherCredentials();
-        if (!$elpError) {
+        if ($elpError !== null) {
             return $elpError;
         }
 
@@ -106,7 +106,7 @@ class CoursesController
     public function edit($course_id)
     {
         $elpError = $this->elp->checkTeacherCredentials();
-        if (!$elpError) {
+        if ($elpError !== null) {
             return $elpError;
         }
 
@@ -149,7 +149,7 @@ class CoursesController
     public function delete($course_id)
     {
         $elpError = $this->elp->checkTeacherCredentials();
-        if (!$elpError) {
+        if ($elpError !== null) {
             return $elpError;
         }
 

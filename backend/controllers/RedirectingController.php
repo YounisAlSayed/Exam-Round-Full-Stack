@@ -27,11 +27,9 @@ class RedirectingController
         $this->exam_question = new Exam_question();
         $this->exams = new Exams();
         $this->help = new Check();
-        $this->help->unsetAll();
     }
     public function dashboard()
     {
-        $this->help->unsetAll();
         $courses = [];
         $nextExamSet = [];
         $user = $_SESSION['user'] ?? null;
@@ -57,27 +55,23 @@ class RedirectingController
     // -------------------------------- user --------------------------------------
     public function login()
     {
-        $this->help->unsetAll();
         $_SESSION['user'] = null;
         return $this->help->changeView('users/login');
     }
 
     public function signup()
     {
-        $this->help->unsetAll();
         return $this->help->changeView('users/signup');
     }
 
     public function logout()
     {
-        $this->help->unsetAll();
         $_SESSION['user'] = null;
         return $this->help->changeView('users/login');
     }
 
     public function profile()
     {
-        $this->help->unsetAll();
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
@@ -92,10 +86,12 @@ class RedirectingController
 
     public function usersList()
     {
-        $this->help->unsetAll();
         $currentUser = $_SESSION['user'] ?? null;
 
-        $this->help->checkTeacherCredentials();
+        $authError = $this->help->checkTeacherCredentials();
+        if ($authError !== null) {
+            return $authError;
+        }
         $usersList = $this->user->all();
         if ($usersList !== null) {
             $usersList = [];
@@ -106,7 +102,7 @@ class RedirectingController
     // ---------------------------------- questions ----------------------------------------
     // public function showExamQuestions(string $exam_id)
     // {
-    //     $this->help->unsetAll();
+
     //     $exam_id = (int) $exam_id;
     //     if (!$exam_id) {
     //         http_response_code(400);
@@ -122,7 +118,6 @@ class RedirectingController
 
     public function createQuestion($course_id)
     {
-        $this->help->unsetAll();
         $course_id = (int) $course_id;
         if (!$course_id) {
             http_response_code(400);
@@ -137,7 +132,6 @@ class RedirectingController
 
     public function studentExamDetails($exam_id)
     {
-        $this->help->unsetAll();
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return $this->help->changeView("users/login", ['error' => 'User Not logged in']);
@@ -176,7 +170,6 @@ class RedirectingController
 
     public function teacherExamDetails($exam_id)
     {
-        $this->help->unsetAll();
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
             return $this->help->changeView('users/login', ['error' => 'User Not Logged in']);
@@ -219,7 +212,6 @@ class RedirectingController
 
     public function examStart($exam_id, $page)
     {
-        $this->help->unsetAll();
         if (!isset($_SESSION['user'])) {
             $this->help->redirect('/api/users/login');
         }
@@ -268,7 +260,6 @@ class RedirectingController
 
     public function teacherCourse($course_id)
     {
-        $this->help->unsetAll();
         if (!$course_id) {
             http_response_code(400);
             return $this->help->changeView('dashboard', ['error' => 'Course Not Passed']);
@@ -296,7 +287,6 @@ class RedirectingController
 
     public function examCreate($exam_id)
     {
-        $this->help->unsetAll();
         $course_id = (int) $_GET['course_id'] ?? null;
         $exam_id = (int) $exam_id;
         $page = $_GET['page'] ?? null;

@@ -93,7 +93,7 @@ class ExamsController
         }
         $course_id = (int) $course_id;
         $elpError = $this->elp->checkTeacherCredentials();
-        if (!$elpError) {
+        if ($elpError !== null) {
             return $elpError;
         }
         if (!$this->courses->find($course_id)) {
@@ -180,7 +180,7 @@ class ExamsController
     public function edit($exam_id)
     {
         $elpError = $this->elp->checkTeacherCredentials();
-        if (!$elpError) {
+        if ($elpError !== null) {
             return $elpError;
         }
 
@@ -233,7 +233,7 @@ class ExamsController
     public function delete($exam_id)
     {
         $elpError = $this->elp->checkTeacherCredentials();
-        if (!$elpError) {
+        if ($elpError !== null) {
             return $elpError;
         }
 

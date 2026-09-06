@@ -39,7 +39,10 @@ class Check
             http_response_code(400);
             return $this->changeView('users/login', ['error' => "user Not Logged in"]);
         }
-        $this->checkUserExistence($user['id']);
+        $userExistenceError = $this->checkUserExistence($user['id']);
+        if ($userExistenceError !== null) {
+            return $userExistenceError;
+        }
         if ($user['role'] !== 'teacher') {
             http_response_code(403);
             return  $this->changeView('dashboard', ['error' => "User Is Forbidden From Entering this page"]);
@@ -54,7 +57,10 @@ class Check
             http_response_code(400);
             return $this->changeView('users/login', ['error' => "user Not Logged in"]);
         }
-        $this->checkUserExistence($user['id']);
+        $userExistenceError = $this->checkUserExistence($user['id']);
+        if ($userExistenceError !== null) {
+            return $userExistenceError;
+        }
         if ($user['role'] !== 'student') {
             http_response_code(403);
             return $this->changeView('dashboard', ['error' => "User Is Forbidden From Entering this page"]);

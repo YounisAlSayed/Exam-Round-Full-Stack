@@ -2,6 +2,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     const editChoiceModal = document.getElementById("editChoiceModal");
 
+    if (!editChoiceModal) {
+        return;
+    }
+
     editChoiceModal.addEventListener("show.bs.modal", function (event) {
         const trigger = event.relatedTarget;
 
@@ -25,38 +29,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-// Handle form submission with confirmation
-document.getElementById("editChoiceForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    const form = this;
-    const formData = new FormData(form);
-
-    // Send AJAX request to update choice
-    fetch(form.action, {
-        method: "POST",
-        body: formData,
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-                // Close edit modal
-                const editModal = bootstrap.Modal.getInstance(document.getElementById("editChoiceModal"));
-                editModal.hide();
-
-                // Show success confirmation
-                const confirmModal = new bootstrap.Modal(document.getElementById("confirmSaveModal"));
-                confirmModal.show();
-
-                // Reload page after confirmation modal is closed
-                document.getElementById("confirmSaveModal").addEventListener("hidden.bs.modal", function () {
-                    location.reload();
-                });
-            } else {
-                alert("Error updating choice: " + (data.message || "Unknown error"));
-            }
-        })
-        .catch((error) => {
-            alert("Error: " + error);
-        });
-});
+// Keep edits as normal server-side form posts.
+const editChoiceForm = document.getElementById("editChoiceForm");
+if (editChoiceForm) {
+    editChoiceForm.addEventListener("submit", function (event) {
+        if (!confirm("Save changes to this choice?")) {
+            event.preventDefault();
+        }
+    });
+}

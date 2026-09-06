@@ -5,6 +5,8 @@ use App\Routes\Router;
 //------------------------------ questions routers -----------------------------------
 Router::post('/api/questions/create/{course_id}', ['QuestionController', 'addQuestion']);
 Router::post('/api/questions/bank/{exam_id}', ['QuestionController', 'questionBank']);
+Router::get('/api/questions/bank/{exam_id}', ['QuestionController', 'questionBank']);
+Router::post('/api/questions/view/{question_id}', ['QuestionController', 'previewQuestion']);
 
 Router::post('/api/questions/update/{question_id}', ['QuestionController', 'editQuestion']);
 

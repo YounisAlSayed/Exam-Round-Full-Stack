@@ -187,6 +187,11 @@ function initializeChoices() {
     questionChoices.forEach((choice) => {
         addChoiceRow(choice["choice_text"], choice["is_correct"], choice["id"]);
     });
+
+    if (getChoiceCount() === 0) {
+        addChoiceRow();
+        addChoiceRow();
+    }
 }
 
 function toggleQuestionType() {
@@ -223,13 +228,15 @@ form.addEventListener("submit", function (event) {
         questionText.focus();
         return;
     }
-    const marks = Number(questionMark.value);
+    if (questionMark) {
+        const marks = Number(questionMark.value);
 
-    if (!Number.isInteger(marks) || marks < 1 || marks > 100) {
-        event.preventDefault();
-        alert("Marks must be a number between 1 and 100.");
-        questionMark.focus();
-        return;
+        if (!Number.isInteger(marks) || marks < 1 || marks > 100) {
+            event.preventDefault();
+            alert("Marks must be a number between 1 and 100.");
+            questionMark.focus();
+            return;
+        }
     }
 
     if (typeMC.checked) {

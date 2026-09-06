@@ -1,15 +1,6 @@
 const checkboxes = document.querySelectorAll('input[name="selected_questions[]"]');
 
 const selectAllBtn = document.getElementById("selectAllBtn");
-const selectedCount = document.getElementById("selectedCount");
-
-function updateSelectedCount() {
-    if (!selectedCount) {
-        return;
-    }
-
-    selectedCount.textContent = Array.from(checkboxes).filter((checkbox) => checkbox.checked).length;
-}
 
 checkboxes.forEach((checkbox) => {
     checkbox.addEventListener("change", updateSelectedCount);
@@ -23,7 +14,4 @@ selectAllBtn?.addEventListener("click", () => {
     });
 
     selectAllBtn.innerHTML = allSelected ? '<i class="fas fa-check-double me-1"></i> Select All' : '<i class="fas fa-xmark me-1"></i> Deselect All';
-    updateSelectedCount();
 });
-
-updateSelectedCount();

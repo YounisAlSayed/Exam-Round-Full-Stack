@@ -2,24 +2,15 @@ let questions = [];
 const removedDraftQuestionIds = new Set();
 
 if (Array.isArray(examQuestions)) {
-    questions = examQuestions.map((q) => {
-        const id = q.question_id || q.id;
-
-        return {
-            id,
-            question_text: q.question_text || q.question || "",
-            question_mark: q.question_mark || 10,
-            choices: examQuestionsChoices[id] || [],
-            type: q.question_type || q.type || "mc",
-            is_generated: false,
-            is_draft: false,
-        };
-    });
-}
-
-const questionCounter = document.getElementById("questionCounter");
-if (questionCounter) {
-    questionCounter.textContent = `${questions.length} questions`;
+    questions = examQuestions.map((q) => ({
+        id: q.id,
+        question_text: q.question,
+        question_mark: q.question_mark || 10,
+        choices: examQuestionsChoices[q.id] || [],
+        type: q.type,
+        is_generated: false,
+        is_draft: true,
+    }));
 }
 // TAB NAVIGATION
 function activateTab(id) {
@@ -116,7 +107,7 @@ function renderQuestions() {
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="updateQuestion(${q.id})">
+                        <button type="button" class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="updateQuestion(${q.id}, '${q.question_text}', ${q.question_mark}, '${q.type}')">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                                 
@@ -154,25 +145,16 @@ function removeQuestion(index) {
 
 // CONFIRM TAB
 function updateConfirmSummary() {
-    const startValue = document.getElementById("startDate").value;
-    const endValue = document.getElementById("endDate").value;
-    const startDate = startValue ? new Date(startValue) : null;
-    const endDate = endValue ? new Date(endValue) : null;
-
     document.getElementById("confirmTitle").textContent = document.getElementById("examTitle").value || "-";
-    document.getElementById("confirmStart").textContent = startDate ? startDate.toLocaleString() : "-";
-    document.getElementById("confirmEnd").textContent = endDate ? endDate.toLocaleString() : "-";
-
-    if (!startDate || !endDate || Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-        document.getElementById("confirmDuration").textContent = "-";
-        return;
-    }
-
-    const durationMinutes = Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / 60000));
-    const hours = Math.floor(durationMinutes / 60);
-    const minutes = durationMinutes % 60;
-
-    document.getElementById("confirmDuration").textContent = `${hours}h ${minutes}m`;
+    document.getElementById("confirmStart").textContent = document.getElementById("startDate").value
+        ? new Date(document.getElementById("startDate").value).toLocaleString()
+        : "-";
+    document.getElementById("confirmEnd").textContent = document.getElementById("endDate").value
+        ? new Date(document.getElementById("endDate").value).toLocaleString()
+        : "-";
+    document.getElementById("confirmDuration").textContent = new Date(
+        new Date(document.getElementById("endDate")).getTime() - new Date(document.getElementById("startDate")).getTime(),
+    );
 }
 
 function renderConfirmQuestions() {
@@ -225,17 +207,9 @@ document.getElementById("openFinalConfirmBtn").addEventListener("click", functio
 });
 
 function createQuestion() {
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = `${basePath}/api/questions/create/courses/${courseID}/view?exam_id=${examID}`;
-    document.body.appendChild(form);
-    form.submit();
+    const modal = questionPreview();
 }
 
-function updateQuestion(questionID) {
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = `${basePath}/api/questions/update/${questionID}?exam_id=${examID}&course_id=${courseID}`;
-    document.body.appendChild(form);
-    form.submit();
+function updateQuestion(questionID, questionText, questionMark, questionType) {
+    const modal = questionPreview("Update", questionID, questionText, questionMark, questionType);
 }

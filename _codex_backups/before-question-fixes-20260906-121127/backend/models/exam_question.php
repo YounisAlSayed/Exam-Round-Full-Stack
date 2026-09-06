@@ -14,9 +14,7 @@ class Exam_question
     }
     public function create(int $exam_id, int $question_id, float $question_mark)
     {
-        $sql = 'INSERT INTO exam_questions (exam_id, question_id, question_mark)
-                VALUES (:exam_id, :question_id, :question_mark)
-                ON DUPLICATE KEY UPDATE question_mark = VALUES(question_mark)';
+        $sql = 'INSERT INTO exam_questions (exam_id, question_id, question_mark) VALUES (:exam_id, :question_id, :question_mark)';
         $statement = $this->pdo->prepare($sql);
         return $statement->execute(['exam_id' => $exam_id, 'question_id' => $question_id, 'question_mark' => $question_mark]);
     }

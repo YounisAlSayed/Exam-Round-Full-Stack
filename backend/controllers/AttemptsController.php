@@ -119,8 +119,8 @@ class AttemptsController
     public function deleteStudentAttempt($attempt_id)
     {
         $elpError = $this->elp->checkTeacherCredentials();
-        if (!$elpError) {
-            return;
+        if ($elpError !== null) {
+            return $elpError;
         }
 
         $attempt_id = (int) $attempt_id;

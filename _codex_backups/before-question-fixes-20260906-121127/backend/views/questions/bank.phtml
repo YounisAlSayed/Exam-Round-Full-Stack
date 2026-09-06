@@ -4,18 +4,25 @@ require_once __DIR__ . "/../layout.phtml";
 $questions = $questions ?? [];
 $exam_id = $exam_id ?? 0;
 $course_id = $course_id ?? 0;
-$selected_questions = $selected_questions ?? ($_SESSION['selected_questions'] ?? []);
-$questionMarks = $questionMarks ?? ($_SESSION['selected_question_marks'] ?? []);
+$selected_questions = isset($_SESSION['selected_questions']) ? $_SESSION['selected_questions'] : [];
 ?>
 
-<?php renderHeader("Question Bank") ?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Question Bank</title>
+</head>
+
+<body>
+
+    <?php renderHeader("Question Bank") ?>
     <div class="container py-5">
-        <?php if (isset($error) || isset($_SESSION['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= htmlspecialchars($error ?? $_SESSION['error']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php endif; ?>
         <div class="row justify-content-center">
             <div class="col-lg-9 col-xl-8">
                 <form action="<?= BASE_PATH ?>/api/questions/bank/<?= $exam_id ?>" method="POST" id="questionBankForm">
@@ -34,8 +41,7 @@ $questionMarks = $questionMarks ?? ($_SESSION['selected_question_marks'] ?? []);
                                     </p>
                                 </div>
                                 <span class="badge bg-primary-subtle text-primary px-3 py-2">
-                                    <span id="selectedCount"><?= count($selected_questions) ?></span> /
-                                    <?= count($questions) ?> selected
+                                    <?= count($questions) ?> Questions
                                 </span>
                             </div>
                         </div>
@@ -52,7 +58,7 @@ $questionMarks = $questionMarks ?? ($_SESSION['selected_question_marks'] ?? []);
 
                             <div class="d-flex flex-column gap-3">
                                 <?php foreach ($questions as $index => $question): ?>
-                                <div class="card border p-3">
+                                <label for="question_<?= $question['id'] ?>" class="card border p-3">
                                     <div class="d-flex align-items-center gap-3">
                                         <!-- Number -->
                                         <div>
@@ -68,32 +74,20 @@ $questionMarks = $questionMarks ?? ($_SESSION['selected_question_marks'] ?? []);
                                                 <?= htmlspecialchars($question['question']) ?>
                                             </p>
                                         </div>
-                                        <div style="width: 95px;">
-                                            <label for="question_mark_<?= $question['id'] ?>"
-                                                class="form-label small mb-1">Marks</label>
-                                            <input type="number" class="form-control form-control-sm"
-                                                id="question_mark_<?= $question['id'] ?>"
-                                                name="question_marks[<?= $question['id'] ?>]" min="1" max="100"
-                                                value="<?= htmlspecialchars($questionMarks[$question['id']] ?? 2) ?>">
-                                        </div>
                                         <div>
-                                            <button class="btn btn-sm btn-outline-primary" name="bank_action"
-                                                value="details"
+                                            <button class="btn btn-sm btn-outline-primary"
                                                 formaction="<?= BASE_PATH ?>/api/questions/view/<?= $question['id'] ?>?exam_id=<?= $exam_id ?>"
                                                 formmethod="post">Details</button>
                                         </div>
                                         <!-- Checkbox -->
                                         <div>
-                                            <label for="question_<?= $question['id'] ?>" class="visually-hidden">
-                                                Select question
-                                            </label>
                                             <input class="form-check-input question-checkbox" type="checkbox"
                                                 name="selected_questions[]" value="<?= $question['id'] ?>"
                                                 id="question_<?= $question['id'] ?>"
-                                                <?= in_array((int) $question['id'], array_map('intval', $selected_questions), true) ? 'checked' : '' ?>>
+                                                <?= in_array($question['id'], $selected_questions) ? 'checked' : '' ?>>
                                         </div>
                                     </div>
-                                </div>
+                                </label>
                                 <?php endforeach; ?>
                             </div>
                             <?php else: ?>
@@ -115,7 +109,7 @@ $questionMarks = $questionMarks ?? ($_SESSION['selected_question_marks'] ?? []);
                                     Cancel
                                 </button>
 
-                                <button type="submit" class="btn btn-primary" name="bank_action" value="proceed"
+                                <button type="submit" class="btn btn-primary"
                                     <?= empty($questions) ? 'disabled' : '' ?>>
                                     Proceed
                                     <i class="fas fa-arrow-right ms-1"></i>
@@ -127,4 +121,8 @@ $questionMarks = $questionMarks ?? ($_SESSION['selected_question_marks'] ?? []);
             </div>
         </div>
     </div>
-    <?php renderFooter([BASE_PATH . "/utils/js/questionBank.js"]) ?>
+    <?php renderFooter() ?>
+    <script src="<?= BASE_PATH ?>/utils/js/questionBank.js"></script>
+</body>
+
+</html>

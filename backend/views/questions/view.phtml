@@ -1,0 +1,117 @@
+<?php
+require_once __DIR__ . "/../layout.phtml";
+
+$course_id = $course_id ?? 0;
+$exam_id = $exam_id ?? ($_GET['exam_id'] ?? null);
+$question = $question ?? [];
+$choices = $choices ?? [];
+$selectedQuestions = $selected_questions ?? ($_SESSION['selected_questions'] ?? []);
+$questionMarks = $questionMarks ?? ($_SESSION['selected_question_marks'] ?? []);
+$questionId = (int) ($question['id'] ?? $question['question_id'] ?? 0);
+$questionText = $question['question'] ?? $question['question_text'] ?? '';
+$questionType = $question['question_type'] ?? $question['type'] ?? 'mc';
+$questionMark = $questionMarks[$questionId] ?? ($question['question_mark'] ?? 2);
+
+$isSelected = $questionId && in_array($questionId, array_map('intval', $selectedQuestions), true);
+?>
+
+<?php renderHeader("Question Details", [BASE_PATH . "/utils/css/createExam.css"]); ?>
+
+<div class="container py-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <!-- Header -->
+            <h4 class="fw-bold mb-1">Question Details</h4>
+
+            <form id="questionForm" method="POST"
+                action="<?= BASE_PATH ?>/api/questions/bank/<?= $exam_id ?>?<?= $isSelected ? 'remove' : 'select' ?>=<?= $questionId ?>">
+                <input type="hidden" name="question_id" value="<?= $questionId ?>">
+                <input type="hidden" name="exam_id" value="<?= $exam_id ?? '' ?>">
+                <?php foreach ($selectedQuestions as $selectedQuestionId): ?>
+                <?php if ((int) $selectedQuestionId !== $questionId): ?>
+                <input type="hidden" name="selected_questions[]" value="<?= (int) $selectedQuestionId ?>">
+                <?php endif; ?>
+                <?php endforeach; ?>
+                <?php foreach ($questionMarks as $markedQuestionId => $mark): ?>
+                <?php if ((int) $markedQuestionId !== $questionId): ?>
+                <input type="hidden" name="question_marks[<?= (int) $markedQuestionId ?>]"
+                    value="<?= htmlspecialchars($mark) ?>">
+                <?php endif; ?>
+                <?php endforeach; ?>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Question</label>
+                        <div class="form-control readonly-field" style="min-height: 48px; padding-top: 12px;">
+                            <?= htmlspecialchars($questionText ?: 'No question text available') ?>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Question Type</label>
+                        <div>
+                            <?php if ($questionType === 't/f'): ?>
+                            <span class="badge bg-info text-white question-type-badge">
+                                <i class="fas fa-check-circle me-1"></i> True / False
+                            </span>
+                            <?php else: ?>
+                            <span class="badge bg-primary question-type-badge">
+                                <i class="fas fa-list me-1"></i> Multiple Choice
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="questionMark" class="form-label fw-semibold">Marks</label>
+                        <input type="number" id="questionMark" name="question_mark" class="form-control" min="1"
+                            max="100" disabled value="<?= htmlspecialchars($questionMark) ?>" required>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Choices</label>
+
+                        <?php if (!empty($choices)): ?>
+                        <?php foreach ($choices as $index => $choice): ?>
+                        <div
+                            class="choice-item <?= $choice['is_correct'] ? 'correct' : '' ?> d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong><?= chr(65 + $index) ?>.</strong>
+                                <?= htmlspecialchars($choice['choice_text']) ?>
+                            </div>
+                            <?php if ($choice['is_correct']): ?>
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i> Correct Answer
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php else: ?>
+                        <div class="text-muted">No choices available for this question.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-center align-items-center gap-3 mt-4 pt-3 border-top">
+                    <button type="button" class="btn btn-outline-danger" onclick="history.back()">
+                        <i class="fas fa-times me-1"></i>
+                        Cancel
+                    </button>
+
+                    <?php if ($isSelected): ?>
+                    <button type="submit" class="btn btn-danger" id="removeBtn" name="bank_action" value="remove">
+                        <i class="fas fa-minus-circle me-1"></i> Remove from Exam
+                    </button>
+                    <?php else: ?>
+                    <button type="submit" class="btn btn-success" id="selectBtn" name="bank_action" value="select">
+                        <i class="fas fa-plus-circle me-1"></i> Select Question
+                    </button>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?php renderFooter() ?>

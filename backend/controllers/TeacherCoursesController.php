@@ -26,7 +26,7 @@ class TeacherCoursesController
     public function getTeachersCourses()
     {
         $authError = $this->auth->checkTeacherCredentials();
-        if (!$authError) {
+        if ($authError !== null) {
             return $authError;
         }
 
@@ -91,7 +91,7 @@ class TeacherCoursesController
     public function deleteTeacherCourse($teacher_id, $course_id)
     {
         $authError = $this->auth->checkTeacherCredentials();
-        if (!$authError) {
+        if ($authError !== null) {
             return $authError;
         }
 
