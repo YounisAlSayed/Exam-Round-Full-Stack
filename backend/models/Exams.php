@@ -183,6 +183,14 @@ class Exams
         return $statement->fetchAll();
     }
 
+    public function getReadyCourseExams($course_id)
+    {
+        $sql = 'SELECT * FROM exams WHERE course_id = :course_id AND status <> "not_ready"';
+        $statement = $this->pdo->prepare($sql);
+        $statement->execute(['course_id' => $course_id]);
+        return $statement->fetchAll();
+    }
+
     public function removeQuestion($question_id, $exam_id)
     {
         $sql = "DELETE FROM exam_questions WHERE question_id=:question_id AND exam_id=:exam_id";

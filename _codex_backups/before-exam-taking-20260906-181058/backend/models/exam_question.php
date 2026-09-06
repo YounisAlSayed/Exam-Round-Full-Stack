@@ -36,6 +36,7 @@ class Exam_question
             q.question as question_text,
             eq.question_mark,
             sa.selected_choice_id,
+            eq.question_mark,
             c.id as choice_id,
             c.choice_text,
             c.is_correct,
@@ -48,9 +49,8 @@ class Exam_question
             INNER JOIN choices c ON eq.question_id = c.question_id
             LEFT JOIN student_answers sa ON eq.exam_id = sa.exam_id 
             AND eq.question_id = sa.question_id 
-            AND sa.student_id = :student_id
-            WHERE eq.exam_id = :exam_id
-            ORDER BY eq.id, c.id";
+            AND sa.selected_choice_id = c.id
+            WHERE eq.exam_id = :exam_id AND sa.student_id = :student_id";
         $statement = $this->pdo->prepare($sql);
         $statement->execute(['exam_id' => $exam_id, 'student_id' => $student_id]);
         return $statement->fetchAll();

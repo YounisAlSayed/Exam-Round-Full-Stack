@@ -212,74 +212,50 @@ class RedirectingController
 
     public function examStart($exam_id, $page)
     {
-        // $authError = $this->help->checkStudentCredentials();
-        // if ($authError !== null) {
-        //     return $authError;
-        // }
-        $exam_id = (int) $exam_id;
-        $student_id = (int) $_SESSION['user']['id'];
-        $exam = $this->exams->getById($exam_id);
-        if (!$exam) {
-            http_response_code(404);
-            $_SESSION['error'] = "Exam not found.";
-            return $this->help->redirect('/api/dashboard');
-        }
-        $exam['exam_id'] = $exam_id;
-        $attempt = $this->attempts->findByExamAndStudent($exam_id, $student_id);
-        if ($attempt && $attempt['submitted_at'] !== null) {
-            $_SESSION['error'] = "User Already took the exam";
-            $this->help->redirect('/api/dashboard');
-        }
-        // if (time() < strtotime($exam['start_date']) || $exam['status'] === 'not_ready') {
-        //     http_response_code(403);
-        //     $_SESSION['error'] = "This exam is not available yet.";
-        //     return $this->help->redirect('/api/dashboard');
-        // }
-        if (!$attempt) {
-            if (time() >= strtotime($exam['end_date'])) {
-                $this->help->redirect('/api/exams/' . $exam_id . '/details/student');
-            }
-            $this->attempts->start($exam_id, $student_id);
-            $attempt = $this->attempts->findByExamAndStudent($exam_id, $student_id);
+        if (!isset($_SESSION['user'])) {
+            $this->help->redirect('/api/users/login');
         }
 
-        // Cache public question data per attempt; navigation never reloads question rows.
-        $state = $_SESSION['exam_taking'][$student_id][$exam_id] ?? null;
-        if (!$state || (int) $state['attempt_id'] !== (int) $attempt['id']) {
-            $questions = Attempts::orderQuestions(
-                $this->questions->getExamQuestions($exam_id),
-                $attempt,
-                !empty($exam['randomize_order'])
-            );
-            if (!$questions) {
-                http_response_code(404);
-                $_SESSION['error'] = "No questions were found for this exam.";
-                return $this->help->redirect('/api/dashboard');
-            }
-            $questions = array_map(static fn($question) => [
-                'id' => (int) $question['question_id'],
-                'question' => $question['question_text'],
-                'question_mark' => (float) $question['question_mark'],
-            ], $questions);
-            $state = [
-                'attempt_id' => (int) $attempt['id'],
-                'questions' => $questions,
-                'choices' => $this->questions->getExamChoiceOptions($exam_id),
-                'page_size' => 2,
-            ];
-            $_SESSION['exam_taking'][$student_id][$exam_id] = $state;
+        if (!$exam_id || !$page) {
+            http_response_code(400);
+            return $this->help->changeView('dashboard', ['error' => 'Exam is not selected']);
         }
-        $totalPages = max(1, (int) ceil(count($state['questions']) / $state['page_size']));
-        $page = max(1, min((int) $page, $totalPages));
-        return $this->help->changeView('exams/start', [
-            'exam' => $exam,
-            'questions' => $state['questions'],
-            'choices' => $state['choices'],
-            'page' => $page,
-            'pageSize' => $state['page_size'],
-            'totalQuestions' => count($state['questions']),
-            'savedAnswers' => $this->attempts->getSavedAnswers($exam_id, $student_id),
-        ]);
+
+        $exam = $this->exams->getExamFullDetails($exam_id);
+        if (!$exam) {
+            http_response_code(404);
+            $this->help->redirect("/api/dashboard");
+        }
+
+        $student_id = (int) $_SESSION['user']['id'];
+        $exam_id = (int) $exam_id;
+
+        // Create the attempt row the FIRST time the student reaches this exam —
+        // find-or-create, so navigating between pages never creates duplicates.
+        $attempt = $this->attempts->findByExamAndStudent($exam_id, $student_id);
+        if (!$attempt) {
+            $this->attempts->start($exam_id, $student_id);
+        } elseif ($attempt['submitted_at'] !== null) {
+            // Already submitted — don't let them re-enter and re-answer
+            http_response_code(403);
+            return $this->help->changeView('dashboard', ['error' => 'You have already submitted this exam']);
+        }
+
+        $size = 2;
+        $offset = (int)($page - 1) * $size;
+        $questions = $this->questions->getExamQuestionSet($exam_id, $offset, $size);
+        if (!$questions) {
+            http_response_code(404);
+            return $this->help->changeView('dashboard', ['error' => 'No Questions Were Found For the Specified Exam']);
+        }
+        $choices = [];
+        foreach ($questions as $question) {
+            $choices[$question['id']] = $this->questions->getQuestionChoices($question['id']);
+        }
+        $totalQuestions = $this->questions->getExamQuestionCount($exam_id);
+        $totalQuestions ?? 0;
+
+        return $this->help->changeView('exams/start', ['exam' => $exam, 'questions' => $questions, 'page' => $page, 'totalQuestions' => $totalQuestions, 'choices' => $choices]);
     }
 
     public function teacherCourse($course_id)

@@ -12,15 +12,14 @@ $answeredQuestions = 0;
 $correctAnswers = 0;
 $totalEarnedMarks = 0;
 $questionsTotalMarks = 0;
-$questionsMap = [];
 
 if (!empty($selections)) {
     // Group selections by question
     $questionsMap = [];
     foreach ($selections as $selection) {
+        $questionsTotalMarks += $selection['question_mark'];
         $qId = $selection['question_id'];
         if (!isset($questionsMap[$qId])) {
-            $questionsTotalMarks += $selection['question_mark'];
             $questionsMap[$qId] = [
                 'question_id' => $selection['question_id'],
                 'question_text' => $selection['question_text'],
@@ -50,7 +49,6 @@ if (!empty($selections)) {
     }
 }
 
-$totalQuestions = count($questionsMap);
 $isSubmitted = $attempt && $attempt['submitted_at'] !== null;
 $isActive = false;
 $canShowQuestions = false;
@@ -72,7 +70,7 @@ if ($exam) {
 $scaledScore = 0;
 $percentage = 0;
 if ($exam && $exam['total_marks'] > 0) {
-    $scaledScore = $isSubmitted ? (float) $attempt['exam_mark'] : 0;
+    $scaledScore = round(($totalEarnedMarks / $questionsTotalMarks) * $exam['total_marks'], 2);
     $percentage = round(($scaledScore / $exam['total_marks']) * 100, 2);
 }
 ?>
@@ -105,9 +103,9 @@ if ($exam && $exam['total_marks'] > 0) {
                         </p>
                     </div>
 
-                    <?php if (!$isSubmitted && $now >= $startDate && $now < $endDate && $_SESSION['user']['role'] === 'student'): ?>
+                    <?php if ($now >= $startDate && $now < $endDate && $_SESSION['user']['role'] === 'student'): ?>
                     <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                        <a href="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?>/start/1" class="btn btn-primary">
+                        <a href="<?= BASE_PATH ?>/api/exams/<?= $next['id'] ?? 0 ?>/start" class="btn btn-primary">
                             <i class="fas fa-arrow-right me-1"></i> Start Exam
                         </a>
                     </div>
@@ -162,7 +160,7 @@ if ($exam && $exam['total_marks'] > 0) {
                     <div class="col-md-3 col-6">
                         <div class="border rounded p-3">
                             <small class="text-muted d-block">Score</small>
-                            <h3 class="fw-bold mb-0"><?= $scaledScore ?> / <?= $exam['total_marks'] ?></h3>
+                            <h3 class="fw-bold mb-0"><?= $totalEarnedMarks ?> / <?= $questionsTotalMarks ?></h3>
                         </div>
                     </div>
                     <div class="col-md-3 col-6">
@@ -213,7 +211,7 @@ if ($exam && $exam['total_marks'] > 0) {
         <div class="mt-4">
             <h5 class="fw-bold mb-3"><i class="fas fa-list me-2"></i>Questions</h5>
 
-            <?php foreach (array_values($questionsMap) as $index => $question): ?>
+            <?php foreach ($questionsMap as $index => $question): ?>
             <?php
                         $selectedChoiceId = $question['selected_choice_id'];
                         $isAnswered = $selectedChoiceId !== null;
@@ -288,7 +286,7 @@ if ($exam && $exam['total_marks'] > 0) {
                 <p class="text-muted mb-3">You are currently taking this exam. Answer all questions and submit when
                     done.
                 </p>
-                <a href="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?>/start/1" class="btn btn-primary">
+                <a href="/api/exams/<?= $exam['exam_id'] ?>/take" class="btn btn-primary">
                     <i class="fas fa-arrow-right me-2"></i>Continue Exam
                 </a>
             </div>

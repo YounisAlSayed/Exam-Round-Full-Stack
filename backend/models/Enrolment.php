@@ -33,17 +33,17 @@ class Enrolment
 
     public function exists(int $student_id, int $courses_id)
     {
-        $sql = "SELECT * FROM enrolment WHERE student_id = :student_id AND courses_id = :courses_id";
+        $sql = "SELECT * FROM enrolment WHERE student_id = :student_id AND course_id = :course_id";
         $statement = $this->pdo->prepare($sql);
-        $statement->execute(['student_id' => $student_id, 'courses_id' => $courses_id]);
+        $statement->execute(['student_id' => $student_id, 'course_id' => $courses_id]);
         return $statement->fetch();
     }
 
     public function create(int $student_id, int $courses_id)
     {
-        $sql = "INSERT INTO enrolment (student_id, courses_id) VALUES (:student_id, :courses_id)";
+        $sql = "INSERT INTO enrolment (student_id, course_id) VALUES (:student_id, :course_id)";
         $statement = $this->pdo->prepare($sql);
-        $success = $statement->execute(['student_id' => $student_id, 'courses_id' => $courses_id]);
+        $success = $statement->execute(['student_id' => $student_id, 'course_id' => $courses_id]);
 
         if (!$success) {
             return false;
@@ -52,10 +52,10 @@ class Enrolment
         return (int) $this->pdo->lastInsertId();
     }
 
-    public function delete(int $id): bool
+    public function delete(int $student_id, int $course_id): bool
     {
-        $sql = "DELETE FROM enrolment WHERE id = :id";
+        $sql = "DELETE FROM enrolment WHERE student_id = :student_id AND course_id = :course_id";
         $statement = $this->pdo->prepare($sql);
-        return $statement->execute(['id' => $id]);
+        return $statement->execute(['student_id' => $student_id, 'course_id' => $course_id]);
     }
 }

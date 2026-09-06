@@ -52,14 +52,18 @@ Router::delete('/api/attempts/{id}', ['AttemptsController', 'deleteStudentAttemp
 //------------------ courses routes -----------------------------
 Router::get('/api/courses/{id}/students', ['CoursesController', 'getCourseStudents']);
 Router::get('/api/courses/{id}/teachers', ['CoursesController', 'getCourseTeachers']);
+Router::get('/api/courses/add/{course_id}', ['CoursesController', 'addToCourse']);
+Router::get('/api/courses/remove/{course_id}', ['CoursesController', 'removeFromCourse']);
 
-Router::get('/api/courses/list', ['CoursesController', 'list']);
+Router::get('/api/courses/student/{course_id}', ['CoursesController', 'studentCourseDetails']);
 
-Router::post('/api/courses', ['CoursesController', 'add']);
+Router::get('/api/courses/list', ['CoursesController', 'getAll']);
 
-Router::put('/api/courses/{id}', ['CoursesController', 'edit']);
+Router::post('/api/courses/create', ['CoursesController', 'add']);
 
-Router::delete('/api/courses/{id}', ['CoursesController', 'delete']);
+Router::post('/api/courses/update/{course_id}', ['CoursesController', 'edit']);
+
+Router::post('/api/courses/delete/{course_id}', ['CoursesController', 'delete']);
 
 // ------------------------- enrollment routes -----------------------------
 Router::get('/api/enrollment/students/{id}', ['EnrollmentController', 'getStudentEnrollments']);

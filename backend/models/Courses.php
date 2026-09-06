@@ -67,11 +67,10 @@ class Courses
 
     public function getStudentCourses(int $student_id)
     {
-        global $pdo;
         $sql = "SELECT c.id, c.name FROM enrolment e 
             INNER JOIN courses c ON e.course_id=c.id 
             WHERE e.student_id=:id";
-        $statement = $pdo->prepare($sql);
+        $statement = $this->pdo->prepare($sql);
         $statement->execute(['id' => $student_id]);
         return $statement->fetchAll();
     }
@@ -94,7 +93,9 @@ class Courses
         $success = $statement->execute(['name' => $name]);
 
         if (!$success) {
-            return false;
+            http_response_code(500);
+            $_SESSION['error'] = "Internal Server Error";
+            return null;
         }
 
         return (int) $this->pdo->lastInsertId();

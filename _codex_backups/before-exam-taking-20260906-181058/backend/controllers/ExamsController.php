@@ -268,58 +268,78 @@ class ExamsController
 
     public function saveProgress($exam_id)
     {
-        return $this->saveAttemptAnswers((int) $exam_id, false);
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . BASE_PATH . '/api/login');
+            exit;
+        }
+
+        $action = $_POST['action'] ?? 'next';
+        $currentPage = (int)($_POST['current_page'] ?? 1);
+        $totalPages = (int)($_POST['total_pages'] ?? 1);
+
+        // Save answers to session
+        if (!isset($_SESSION['exam_answers'])) {
+            $_SESSION['exam_answers'] = [];
+        }
+        $examAnswers = [];
+        foreach ($_POST as $key => $value) {
+            if (strpos($key, 'question_') === 0) {
+                $question_id = (int)str_replace('question_', '', $key);
+                $_SESSION['exam_answers'][$exam_id][$question_id] = (int) $value;
+            }
+        }
+
+        // Redirect
+        if ($action === 'previous' && $currentPage > 1) {
+            $nextPage = $currentPage - 1;
+        } elseif ($action === 'next' && $currentPage < $totalPages) {
+            $nextPage = $currentPage + 1;
+        } else {
+            $nextPage = $currentPage;
+        }
+
+        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/start/' . $nextPage);
+        exit;
     }
 
     public function submitExam($exam_id)
     {
-        return $this->saveAttemptAnswers((int) $exam_id, true);
-    }
+        if (!isset($_SESSION['user'])) {
+            header('Location: ' . BASE_PATH . '/api/login');
+            exit;
+        }
 
-    private function saveAttemptAnswers(int $exam_id, bool $submit)
-    {
-        // $authError = $this->elp->checkStudentCredentials();
-        // if ($authError !== null) {
-        //     return $authError;
-        // }
-        $student_id = (int) $_SESSION['user']['id'];
-        $answers = [];
-        foreach ($_POST as $key => $value) {
-            if (preg_match('/^question_([1-9][0-9]*)$/', $key, $matches)) {
-                $choiceId = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-                if ($choiceId === false) {
-                    http_response_code(400);
-                    return $this->elp->changeView('dashboard', ['error' => 'Invalid answer.']);
-                }
-                $answers[(int) $matches[1]] = $choiceId;
+        // Get saved answers from session
+        $answers = $_SESSION['exam_answers'][$exam_id] ?? [];
+        $student_id = $_SESSION['user']['id'];
+
+        // Process and save answers
+        $totalMarks = 0;
+        $earnedMarks = 0;
+
+        foreach ($answers as $questionId => $choiceId) {
+            // Save student answer
+            $this->studentsAnswers->create($student_id, $exam_id, $questionId, $choiceId);
+
+            // Check if correct
+            $choice = $this->choices->getById($choiceId);
+            if ($choice && $choice['is_correct']) {
+                $question = $this->exam_question->getQuestionMark($exam_id, $questionId);
+                $earnedMarks += $question['question_mark'];
             }
         }
 
-        try {
-            $result = $this->attempts->saveAnswers($exam_id, $student_id, $answers, $submit);
-        } catch (\DomainException $error) {
-            http_response_code(400);
-            return $this->elp->changeView('dashboard', ['error' => $error->getMessage()]);
-        } catch (\Throwable $error) {
-            error_log('Failed to save exam attempt: ' . $error->getMessage());
-            http_response_code(500);
-            return $this->elp->changeView('dashboard', ['error' => 'Could not save the exam. Please go back and try again.']);
-        }
+        // Get total marks
+        $totalMarks = ($this->exams->getTotalMarks($exam_id))['total_marks'];
 
-        if ($result['submitted']) {
-            unset($_SESSION['exam_taking'][$student_id][$exam_id], $_SESSION['exam_answers'][$exam_id]);
-            $_SESSION['flash'] = 'Exam submitted successfully!';
-            $this->elp->redirect('/api/exams/' . $exam_id . '/details/student');
-        }
-        $state = $_SESSION['exam_taking'][$student_id][$exam_id] ?? null;
-        $totalPages = $state ? max(1, (int) ceil(count($state['questions']) / $state['page_size'])) : 1;
-        $page = max(1, min((int) ($_POST['current_page'] ?? 1), $totalPages));
-        $action = $_POST['action'] ?? 'next';
-        if ($action === 'next') {
-            $page = min($page + 1, $totalPages);
-        } elseif ($action === 'previous') {
-            $page = max(1, $page - 1);
-        }
-        $this->elp->redirect('/api/exams/' . $exam_id . '/start/' . $page);
+        // Save attempt
+        $this->attempts->updateSubmitted($exam_id, $student_id, $earnedMarks);
+
+        // Clear session answers
+        unset($_SESSION['exam_answers'][$exam_id]);
+
+        $_SESSION['flash'] = 'Exam submitted successfully!';
+        header('Location: ' . BASE_PATH . '/api/exams/' . $exam_id . '/details/' . $_SESSION['user']['role']);
+        exit;
     }
 }

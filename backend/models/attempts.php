@@ -88,4 +88,92 @@ class Attempts
         $statement->execute(['id1' => $exam_id, 'id2' => $exam_id, 'id3' => $exam_id]);
         return $statement->fetch();
     }
+
+    public static function orderQuestions(array $questions, array $attempt, bool $randomize): array
+    {
+        $seed = $attempt['id'] . ':' . $attempt['student_id'] . ':' . $attempt['exam_id'] . ':' . $attempt['started_at'];
+        usort($questions, static function ($left, $right) use ($seed, $randomize) {
+            if (!$randomize) {
+                return (int) $left['question_id'] <=> (int) $right['question_id'];
+            }
+            return strcmp(hash('sha256', $seed . ':' . $left['question_id']), hash('sha256', $seed . ':' . $right['question_id']));
+        });
+        return $questions;
+    }
+
+    public function getSavedAnswers(int $exam_id, int $student_id): array
+    {
+        $statement = $this->pdo->prepare('SELECT question_id, selected_choice_id FROM student_answers WHERE exam_id = :exam_id AND student_id = :student_id');
+        $statement->execute(['exam_id' => $exam_id, 'student_id' => $student_id]);
+        return $statement->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
+    public function saveAnswers(int $exam_id, int $student_id, array $answers, bool $submit): array
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $statement = $this->pdo->prepare('SELECT total_marks, end_date FROM exams WHERE id = :id FOR UPDATE');
+            $statement->execute(['id' => $exam_id]);
+            $exam = $statement->fetch();
+
+            $statement = $this->pdo->prepare('SELECT * FROM attempts WHERE exam_id = :exam_id AND student_id = :student_id FOR UPDATE');
+            $statement->execute(['exam_id' => $exam_id, 'student_id' => $student_id]);
+            $attempt = $statement->fetch();
+
+            if (!$exam || !$attempt) {
+                throw new \DomainException('Start the exam before saving answers.');
+            }
+            // Repeated submits must never replace a completed score with zero.
+            if ($attempt['submitted_at'] !== null) {
+                $this->pdo->commit();
+                return ['submitted' => true, 'mark' => (float) $attempt['exam_mark']];
+            }
+
+            $validate = $this->pdo->prepare('SELECT c.id
+            FROM choices c
+            INNER JOIN exam_questions eq ON eq.question_id = c.question_id
+            WHERE eq.exam_id = :exam_id AND eq.question_id = :question_id AND c.id = :choice_id');
+
+            $save = $this->pdo->prepare('INSERT INTO student_answers (student_id, exam_id, question_id, selected_choice_id) VALUES
+            (:student_id, :exam_id, :question_id, :choice_id) ON DUPLICATE KEY UPDATE selected_choice_id = VALUES(selected_choice_id)');
+
+            foreach ($answers as $questionId => $choiceId) {
+                if (!is_int($questionId) || $questionId <= 0 || !is_int($choiceId) || $choiceId <= 0) {
+                    throw new \DomainException('Invalid answer. Please reopen the exam.');
+                }
+                $params = ['exam_id' => $exam_id, 'question_id' => $questionId, 'choice_id' => $choiceId];
+                $validate->execute($params);
+                if (!$validate->fetch()) {
+                    throw new \DomainException('The selected choice does not belong to this exam question.');
+                }
+                $params['student_id'] = $student_id;
+                $save->execute($params);
+            }
+
+            $submit = $submit || time() >= strtotime($exam['end_date']);
+            $mark = (float) $attempt['exam_mark'];
+            if ($submit) {
+                $statement = $this->pdo->prepare('SELECT COALESCE(SUM(eq.question_mark), 0) AS possible, COALESCE(SUM(CASE WHEN c.is_correct = 1 THEN eq.question_mark ELSE 0 END), 0) AS earned
+                    FROM exam_questions eq
+                    LEFT JOIN student_answers sa ON sa.exam_id = eq.exam_id AND sa.question_id = eq.question_id AND sa.student_id = :student_id
+                    LEFT JOIN choices c ON c.id = sa.selected_choice_id AND c.question_id = eq.question_id
+                    WHERE eq.exam_id = :exam_id');
+                $statement->execute(['student_id' => $student_id, 'exam_id' => $exam_id]);
+                $totals = $statement->fetch();
+
+                $mark = (float) $totals['possible'] > 0
+                    ? round((float) $totals['earned'] / (float) $totals['possible'] * (float) $exam['total_marks'], 2)
+                    : 0.0;
+                $statement = $this->pdo->prepare('UPDATE attempts SET submitted_at = NOW(), exam_mark = :mark WHERE id = :id');
+                $statement->execute(['mark' => $mark, 'id' => $attempt['id']]);
+            }
+            $this->pdo->commit();
+            return ['submitted' => $submit, 'mark' => $mark];
+        } catch (\Throwable $error) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $error;
+        }
+    }
 }

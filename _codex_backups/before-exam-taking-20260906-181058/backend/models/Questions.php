@@ -73,17 +73,6 @@ class Questions
         return $statement->fetchAll();
     }
 
-    public function getExamChoiceOptions(int $exam_id): array
-    {
-        $statement = $this->pdo->prepare('SELECT c.id, c.question_id, c.choice_text FROM choices c INNER JOIN exam_questions eq ON eq.question_id = c.question_id WHERE eq.exam_id = :exam_id ORDER BY c.id');
-        $statement->execute(['exam_id' => $exam_id]);
-        $choices = [];
-        foreach ($statement->fetchAll() as $choice) {
-            $choices[$choice['question_id']][] = $choice;
-        }
-        return $choices;
-    }
-
     public function getQuestionChoices(int $question_id)
     {
         $sql = "SELECT * FROM choices WHERE question_id=:id";
