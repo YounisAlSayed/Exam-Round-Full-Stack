@@ -5,30 +5,12 @@ $exams = $exams ?? [];
 $course = $course ?? null;
 $currentUser = $_SESSION['user'] ?? null;
 
-// Get course name from first exam if available
 $courseName = $course['name'] ?? (!empty($exams) ? $exams[0]['course_name'] ?? 'Course' : 'Course');
 
-// Calculate statistics
-$totalExams = count($exams);
-$availableExams = 0;
-$completedExams = 0;
-$upcomingExams = 0;
 $now = new DateTime();
 
-foreach ($exams as $exam) {
-    $startDate = new DateTime($exam['start_date']);
-    $endDate = new DateTime($exam['end_date']);
-
-    if ($now < $startDate) {
-        $upcomingExams++;
-    } elseif ($now > $endDate) {
-        $completedExams++;
-    } else {
-        $availableExams++;
-    }
-}
 ?>
-<?php renderHeader("Student Course Details") ?>
+<?php renderHeader("Student Course Details", [BASE_PATH . '/utils/css/studentCourse.css']) ?>
 <div class="container py-4">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -46,47 +28,6 @@ foreach ($exams as $exam) {
             <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
         </a>
     </div>
-
-    <!-- Statistics Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm stat-card h-100">
-                <div class="card-body text-center p-3">
-                    <i class="fas fa-file-alt text-primary" style="font-size: 1.5rem;"></i>
-                    <h3 class="fw-bold mb-0 mt-1"><?= $totalExams ?></h3>
-                    <small class="text-muted">Total Exams</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm stat-card h-100">
-                <div class="card-body text-center p-3">
-                    <i class="fas fa-play-circle text-success" style="font-size: 1.5rem;"></i>
-                    <h3 class="fw-bold mb-0 mt-1"><?= $availableExams ?></h3>
-                    <small class="text-muted">Available</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm stat-card h-100">
-                <div class="card-body text-center p-3">
-                    <i class="fas fa-clock text-warning" style="font-size: 1.5rem;"></i>
-                    <h3 class="fw-bold mb-0 mt-1"><?= $upcomingExams ?></h3>
-                    <small class="text-muted">Upcoming</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="card border-0 shadow-sm stat-card h-100">
-                <div class="card-body text-center p-3">
-                    <i class="fas fa-check-circle text-info" style="font-size: 1.5rem;"></i>
-                    <h3 class="fw-bold mb-0 mt-1"><?= $completedExams ?></h3>
-                    <small class="text-muted">Completed</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Exams List -->
     <?php if (!empty($exams)): ?>
         <div class="exams-grid">
@@ -97,7 +38,6 @@ foreach ($exams as $exam) {
                 $isActive = $now >= $startDate && $now <= $endDate;
                 $isCompleted = $now > $endDate;
 
-                // Calculate time until exam
                 if ($isUpcoming) {
                     $diff = $now->diff($startDate);
                     $timeText = $diff->days . ' day' . ($diff->days > 1 ? 's' : '') . ' remaining';
@@ -194,105 +134,3 @@ foreach ($exams as $exam) {
     <?php endif; ?>
 </div>
 <?php renderFooter() ?>
-<style>
-    /* Exams Grid */
-    .exams-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 20px;
-    }
-
-    /* Exam Card Link */
-    .exam-card-link {
-        display: block;
-        text-decoration: none;
-        color: inherit;
-        transition: transform 0.2s ease;
-    }
-
-    .exam-card-link:hover {
-        transform: translateY(-4px);
-    }
-
-    /* Exam Card */
-    .exam-card {
-        border-radius: 16px !important;
-        transition: box-shadow 0.3s ease;
-        overflow: hidden;
-    }
-
-    .exam-card:hover {
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .exam-card .card-body {
-        padding: 20px !important;
-    }
-
-    /* Exam Details */
-    .exam-details {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-top: 8px;
-    }
-
-    /* Exam Footer */
-    .exam-footer {
-        border-color: #e9ecef !important;
-    }
-
-    .exam-footer .text-primary {
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-    .exam-card:hover .exam-footer .text-primary {
-        transform: translateX(4px);
-    }
-
-    /* Stats Cards */
-    .stat-card {
-        border-radius: 12px !important;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
-    }
-
-    .stat-card .card-body {
-        padding: 16px !important;
-    }
-
-    .stat-card i {
-        opacity: 0.8;
-    }
-
-    .stat-card h3 {
-        font-size: 1.5rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .exams-grid {
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-
-        .exam-card .card-body {
-            padding: 16px !important;
-        }
-
-        .stat-card h3 {
-            font-size: 1.25rem;
-        }
-    }
-
-    @media (min-width: 769px) and (max-width: 1024px) {
-        .exams-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-</style>

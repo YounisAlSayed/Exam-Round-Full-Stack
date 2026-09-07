@@ -38,8 +38,6 @@ class AttemptsController
     }
 
     // Router::post('/api/attempts/student/{id}', ['AttemptsController', 'updateStudentAttempt']);
-    // A student can only start/submit their OWN attempt (never on another student's behalf).
-    // Body: exam_id (required), action = 'start' | 'submit' (defaults to 'start')
     public function updateStudentAttempt($student_id)
     {
         $student_id = (int) $student_id;

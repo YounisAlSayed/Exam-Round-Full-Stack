@@ -4,11 +4,12 @@
     const pageSize = Math.max(1, Number(config.pageSize) || 2);
     const questions = config.questions;
     const totalPages = Math.max(1, Math.ceil(questions.length / pageSize));
-    const cards = new Map(Array.from(form.querySelectorAll("[data-question-id]"), (card) => [Number(card.dataset.questionId), card]));
+    const cards = new Map(questions.map((question) => [Number(question.id), document.getElementById(`question_${question.id}`)]));
     const answers = new Map();
     const previous = document.getElementById("previousPage");
     const next = document.getElementById("nextPage");
     const lastSubmit = document.getElementById("lastPageSubmit");
+
     let currentPage = Number(config.currentPage) || 1;
     let posting = false;
     let timerInterval = null;
@@ -50,7 +51,7 @@
             event.preventDefault();
             return;
         }
-        // Hidden pages remain enabled, so the normal POST includes every selected answer.
+
         updateAnswers();
         posting = true;
         clearInterval(timerInterval);
@@ -61,11 +62,9 @@
         const hours = Math.floor(remaining / 3600);
         const minutes = Math.floor((remaining % 3600) / 60);
         const seconds = remaining % 60;
+
         document.getElementById("timerText").textContent = [hours, minutes, seconds].map((value) => String(value).padStart(2, "0")).join(":");
         const progress = Math.max(0, Math.min(100, (remaining / Math.max(1, Number(config.timeLimit))) * 100));
-        const progressBar = document.getElementById("timerProgress");
-        progressBar.style.width = progress + "%";
-        progressBar.className = "progress-timer-bar" + (progress < 20 ? " danger" : progress < 50 ? " warning" : "");
         document.getElementById("timerDisplay").classList.toggle("warning", progress < 20);
         if (remaining === 0 && !posting) {
             posting = true;

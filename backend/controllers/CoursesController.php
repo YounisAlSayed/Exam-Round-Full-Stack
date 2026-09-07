@@ -29,8 +29,9 @@ class CoursesController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            header('Location: ' . BASE_PATH . '/api/login');
-            exit;
+            http_response_code(403);
+            $_SESSION['error'] = "User is not logged in";
+            $this->elp->redirect('/api/login');
         }
 
         $allCourses = $this->courses->all();
@@ -65,7 +66,9 @@ class CoursesController
         $currentUser = $_SESSION['user'] ?? null;
 
         if ($currentUser === null) {
-            $this->elp->redirect('/api/users/login');
+            http_response_code(403);
+            $_SESSION['error'] = "User is not logged in";
+            $this->elp->redirect('/api/login');
         }
 
         $course = $this->courses->find($course_id);
@@ -237,7 +240,7 @@ class CoursesController
             $_SESSION['error'] = "Internal Server Error";
             $this->elp->redirect('/api/courses/list');
         }
-        $this->elp->redirect('/api/course/list');
+        $this->elp->redirect('/api/courses/list');
     }
 
     public function removeFromCourse($course_id)
@@ -282,12 +285,7 @@ class CoursesController
             $this->elp->redirect('/api/dashboard');
         }
         $course = $this->courses->find($course_id) ?? [];
-        $exams = $this->exams->getReadyCourseExams($course_id);
-        if (!$exams) {
-            http_response_code(500);
-            $_SESSION['error'] = "Internal Server Error";
-            $this->elp->redirect('/api/courses/list');
-        }
+        $exams = $this->exams->getReadyCourseExams($course_id) ?? [];
 
         return $this->elp->changeView('courses/studentCourse', ['exams' => $exams, 'course' => $course]);
     }

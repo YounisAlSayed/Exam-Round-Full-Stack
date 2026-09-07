@@ -26,27 +26,27 @@ class UserController
     }
 
     // Router::get('/api/users/{id}', ['UserController', 'getById']);
-    public function getById(string $user_id)
-    {
-        $user_id = (int) $user_id;
-        $currentUser = $_SESSION['user'] ?? null;
-        if ($currentUser === null) {
-            header('Location: /api/login');
-            exit;
-        }
+    // public function getById(string $user_id)
+    // {
+    //     $user_id = (int) $user_id;
+    //     $currentUser = $_SESSION['user'] ?? null;
+    //     if ($currentUser === null) {
+    //         header('Location: /api/login');
+    //         exit;
+    //     }
 
-        if ($currentUser['id'] !== $user_id && $currentUser['role'] !== 'teacher') {
-            http_response_code(403);
-            return new ViewModel('users/forbidden');
-        }
+    //     if ($currentUser['id'] !== $user_id && $currentUser['role'] !== 'teacher') {
+    //         http_response_code(403);
+    //         return new ViewModel('users/forbidden');
+    //     }
 
-        $user = $this->user->find($user_id);
-        if (!$user) {
-            http_response_code(404);
-            return new ViewModel('users/notFound');
-        }
-        return $user;
-    }
+    //     $user = $this->user->find($user_id);
+    //     if (!$user) {
+    //         http_response_code(404);
+    //         return new ViewModel('users/notFound');
+    //     }
+    //     return $user;
+    // }
 
     // Router::post('/api/users/login', ['UserController', 'login']);
     public function login()

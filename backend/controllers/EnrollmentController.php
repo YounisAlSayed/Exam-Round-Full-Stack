@@ -80,33 +80,33 @@ class EnrollmentController
     }
 
     // Router::delete('/api/enrolment/{id}', ['EnrollmentController', 'deleteStudentEnrollment']);
-    public function deleteStudentEnrollment($enrolment_id)
-    {
-        $enrolment_id = (int) $enrolment_id;
-        $currentUser = $_SESSION['user'] ?? null;
+    // public function deleteStudentEnrollment($enrolment_id)
+    // {
+    //     $enrolment_id = (int) $enrolment_id;
+    //     $currentUser = $_SESSION['user'] ?? null;
 
-        if ($currentUser === null) {
-            $this->elp->redirect("/api/users/login");
-        }
+    //     if ($currentUser === null) {
+    //         $this->elp->redirect("/api/users/login");
+    //     }
 
-        $enrollment = $this->enrolment->find($enrolment_id);
+    //     $enrollment = $this->enrolment->find($enrolment_id);
 
-        if (!$enrollment) {
-            http_response_code(404);
-            return $this->elp->changeView('dashboard', ['id' => $enrolment_id]);
-        }
+    //     if (!$enrollment) {
+    //         http_response_code(404);
+    //         return $this->elp->changeView('dashboard', ['id' => $enrolment_id]);
+    //     }
 
-        if ((int) $currentUser['id'] !== (int) $enrollment['student_id'] && $currentUser['role'] !== 'teacher') {
-            http_response_code(403);
-            return $this->elp->changeView('dashboard', []);
-        }
+    //     if ((int) $currentUser['id'] !== (int) $enrollment['student_id'] && $currentUser['role'] !== 'teacher') {
+    //         http_response_code(403);
+    //         return $this->elp->changeView('dashboard', []);
+    //     }
 
-        if (!$this->enrolment->delete($enrolment_id)) {
-            http_response_code(500);
-            return $this->elp->changeView('dashboard', ['error' => 'Internal Server Error']);
-        }
+    //     if (!$this->enrolment->delete($enrolment_id)) {
+    //         http_response_code(500);
+    //         return $this->elp->changeView('dashboard', ['error' => 'Internal Server Error']);
+    //     }
 
-        $_SESSION['flash'] = 'Enrollment removed successfully';
-        $this->elp->redirect("/api/dashboard");
-    }
+    //     $_SESSION['flash'] = 'Enrollment removed successfully';
+    //     $this->elp->redirect("/api/dashboard");
+    // }
 }

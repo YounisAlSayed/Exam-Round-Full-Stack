@@ -72,13 +72,15 @@ class QuestionController
 
         if (!$course_id || !$question || !in_array($question_type, ['mc', 't/f'], true) || ($needsQuestionMark && $question_mark <= 0)) {
             http_response_code(400);
-            return $this->elp->changeView('dashboard', ['error' => 'Incomplete input']);
+            $_SESSION['error'] = "Incomplete input";
+            $this->elp->redirect('/api/dashboard');
         }
         $course = $this->courses->find($course_id);
 
         if (!$course) {
             http_response_code(404);
-            return $this->elp->changeView('dashboard', ['error' => 'Course not found']);
+            $_SESSION['error'] = "Course not found";
+            $this->elp->redirect('/api/dashboard');
         }
         $choices = [];
 
@@ -87,7 +89,8 @@ class QuestionController
 
             if (count($postedChoices) < 2 || count($postedChoices) > 4) {
                 http_response_code(400);
-                return $this->elp->changeView('dashboard', ['error' => 'A multiple-choice question must have 2 to 4 choices.']);
+                $_SESSION['error'] = "A multiple-choice question must have 2 to 4 choices.";
+                $this->elp->redirect('/api/dashboard');
             }
 
             foreach ($postedChoices as $choice) {
@@ -96,7 +99,8 @@ class QuestionController
 
                 if ($choiceText === '') {
                     http_response_code(400);
-                    return $this->elp->changeView('dashboard', ['error' => 'All choices must be filled in.']);
+                    $_SESSION['error'] = 'All choices must be filled in.';
+                    $this->elp->redirect('/api/dashboard');
                 }
 
                 $choices[] = [
@@ -108,14 +112,16 @@ class QuestionController
             $hasCorrectChoice = array_filter($choices, fn($choice) => (int) $choice['is_correct'] === 1);
             if (empty($hasCorrectChoice)) {
                 http_response_code(400);
-                return $this->elp->changeView('dashboard', ['error' => 'Please select a correct answer.']);
+                $_SESSION['error'] = 'Please select a correct answer.';
+                $this->elp->redirect('/api/dashboard');
             }
         } elseif ($question_type === 't/f') {
             $tf_correct = $_POST['tf_correct'] ?? null;
 
             if ($tf_correct !== 'True' && $tf_correct !== 'False') {
                 http_response_code(400);
-                return $this->elp->changeView('dashboard', ['error' => 'Please select True or False.']);
+                $_SESSION['error'] = 'Please select True or False.';
+                $this->elp->redirect('/api/dashboard');
             }
 
             $choices = [
@@ -128,7 +134,8 @@ class QuestionController
 
         if (!$question_id) {
             http_response_code(500);
-            return $this->elp->changeView('dashboard', ['error' => 'Failed to create question.']);
+            $_SESSION['error'] = 'Failed to create question.';
+            $this->elp->redirect('/api/dashboard');
         }
 
         foreach ($choices as $choice) {
@@ -137,11 +144,11 @@ class QuestionController
                 http_response_code(500);
                 $_SESSION['error'] = 'Failed to create question choice.';
                 if ($exam_id) {
-                    header("Location: " . BASE_PATH . "/api/questions/create/courses/" . $course_id . "/view?exam_id=" . $exam_id);
-                    exit;
+                    $this->elp->redirect("/api/questions/create/courses/" . $course_id . "/view?exam_id=" . $exam_id);
                 }
 
-                return $this->elp->changeView('dashboard', ['error' => 'Failed to create choice.']);
+                $_SESSION['error'] = 'Failed to create choice.';
+                $this->elp->redirect('/api/dashboard');
             }
         }
         if ($exam_id) {
@@ -149,18 +156,15 @@ class QuestionController
             if (!$entry) {
                 http_response_code(500);
                 $_SESSION['error'] = 'Failed to add question to exam.';
-                header("Location: " . BASE_PATH . "/api/questions/create/courses/" . $course_id . "/view?exam_id=" . $exam_id);
-                exit;
+                $this->elp->redirect("/api/questions/create/courses/" . $course_id . "/view?exam_id=" . $exam_id);
             }
         }
 
         $_SESSION['flash'] = 'Created the question successfully.';
         if ($exam_id) {
-            header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
-            exit;
+            $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
         }
-        header("Location: " . BASE_PATH . "/api/courses/teacher/" . $course_id);
-        exit;
+        $this->elp->redirect("/api/courses/teacher/" . $course_id);
     }
 
     public function previewQuestion($question_id)
@@ -227,16 +231,19 @@ class QuestionController
         $exam = $this->exams->find($exam_id);
         if (!$exam) {
             http_response_code(404);
-            return $this->elp->changeView('dashboard', ['error' => 'Exam not found.']);
+            $_SESSION['error'] = 'Exam not found.';
+            $this->elp->redirect('/api/dashboard');
         }
         if ((int) $exam['teacher_id'] !== (int) $_SESSION['user']['id']) {
             http_response_code(403);
-            return $this->elp->changeView('dashboard', ['error' => 'You can only edit questions in your own exams.']);
+            $_SESSION['error'] = 'You can only edit questions in your own exams.';
+            $this->elp->redirect('/api/dashboard');
         }
         $question = $this->questions->getQuestionDetails($question_id, $exam_id);
         if (!$question) {
             http_response_code(404);
-            return $this->elp->changeView('dashboard', ['error' => 'This question is no longer part of the exam. Please reopen the exam.']);
+            $_SESSION['error'] = 'This question is no longer part of the exam. Please reopen the exam.';
+            $this->elp->redirect('/api/dashboard');
         }
         $course_id = (int) $question['course_id'];
         $questionChoices = $this->questions->getQuestionChoices($question_id) ?: [];
@@ -307,7 +314,8 @@ class QuestionController
 
         if ($error !== null) {
             http_response_code(400);
-            return $this->elp->changeView('dashboard', ['error' => $error]);
+            $_SESSION['error'] = $error;
+            $this->elp->redirect('/api/dashboard');
         }
 
         try {
@@ -323,14 +331,13 @@ class QuestionController
         } catch (\DomainException $error) {
             http_response_code(409);
             $_SESSION['error'] = $error->getMessage();
-            return $this->elp->changeView('dashboard', ['error' => $error->getMessage()]);
+            $this->elp->redirect('/api/dashboard');
         } catch (\Throwable $error) {
-            error_log('Failed to save exam question: ' . $error->getMessage());
             http_response_code(500);
-            return $this->elp->changeView('dashboard', ['error' => 'Failed to save the question. No changes were saved.']);
+            $_SESSION['error'] = "Failed to save the question. No changes were saved.";
+            $this->elp->redirect('/api/dashboard');
         }
 
-        // Let the bank reload the exam's saved IDs after a shared question is replaced.
         unset($_SESSION['selected_questions'], $_SESSION['selected_question_marks']);
         $_SESSION['flash'] = $savedId !== $question_id
             ? 'Saved a new question for this exam. Other exams keep the original question.'
@@ -393,6 +400,16 @@ class QuestionController
         if (!$exam) {
             $this->elp->redirect($_SESSION['redirect']);
         }
+        $title = isset($_POST['title']) ? $_POST['title'] : null;
+        $status = isset($_POST['exam_status']) ? $_POST['exam_status'] : null;
+        $marks = isset($_POST['total_marks']) ? $_POST['total_marks'] : null;
+        $start = isset($_POST['start_date']) ? $_POST['start_date'] : null;
+        $end = isset($_POST['end_date']) ? $_POST['end_date'] : null;
+        $randomize = isset($_POST['randomize_order']) ? 1 : 0;
+
+        if ($title && $status && $status && $marks && $start && $end)
+            $this->exams->edit($exam_id, $title, $status, $marks, $start, $end, $randomize);
+
         $course_id = (int) $exam['course_id'];
         $examQuestions = $this->questions->getExamQuestions($exam_id) ?: [];
         $existingQuestionIds = [];
@@ -482,8 +499,7 @@ class QuestionController
 
             unset($_SESSION['selected_questions'], $_SESSION['selected_question_marks']);
             $_SESSION['flash'] = 'Question bank updated successfully.';
-            header("Location: " . BASE_PATH . "/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
-            exit;
+            $this->elp->redirect("/api/exams/preview/" . $exam_id . "?course_id=" . $course_id . "&page=questions");
         }
 
         return $this->elp->changeView('questions/bank', [

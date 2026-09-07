@@ -35,12 +35,14 @@ class RedirectingController
         $user = $_SESSION['user'] ?? null;
         if (!$user) {
             http_response_code(404);
-            return $this->help->changeView('users/login', ['error' => 'User Not Logged in']);
+            $_SESSION['error'] = 'User Not Logged in';
+            return $this->help->redirect('/api/login');
         }
         $user_id = $user['id'];
         if (!$user_id) {
             http_response_code(400);
-            return $this->help->changeView('users/login', ['error' => 'User ID Not Found']);
+            $_SESSION['error'] = 'User ID Not Found';
+            return $this->help->redirect('/api/login');
         }
         if ($user['role'] === 'teacher') {
             $courses = $this->courses->getTeacherCourses((int) $user['id']);
@@ -84,38 +86,22 @@ class RedirectingController
         return $this->help->changeView('users/profile', ['user' => $user]);
     }
 
-    public function usersList()
-    {
-        $currentUser = $_SESSION['user'] ?? null;
-
-        $authError = $this->help->checkTeacherCredentials();
-        if ($authError !== null) {
-            return $authError;
-        }
-        $usersList = $this->user->all();
-        if ($usersList !== null) {
-            $usersList = [];
-        }
-        return $this->help->changeView('users/list', ['usersList' => $usersList]);
-    }
-
-    // ---------------------------------- questions ----------------------------------------
-    // public function showExamQuestions(string $exam_id)
+    // public function usersList()
     // {
+    //     $currentUser = $_SESSION['user'] ?? null;
 
-    //     $exam_id = (int) $exam_id;
-    //     if (!$exam_id) {
-    //         http_response_code(400);
-    //         return (new ViewModel('exam/all', ['error' => 'No Exam ID passed']));
+    //     $authError = $this->help->checkTeacherCredentials();
+    //     if ($authError !== null) {
+    //         return $authError;
     //     }
-
-    //     if (!$this->exams->find($exam_id)) {
-    //         http_response_code(404);
-    //         return (new ViewModel('exam/all', ['error' => 'Exam Not Found']));
+    //     $usersList = $this->user->all();
+    //     if ($usersList !== null) {
+    //         $usersList = [];
     //     }
-    //     return (new ViewModel('exam/questions', ['questions' => $this->questions->getExamQuestions($exam_id)]));
+    //     return $this->help->changeView('users/list', ['usersList' => $usersList]);
     // }
 
+    // ---------------------------------- questions ----------------------------------------
     public function createQuestion($course_id)
     {
         $course_id = (int) $course_id;
@@ -138,13 +124,15 @@ class RedirectingController
         }
         if (!$exam_id) {
             http_response_code(400);
-            return $this->help->changeView("dashboard", ['error' => 'Exam ID not Passed']);
+            $_SESSION['error'] = 'Exam ID not Passed';
+            $this->help->redirect("/api/dashboard");
         }
         $user = $_SESSION['user'];
         $examDetails = $this->exams->getExamFullDetails($exam_id);
         if (!$examDetails) {
             http_response_code(404);
-            return $this->help->changeView("dashboard", ['error' => 'Exam Not Found']);
+            $_SESSION['error'] = 'Exam Not Found';
+            $this->help->redirect("/api/dashboard");
         }
         $studentAttempt = '';
         $studentSelection = '';
@@ -172,26 +160,31 @@ class RedirectingController
     {
         if (!isset($_SESSION['user'])) {
             http_response_code(400);
-            return $this->help->changeView('users/login', ['error' => 'User Not Logged in']);
+            $_SESSION['error'] = 'User Not Logged in';
+            $this->help->redirect('users/login');
         }
         if (!$exam_id) {
             http_response_code(400);
-            return $this->help->changeView('dashboard', ['error' => 'Exam ID Not Passed']);
+            $_SESSION['error'] = 'Exam ID Not Passed';
+            $this->help->redirect('/api/dashboard');
         }
         if (!$this->exams->getById($exam_id)) {
             http_response_code(404);
-            return $this->help->changeView('dashboard', ['error' => 'Exam Not Found']);
+            $_SESSION['error'] = 'Exam Not Found';
+            $this->help->redirect('/api/dashboard');
         }
         $user = $_SESSION['user'];
         if ($user['role'] !== 'teacher') {
             http_response_code(403);
-            return $this->help->changeView('dashboard', ['error' => 'User Does not have access to this page']);
+            $_SESSION['error'] = 'User Does not have access to this page';
+            $this->help->redirect('/api/dashboard');
         }
 
         $exam = $this->exams->getExamFullDetails($exam_id);
         if (!$exam) {
             http_response_code(404);
-            return $this->help->changeView('dashboard', ['error' => 'Exam Not found']);
+            $_SESSION['error'] = 'Exam Not found';
+            $this->help->redirect('/api/dashboard');
         }
 
         $examQuestions = $this->questions->getExamQuestions($exam_id);
@@ -224,7 +217,7 @@ class RedirectingController
             $_SESSION['error'] = "Exam not found.";
             return $this->help->redirect('/api/dashboard');
         }
-        $exam['exam_id'] = $exam_id;
+
         $attempt = $this->attempts->findByExamAndStudent($exam_id, $student_id);
         if ($attempt && $attempt['submitted_at'] !== null) {
             $_SESSION['error'] = "User Already took the exam";
@@ -261,6 +254,7 @@ class RedirectingController
                 'question' => $question['question_text'],
                 'question_mark' => (float) $question['question_mark'],
             ], $questions);
+
             $state = [
                 'attempt_id' => (int) $attempt['id'],
                 'questions' => $questions,

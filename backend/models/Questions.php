@@ -75,7 +75,12 @@ class Questions
 
     public function getExamChoiceOptions(int $exam_id): array
     {
-        $statement = $this->pdo->prepare('SELECT c.id, c.question_id, c.choice_text FROM choices c INNER JOIN exam_questions eq ON eq.question_id = c.question_id WHERE eq.exam_id = :exam_id ORDER BY c.id');
+        $sql = 'SELECT c.id, c.question_id, c.choice_text 
+        FROM choices c 
+        INNER JOIN exam_questions eq ON eq.question_id = c.question_id 
+        WHERE eq.exam_id = :exam_id 
+        ORDER BY c.id';
+        $statement = $this->pdo->prepare($sql);
         $statement->execute(['exam_id' => $exam_id]);
         $choices = [];
         foreach ($statement->fetchAll() as $choice) {
@@ -164,7 +169,6 @@ class Questions
                 }
             }
 
-            // Shared questions and choices stay untouched; only this exam gets the edited copy.
             $copy = count($examIds) > 1;
             $savedId = $question_id;
             if ($copy) {
@@ -197,6 +201,7 @@ class Questions
 
             $statement = $this->pdo->prepare('UPDATE exam_questions SET question_id = :saved_id, question_mark = :mark WHERE exam_id = :exam_id AND question_id = :question_id');
             $statement->execute(['saved_id' => $savedId, 'mark' => $mark, 'exam_id' => $exam_id, 'question_id' => $question_id]);
+
             $this->pdo->commit();
             return $savedId;
         } catch (\Throwable $error) {

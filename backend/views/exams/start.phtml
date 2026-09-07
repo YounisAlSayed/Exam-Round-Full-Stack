@@ -58,9 +58,6 @@ $savedAnswers = $savedAnswers ?? [];
                             <i class="fas fa-clock me-2"></i>
                             <span id="timerText">--:--:--</span>
                         </div>
-                        <div class="progress-timer">
-                            <div class="progress-timer-bar" id="timerProgress" style="width: 100%;"></div>
-                        </div>
                     </div>
 
                     <div>
@@ -74,8 +71,8 @@ $savedAnswers = $savedAnswers ?? [];
         </header>
 
         <div class="container mt-5 pt-4">
-            <form method="POST" action="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?? 0 ?>/submit" id="examForm">
-                <input type="hidden" name="exam_id" value="<?= $exam['exam_id'] ?? 0 ?>">
+            <form method="POST" action="<?= BASE_PATH ?>/api/exams/<?= $exam['id'] ?? 0 ?>/submit" id="examForm">
+                <input type="hidden" name="id" value="<?= $exam['id'] ?? 0 ?>">
                 <input type="hidden" name="current_page" value="<?= $currentPage ?>">
                 <input type="hidden" name="total_pages" value="<?= $totalPages ?>">
 
@@ -86,88 +83,86 @@ $savedAnswers = $savedAnswers ?? [];
                         $savedChoice = $savedAnswers[$question['id']] ?? null;
                         ?>
 
-                        <div class="question-card card mb-4" data-question-id="<?= $question['id'] ?>"
+                        <div class="question-card card mb-4" id="question_<?= $question['id'] ?>""
                             <?= intdiv($index, $pageSize) + 1 !== $currentPage ? 'hidden' : '' ?>>
-                            <div class="card-body p-4">
-                                <!-- Question Header -->
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <span class="question-number me-2">
-                                            <?= $index + 1 ?>
-                                        </span>
-                                        <span class="fw-semibold">
-                                            Question <?= $index + 1 ?>
-                                        </span>
-                                    </div>
-                                    <span class="badge bg-secondary rounded-pill">
-                                        <?= $question['question_mark'] ?? 0 ?> marks
+                            <div class=" card-body p-4">
+                            <!-- Question Header -->
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <span class="question-number me-2">
+                                        <?= $index + 1 ?>
+                                    </span>
+                                    <span class="fw-semibold">
+                                        Question <?= $index + 1 ?>
                                     </span>
                                 </div>
+                                <span class="badge bg-secondary rounded-pill">
+                                    <?= $question['question_mark'] ?? 0 ?> marks
+                                </span>
+                            </div>
 
-                                <!-- Question Text -->
-                                <p class="mb-4 fs-6">
-                                    <?= htmlspecialchars($question['question'] ?? '') ?>
-                                </p>
+                            <!-- Question Text -->
+                            <p class="mb-4 fs-6">
+                                <?= htmlspecialchars($question['question'] ?? '') ?>
+                            </p>
 
-                                <!-- Choices -->
-                                <div class="choices-container">
-                                    <?php if (!empty($question_choices)): ?>
-                                        <?php foreach ($question_choices as $choiceIndex => $choice): ?>
-                                            <div class="choice-item mb-2 <?= ($savedChoice == $choice['id']) ? 'selected' : '' ?>">
-                                                <label class="d-flex align-items-center" style="cursor: pointer;">
-                                                    <input type="radio" name="question_<?= $question['id'] ?>"
-                                                        value="<?= $choice['id'] ?>" id="choice_<?= $choice['id'] ?>"
-                                                        <?= ($savedChoice == $choice['id']) ? 'checked' : '' ?>
-                                                        onchange="this.closest('.choice-item').parentElement.querySelectorAll('.choice-item').forEach(el => el.classList.remove('selected')); this.closest('.choice-item').classList.add('selected');">
-                                                    <span class="fw-bold me-3" style="min-width: 28px;">
-                                                        <?= chr(65 + $choiceIndex) ?>.
-                                                    </span>
-                                                    <span><?= htmlspecialchars($choice['choice_text']) ?></span>
-                                                </label>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <div class="text-muted">No choices available for this question.</div>
-                                    <?php endif; ?>
-                                </div>
+                            <!-- Choices -->
+                            <div class="choices-container">
+                                <?php if (!empty($question_choices)): ?>
+                                    <?php foreach ($question_choices as $choiceIndex => $choice): ?>
+                                        <div class="choice-item mb-2 <?= ($savedChoice == $choice['id']) ? 'selected' : '' ?>">
+                                            <label class="d-flex align-items-center" style="cursor: pointer;">
+                                                <input type="radio" name="question_<?= $question['id'] ?>" value="<?= $choice['id'] ?>"
+                                                    id="choice_<?= $choice['id'] ?>"
+                                                    <?= ($savedChoice == $choice['id']) ? 'checked' : '' ?>
+                                                    onchange="this.closest('.choice-item').parentElement.querySelectorAll('.choice-item').forEach(el => el.classList.remove('selected')); this.closest('.choice-item').classList.add('selected');">
+                                                <span class="fw-bold me-3" style="min-width: 28px;">
+                                                    <?= chr(65 + $choiceIndex) ?>.
+                                                </span>
+                                                <span><?= htmlspecialchars($choice['choice_text']) ?></span>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="text-muted">No choices available for this question.</div>
+                                <?php endif; ?>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body text-center py-5">
-                            <i class="fas fa-exclamation-circle text-warning" style="font-size: 48px;"></i>
-                            <h5 class="fw-bold mt-3">No Questions Found</h5>
-                            <p class="text-muted">This exam doesn't have any questions yet.</p>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Navigation -->
-                <div class="d-flex justify-content-between align-items-center mt-4">
-                    <button type="button" id="previousPage" class="btn btn-outline-primary pagination-btn"
-                        style="<?= $currentPage <= 1 ? 'visibility: hidden;' : '' ?>">
-                        <i class="fas fa-arrow-left me-2"></i>Previous
-                    </button>
-
-                    <span class="text-muted small" id="pageLabel">
-                        Page <?= $currentPage ?> of <?= $totalPages ?>
-                    </span>
-
-                    <button type="submit" id="nextPage"
-                        formaction="<?= BASE_PATH ?>/api/exams/<?= $exam['exam_id'] ?? 0 ?>/save/progress" name="action"
-                        value="next" class="btn btn-primary pagination-btn"
-                        <?= $currentPage >= $totalPages ? 'hidden' : '' ?>>
-                        <i class="fas fa-save me-2"></i>Save & Next
-                    </button>
-                    <button type="button" id="lastPageSubmit" class="btn btn-success pagination-btn"
-                        data-bs-toggle="modal" data-bs-target="#submitModal"
-                        <?= $currentPage < $totalPages ? 'hidden' : '' ?>>
-                        <i class="fas fa-check-circle me-2"></i>Submit Exam
-                    </button>
-                </div>
-            </form>
         </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-exclamation-circle text-warning" style="font-size: 48px;"></i>
+            <h5 class="fw-bold mt-3">No Questions Found</h5>
+            <p class="text-muted">This exam doesn't have any questions yet.</p>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Navigation -->
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <button type="button" id="previousPage" class="btn btn-outline-primary pagination-btn"
+        style="<?= $currentPage <= 1 ? 'visibility: hidden;' : '' ?>">
+        <i class="fas fa-arrow-left me-2"></i>Previous
+    </button>
+
+    <span class="text-muted small" id="pageLabel">
+        Page <?= $currentPage ?> of <?= $totalPages ?>
+    </span>
+
+    <button type="submit" id="nextPage"
+        formaction="<?= BASE_PATH ?>/api/exams/<?= $exam['id'] ?? 0 ?>/save/progress" name="action" value="next"
+        class="btn btn-primary pagination-btn" <?= $currentPage >= $totalPages ? 'hidden' : '' ?>>
+        <i class="fas fa-save me-2"></i>Save & Next
+    </button>
+    <button type="button" id="lastPageSubmit" class="btn btn-success pagination-btn" data-bs-toggle="modal"
+        data-bs-target="#submitModal" <?= $currentPage < $totalPages ? 'hidden' : '' ?>>
+        <i class="fas fa-check-circle me-2"></i>Submit Exam
+    </button>
+</div>
+</form>
+    </div>
     </div>
 
     <!-- Submit Confirmation Modal -->

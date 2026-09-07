@@ -1,0 +1,95 @@
+.exams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.exam-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease;
+}
+
+.exam-card-link:hover {
+    transform: translateY(-4px);
+}
+
+.exam-card {
+    border-radius: 16px !important;
+    transition: box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+.exam-card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.exam-card .card-body {
+    padding: 20px !important;
+}
+
+.exam-details {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-top: 8px;
+}
+
+.exam-footer {
+    border-color: #e9ecef !important;
+}
+
+.exam-footer .text-primary {
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.exam-card:hover .exam-footer .text-primary {
+    transform: translateX(4px);
+}
+
+.stat-card {
+    border-radius: 12px !important;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+.stat-card .card-body {
+    padding: 16px !important;
+}
+
+.stat-card i {
+    opacity: 0.8;
+}
+
+.stat-card h3 {
+    font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .exams-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .exam-card .card-body {
+        padding: 16px !important;
+    }
+
+    .stat-card h3 {
+        font-size: 1.25rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .exams-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
